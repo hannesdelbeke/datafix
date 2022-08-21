@@ -8,19 +8,19 @@ def collect_hello_world_list(*args, **kwargs):
     return ["Hello", "World"]
 
 
-class ActionCollectHelloWorld(Action):
+class ActionCollectHelloWorld(ActionCollect):
     run = collect_hello_world
 
 
-class ActionCollectHelloWorldList(Action):
+class ActionCollectHelloWorldList(ActionCollect):
     run = collect_hello_world_list
 
 
 class CollectHelloWorld(Collector):
-    action = ActionCollectHelloWorld
+    action_class = ActionCollectHelloWorld
 
 class CollectHelloWorldList(Collector):
-    action = ActionCollectHelloWorldList
+    action_class = ActionCollectHelloWorldList
 
 
 
@@ -66,8 +66,11 @@ def main():
     session.children[0]._run()
     session.children[0]._run()
     session.children[0]._run()
-    print(session.children[0].children)
 
+    print()
+    import pprint
+    pp = pprint.pp
+    pp(session.tree())
 
 if __name__ == '__main__':
     main()

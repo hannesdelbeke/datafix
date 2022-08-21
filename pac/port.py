@@ -33,6 +33,8 @@ import pac.orders.pyblish
 
 class Node(object):
     def __init__(self, parent=None, name=None):
+        self.action_class = None
+        self.action = None
         self.parent = parent
         self.children = []
         self.state = 'uninitialized'
@@ -59,6 +61,16 @@ class Node(object):
     # run on fail yes/no
     # dependencies/requires
 
+    def tree(self):
+        """returns a list of all nodes in the hierarchy"""
+        hierarchy = {}
+        hierarchy['name'] = self.__class__.__name__
+        hierarchy['children'] = []
+        for child in self.children:
+            hierarchy['children'].append(child.tree())
+        hierarchy['action_class'] = self.action_class
+
+        return hierarchy
     pass
 
 
@@ -107,7 +119,8 @@ class Action(Node):
 
 
 class ActionCollect(Action):
-    def _run(self, session):  # create instances node(s)
+    def _run(self):  # create instances node(s)
+        print(self._run)
         try:
             self.state = 'running'
 
@@ -115,7 +128,7 @@ class ActionCollect(Action):
 
             for instance in result:
                 wrap = InstanceWrapper(instance, parent=self)
-                self.instance_wrappers.append(wrap)
+                self.parent.instance_wrappers.append(wrap)
 
             self.state = 'success'
 
@@ -136,11 +149,12 @@ class Collector(Node):  # session plugin (context), session is a node
         super().__init__(parent=parent)
 
     def _run(self):  # create instances node(s)
-        result = self.action.run()
+        print(self._run)
+        if self.action_class:
+            self.action = self.action_class(parent=self)
+            result = self.action._run()
+            return result
 
-        for instance in result:
-            wrap = InstanceWrapper(instance, parent=self)
-            self.instance_wrappers.append(wrap)
 
 
 # get all instances from session (from collectors) from type X (mesh) and validate
@@ -215,7 +229,6 @@ class Session(Node):
         # export.run(session)
             # get the collect instances from session, get mesh inst from collect inst.
             # run export on the mesh instances, create backward link (to export inst) in mesh instances
-
 
 class InstanceWrapper(Node):
     """
