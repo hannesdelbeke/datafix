@@ -188,9 +188,8 @@ class Collector(Node):  # session plugin (context), session is a node
 
 # get all instances from session (from collectors) from type X (mesh) and validate
 class Validator(Node):  # instance plugin
-
-    # def _run(self, instance):
-    #     raise NotImplementedError()
+    def validate_instance(self, instance):
+        raise NotImplementedError()
 
     # get the collect instances from session, get the mesh instances from collect instances,
     # run validate on the mesh instances, create backward link (to validate inst) in mesh instances
@@ -204,11 +203,11 @@ class Validator(Node):  # instance plugin
                     instance_wrap.connections.append(self)
 
                     try:
-                        self.state = 'running'
-                        result = self._run(instance=instance_wrap.instance)
-                        self.state = 'success'
+                        instance_wrap.state = 'running'
+                        result = self.validate_instance(instance=instance_wrap.instance)
+                        instance_wrap.state = 'success'
                     except:
-                        self.state = 'failed'
+                        instance_wrap.state = 'failed'
                     print("validate " + self.state, instance_wrap.instance)
         # if not implemented, return empty list
         except NotImplementedError:

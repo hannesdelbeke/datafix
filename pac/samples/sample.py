@@ -33,14 +33,11 @@ class CollectHelloWorldList(Collector):
 
 
 class ValidateHelloWorld(Validator):
-    def __init__(self, parent):
-        super().__init__(parent=parent)
-        self.state = None
-        # state can be run, error, not_yet_ran, running
-        self.state = 'not_yet_ran'
-
-    def _run(self, instance):
+    def validate_instance(self, instance):
         assert instance == "Hello World"
+
+    # def _run(self):
+    #     assert instance == "Hello World"
 
 
 def main():
