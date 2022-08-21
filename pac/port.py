@@ -1,5 +1,3 @@
-import pac.orders.pyblish
-
 # session
 #  collect_node
 #    instance_wrap A
@@ -33,13 +31,15 @@ import pac.orders.pyblish
 
 class Node(object):
     def __init__(self, parent=None, name=None):
-        self.action_class = None
-        self.action = None
-        self.parent = parent
-        self.children = []
-        self.state = 'uninitialized'
-        self.connections = []  # indirect connections, excl parent
-        self.name = name
+        # self.action_class = None
+        # self.action = None
+
+        self.parent = parent  # node that created this node
+        self.children = []  # nodes created by this node
+        self.connections = []  # related nodes
+
+        self.state = 'initialized'
+        # self.name = name
 
     @property
     def session(self):
@@ -49,29 +49,43 @@ class Node(object):
             return self
 
     def _run(self):
-        return self.run()
+        """
+        inherit and overwrite this
+        """
+        raise NotImplementedError
 
     def run(self):
-        """if node has action attribute, run it"""
-        if hasattr(self, 'action'):
-            self.action.run(self)
-        # for child in self.children:
-        #     child.run()
+        """
+        public method, don't overwrite this
+        """
+        try:
+            self.state = 'running'
+            result = self._run()
+            self.state = 'success'
+            return result
+        except Exception as e:
+            self.state = 'failed'
+            print(e)
 
-    # run on fail yes/no
-    # dependencies/requires
-
-    def tree(self):
-        """returns a list of all nodes in the hierarchy"""
-        hierarchy = {}
-        hierarchy['name'] = self.__class__.__name__
-        hierarchy['children'] = []
+    def pp_tree(self, depth=0):
+        """
+        Session ==>> initialized
+          CollectHelloWorld ==>> success
+            InstanceWrapper (Hello World)==>> initialized
+          CollectHelloWorldList ==>> success
+            InstanceWrapper (Hello)==>> initialized
+            InstanceWrapper (World)==>> initialized
+          ValidateHelloWorld ==>> failed
+        """
+        txt = '  '*depth + self.__class__.__name__ + ' ==>> ' + self.state + '\n'
         for child in self.children:
-            hierarchy['children'].append(child.tree())
-        hierarchy['action_class'] = self.action_class
-
-        return hierarchy
-    pass
+            try:
+                txt += child.pp_tree(depth=depth+1).replace('==>>', f'({child.instance})==>>')
+            except AttributeError:
+                txt += child.pp_tree(depth=depth+1)
+        if depth == 0:
+            print(txt)
+        return txt
 
 
 class Action(Node):
@@ -94,7 +108,7 @@ class Action(Node):
         super().__init__(parent=parent, name=name)
 
     # node could be session or instance or collector or validator
-    def run(self, *args, **kwargs):
+    def _run(self, *args, **kwargs):
         """node is the parent of this action"""
         # TODO check if function takes args and kwargs
         # either wrap function or inherit action and overwrite run
@@ -116,64 +130,74 @@ class Action(Node):
         # if not implemented, return empty list
         except NotImplementedError:
             result = []
+            print('Not implemented', self)
 
 
-class ActionCollect(Action):
-    def _run(self):  # create instances node(s)
-        print(self._run)
-        try:
-            self.state = 'running'
-
-            result = self.run()
-
-            for instance in result:
-                wrap = InstanceWrapper(instance, parent=self)
-                self.parent.instance_wrappers.append(wrap)
-
-            self.state = 'success'
-
-        # if not implemented, return empty list
-        except NotImplementedError:
-            result = []
+# class ActionCollect(Action):
+#     def _run(self):  # create instances node(s)
+#         print(self._run)
+#         try:
+#             self.state = 'running'
+#
+#             result = self.run()
+#
+#             for instance in result:
+#                 wrap = InstanceWrapper(instance, parent=self)
+#                 self.parent.instance_wrappers.append(wrap)
+#
+#             self.state = 'success'
+#
+#         # if not implemented, return empty list
+#         except NotImplementedError:
+#             result = []
 
 
 class Collector(Node):  # session plugin (context), session is a node
-    order = pac.orders.pyblish.COLLECT
-
     @property
     def instance_wrappers(self):
         return self.children
 
-    def __init__(self, parent):
-        self.actions = []
-        super().__init__(parent=parent)
+    # def collect(self):
+    #     raise NotImplementedError
+
+    def run(self):
+        result = super().run()
+
+        for instance in result:
+            wrap = InstanceWrapper(instance, parent=self)
+            self.instance_wrappers.append(wrap)
+
+        return result
 
     def _run(self):  # create instances node(s)
-        print(self._run)
-        if self.action_class:
-            self.action = self.action_class(parent=self)
-            result = self.action._run()
-            return result
-
+        raise NotImplementedError
+        # print(self._run)
+        # # if self.action_class:
+        #     # self.action = self.action_class(parent=self)
+        #     # result = self.action._run()
+        #
+        # # result = self.run()
+        # result = self.collect()
+        #
+        # for instance in result:
+        #     wrap = InstanceWrapper(instance, parent=self)
+        #     self.instance_wrappers.append(wrap)
+        #
+        # return result
 
 
 # get all instances from session (from collectors) from type X (mesh) and validate
 class Validator(Node):  # instance plugin
-    order = pac.orders.pyblish.VALIDATE
 
-    def __init__(self, parent):
-        self.actions = []
-        super().__init__(parent=parent)
-
-    def run(self, instance):
-        raise NotImplementedError()
+    # def _run(self, instance):
+    #     raise NotImplementedError()
 
     # get the collect instances from session, get the mesh instances from collect instances,
     # run validate on the mesh instances, create backward link (to validate inst) in mesh instances
-    def _run(self, session):  # create instances node(s)
+    def _run(self):  # create instances node(s)
         try:
             # get matching instances from session
-            for plugin_instance in session.plugin_instances:
+            for plugin_instance in self.session.plugin_instances:
                 for instance_wrap in plugin_instance.children:
 
                     self.connections.append(instance_wrap)
@@ -181,7 +205,7 @@ class Validator(Node):  # instance plugin
 
                     try:
                         self.state = 'running'
-                        result = self.run(instance=instance_wrap.instance)
+                        result = self._run(instance=instance_wrap.instance)
                         self.state = 'success'
                     except:
                         self.state = 'failed'
@@ -214,7 +238,8 @@ class Session(Node):
             print("running", plugin_class)
             plugin_instance = plugin_class(parent=self)
             self.plugin_instances.append(plugin_instance)
-            plugin_instance._run()
+            # print("running", plugin_instance)
+            plugin_instance.run()
 
         # create collector instance and track in session, create backward link in collect instance
         # collector.run(session)

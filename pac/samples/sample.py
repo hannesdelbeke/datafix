@@ -17,18 +17,18 @@ class ActionCollectHelloWorldList(Action):
 
 
 class CollectHelloWorld(Collector):
-    def run(self):
+    def _run(self):
         return ["Hello World"]
 
 
 
 class CollectHelloWorld(Collector):
-    def run(self):
+    def _run(self):
         return ["Hello World"]
 
 
 class CollectHelloWorldList(Collector):
-    def run(self):
+    def _run(self):
         return ["Hello", "World"]
 
 
@@ -39,7 +39,7 @@ class ValidateHelloWorld(Validator):
         # state can be run, error, not_yet_ran, running
         self.state = 'not_yet_ran'
 
-    def run(self, instance):
+    def _run(self, instance):
         assert instance == "Hello World"
 
 
@@ -51,12 +51,13 @@ def main():
     session.run()
 
     print()
-    # print validation results instances
-    for plugin in session.plugin_instances:
-        print(plugin)
-        print(plugin.children)
-        for inst in plugin.children:
-            print('STATE', inst, inst.parent, inst.parent.state)  # TODO get validation state, atm we get parent(collect) state
+    # # print validation results instances
+    # for plugin in session.plugin_instances:
+    #     print(plugin)
+    #     print(plugin.children)
+    #     for inst in plugin.children:
+    #         print('STATE', inst, inst.parent, inst.parent.state)  # TODO get validation state, atm we get parent(collect) state
 
+    session.pp_tree()
 if __name__ == '__main__':
     main()
