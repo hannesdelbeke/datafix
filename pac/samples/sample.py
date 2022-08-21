@@ -1,6 +1,27 @@
 from pac.port import *
 
 
+def collect_hello_world():
+    return ["Hello World"]
+
+def collect_hello_world_list():
+    return ["Hello", "World"]
+
+
+class ActionCollectHelloWorld(Action):
+    run = collect_hello_world
+
+
+class ActionCollectHelloWorldList(Action):
+    run = collect_hello_world_list
+
+
+class CollectHelloWorld(Collector):
+    def run(self):
+        return ["Hello World"]
+
+
+
 class CollectHelloWorld(Collector):
     def run(self):
         return ["Hello World"]

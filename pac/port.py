@@ -26,12 +26,35 @@ import pac.orders.pyblish
 # import bpy
 
 
+# ypu  cant run a node, you can run an action on a node
+# nodes contain data and connections, and connect to action_nodes and instances
+# action nodes can be run
+# instances contain data like meshes, strings, ...
+
 class Node(object):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, name=None):
         self.parent = parent
         self.children = []
         self.state = 'uninitialized'
         self.connections = []  # indirect connections, excl parent
+        self.name = name
+
+    @property
+    def session(self):
+        if self.parent:
+            return self.parent.session
+        else:
+            return self
+
+    def _run(self):
+        return self.run()
+
+    def run(self):
+        """if node has action attribute, run it"""
+        if hasattr(self, 'action'):
+            self.action.run(self)
+        # for child in self.children:
+        #     child.run()
 
     # run on fail yes/no
     # dependencies/requires
@@ -39,7 +62,7 @@ class Node(object):
     pass
 
 
-class Action(object):
+class Action(Node):
     # TODO add connection when run on node
 
     # an action is just a function with a name?
@@ -52,31 +75,38 @@ class Action(object):
     # action.function = print_hello
     # action.name = 'print_hello'
 
-    def __init__(self, function=None, name=None):
+    def __init__(self, parent, function=None, name=None):
+        # parent, whatever initiated this action
         self.function = function
-        self.name = name
+        self.state = 'not run'
+        super().__init__(parent=parent, name=name)
 
-    # node could be session, or could be instance
-    def run(self, node, *args, **kwargs):
+    # node could be session or instance or collector or validator
+    def run(self, *args, **kwargs):
+        """node is the parent of this action"""
         # TODO check if function takes args and kwargs
-        self.function(node, *args, **kwargs)
+        # either wrap function or inherit action and overwrite run
+        parent_node = self.parent
+        self.function(parent_node, *args, **kwargs)
+
+    def _run(self):  # create instances node(s)
+        try:
+            self.state = 'running'
+
+            result = self.run()
+
+            for instance in result:
+                wrap = InstanceWrapper(instance, parent=self)
+                self.instance_wrappers.append(wrap)
+
+            self.state = 'success'
+
+        # if not implemented, return empty list
+        except NotImplementedError:
+            result = []
 
 
-class Collector(Node):  # session plugin (context), session is a node
-    order = pac.orders.pyblish.COLLECT
-
-    @property
-    def instance_wrappers(self):
-        return self.children
-
-    def __init__(self, parent):
-        self.actions = []
-        super().__init__(parent=parent)
-
-    def run(self):
-        # returns for example meshes, or strings
-        raise NotImplementedError()
-
+class ActionCollect(Action):
     def _run(self, session):  # create instances node(s)
         try:
             self.state = 'running'
@@ -94,8 +124,27 @@ class Collector(Node):  # session plugin (context), session is a node
             result = []
 
 
+class Collector(Node):  # session plugin (context), session is a node
+    order = pac.orders.pyblish.COLLECT
+
+    @property
+    def instance_wrappers(self):
+        return self.children
+
+    def __init__(self, parent):
+        self.actions = []
+        super().__init__(parent=parent)
+
+    def _run(self):  # create instances node(s)
+        result = self.action.run()
+
+        for instance in result:
+            wrap = InstanceWrapper(instance, parent=self)
+            self.instance_wrappers.append(wrap)
+
+
 # get all instances from session (from collectors) from type X (mesh) and validate
-class Validator(Node): # instance plugin
+class Validator(Node):  # instance plugin
     order = pac.orders.pyblish.VALIDATE
 
     def __init__(self, parent):
@@ -142,12 +191,16 @@ class Session(Node):
     def plugin_instances(self):
         return self.children
 
+    # @property
+    # def collected_instances(self):
+    #     return self.children
+
     def run(self):
         for plugin_class in self.registered_plugins:
             print("running", plugin_class)
             plugin_instance = plugin_class(parent=self)
             self.plugin_instances.append(plugin_instance)
-            plugin_instance._run(session=self)
+            plugin_instance._run()
 
         # create collector instance and track in session, create backward link in collect instance
         # collector.run(session)

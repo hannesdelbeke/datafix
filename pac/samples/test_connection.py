@@ -39,6 +39,7 @@ session.run()
 # validate success A
 # validate failed B
 
+
 # query result from instance A
 collect_a_plugin_inst = session.plugin_instances[0]
 instance_wrap_a = collect_a_plugin_inst.children[0]
@@ -47,6 +48,7 @@ print(instance_wrap_a)
 print(instance_wrap_a.parent)
 print(instance_wrap_a.parent.state)
 print(instance_wrap_a.connections)
+print(instance_wrap_a.connections[0].state)
 
 # InstanceWrapper(A)
 # <__main__.CollecA object at 0x0000010AA57F3D00>
