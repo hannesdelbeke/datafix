@@ -33,7 +33,7 @@
 class Node(object):
     def __init__(self, parent=None, name=None):
         # self.action_class = None
-        # self.action = None
+        self.actions = []
 
         self.parent = parent  # node that created this node
         self.children = []  # nodes created by this node
@@ -90,36 +90,7 @@ class Node(object):
 
 
 class Action(Node):
-    def __init__(self, parent, function=None, name=None):
-        # parent, whatever initiated this action
-        self.function = function
-        self.state = 'not run'
-        super().__init__(parent=parent, name=name)
-
-    # node could be session or instance or collector or validator
-    def _run(self, *args, **kwargs):
-        """node is the parent of this action"""
-        # TODO check if function takes args and kwargs
-        # either wrap function or inherit action and overwrite run
-        parent_node = self.parent
-        self.function(parent_node, *args, **kwargs)
-
-    def _run(self):  # create instances node(s)
-        try:
-            self.state = 'running'
-
-            result = self.run()
-
-            for instance in result:
-                wrap = InstanceWrapper(instance, parent=self)
-                self.instance_wrappers.append(wrap)
-
-            self.state = 'success'
-
-        # if not implemented, return empty list
-        except NotImplementedError:
-            result = []
-            print('Not implemented', self)
+    pass
 
 
 class Collector(Node):  # session plugin (context), session is a node
