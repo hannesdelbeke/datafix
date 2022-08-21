@@ -188,6 +188,11 @@ class Collector(Node):  # session plugin (context), session is a node
 
 # get all instances from session (from collectors) from type X (mesh) and validate
 class Validator(Node):  # instance plugin
+    def __init__(self, parent):
+        super().__init__(parent=parent)
+        self.results = []  # store run stuff in here
+
+
     def validate_instance(self, instance):
         raise NotImplementedError()
 
@@ -195,6 +200,7 @@ class Validator(Node):  # instance plugin
     # run validate on the mesh instances, create backward link (to validate inst) in mesh instances
     def _run(self):  # create instances node(s)
         try:
+            self.results = []
             # get matching instances from session
             for plugin_instance in self.session.plugin_instances:
                 for instance_wrap in plugin_instance.children:
@@ -203,11 +209,13 @@ class Validator(Node):  # instance plugin
                     instance_wrap.connections.append(self)
 
                     try:
-                        instance_wrap.state = 'running'
+                        state = 'running'
                         result = self.validate_instance(instance=instance_wrap.instance)
-                        instance_wrap.state = 'success'
+                        state = 'success'
                     except:
-                        instance_wrap.state = 'failed'
+                        state = 'failed'
+                    self.results.append([instance_wrap, state])
+
                     print("validate " + self.state, instance_wrap.instance)
         # if not implemented, return empty list
         except NotImplementedError:
@@ -262,6 +270,21 @@ class InstanceWrapper(Node):
         # self.actions = []
         self.instance = instance
         super().__init__(parent=parent)
+
+    @property
+    def state(self):
+        state = 'success'
+        for node in self.connections:
+            for result_node, result_state in node.results:
+                if result_state == 'failed':
+                    state = 'failed'
+                    return state
+            # if node == self:
+            #     return state
+
+    @state.setter
+    def state(self, state):
+        pass
 
     def __str__(self):
         return f'InstanceWrapper({self.instance})'
