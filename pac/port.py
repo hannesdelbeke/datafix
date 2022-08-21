@@ -1,5 +1,19 @@
 import pac.orders.pyblish
 
+# session
+#  collect_node
+#    instance_wrap A
+#      instance A
+#    instance_wrap B
+#      instance B
+#  validator_node
+#    get session, get plugins with instances(aka children)
+#    run an action on each instance, result SUCCESS or FAIL (or WARNING/ custom)
+
+# action can be attached and run on every node (right click in UI)
+# repair/fix can use these actions
+# validate node is an action, get the instance wrapper children and validate them
+
 # create collect n validation plugins
 # add fix action
 
@@ -17,6 +31,7 @@ class Node(object):
         self.parent = parent
         self.children = []
         self.state = 'uninitialized'
+        self.connections = []  # indirect connections, excl parent
 
     # run on fail yes/no
     # dependencies/requires
@@ -25,6 +40,8 @@ class Node(object):
 
 
 class Action(object):
+    # TODO add connection when run on node
+
     # an action is just a function with a name?
 
     # def print_hello():
@@ -49,7 +66,7 @@ class Collector(Node):  # session plugin (context), session is a node
     order = pac.orders.pyblish.COLLECT
 
     @property
-    def instances(self):
+    def instance_wrappers(self):
         return self.children
 
     def __init__(self, parent):
@@ -62,16 +79,15 @@ class Collector(Node):  # session plugin (context), session is a node
 
     def _run(self, session):  # create instances node(s)
         try:
+            self.state = 'running'
+
             result = self.run()
 
             for instance in result:
                 wrap = InstanceWrapper(instance, parent=self)
-                self.instances.append(wrap)
+                self.instance_wrappers.append(wrap)
 
-            # wrap result in instance
-            # add to session
-            # add to self.instances
-
+            self.state = 'success'
 
         # if not implemented, return empty list
         except NotImplementedError:
@@ -96,6 +112,10 @@ class Validator(Node): # instance plugin
             # get matching instances from session
             for plugin_instance in session.plugin_instances:
                 for instance_wrap in plugin_instance.children:
+
+                    self.connections.append(instance_wrap)
+                    instance_wrap.connections.append(self)
+
                     try:
                         self.state = 'running'
                         result = self.run(instance=instance_wrap.instance)
@@ -116,18 +136,17 @@ class Validator(Node): # instance plugin
 class Session(Node):
     def __init__(self):
         self.registered_plugins = []
-        self.instances = []  # plugin_instances
         super().__init__()
 
     @property
     def plugin_instances(self):
-        return self.instances
+        return self.children
 
     def run(self):
         for plugin_class in self.registered_plugins:
             print("running", plugin_class)
             plugin_instance = plugin_class(parent=self)
-            self.instances.append(plugin_instance)
+            self.plugin_instances.append(plugin_instance)
             plugin_instance._run(session=self)
 
         # create collector instance and track in session, create backward link in collect instance
@@ -159,24 +178,3 @@ class InstanceWrapper(Node):
 
     def __repr__(self):
         return f'InstanceWrapper({self.instance})'
-
-
-class CollectHelloWorld(Collector):
-    def run(self):
-        return ["Hello World"]
-
-
-class CollectHelloWorldList(Collector):
-    def run(self):
-        return ["Hello", "World"]
-
-
-class ValidateHelloWorld(Validator):
-    def __init__(self, parent):
-        super().__init__(parent=parent)
-        self.state = None
-        # state can be run, error, not_yet_ran, running
-        self.state = 'not_yet_ran'
-
-    def run(self, instance):
-        assert instance == "Hello World"
