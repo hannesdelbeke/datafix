@@ -30,6 +30,37 @@
 # action nodes can be run
 # instances contain data like meshes, strings, ...
 
+class AdapterBrain(object):
+    def __init__(self):
+        self.registered_adapters = []
+
+    def convert(self, instance, type):
+        for adapter in self.registered_adapters:
+            if adapter.type_output == type:
+                return adapter.adapt(instance)
+        return None
+
+    def register_adapter(self, adapter):
+        self.registered_adapters.append(adapter)
+
+
+class Adapter(object):
+    # when we run on another node, sometimes we expect input of a certain type.
+    # this is the adapter class, which can convert the input to the expected type
+    # if there is a registered adapter
+
+    type_input = None
+    type_output = None
+
+    def _run(self, instance):
+        raise NotImplementedError()
+
+    def run(self, instance):
+        return self._run(instance)
+
+    # input: instance(wrapper?)
+    # output: int
+
 class Node(object):
     def __init__(self, parent=None, name=None):
         # self.action_class = None
