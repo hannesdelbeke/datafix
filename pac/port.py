@@ -15,15 +15,13 @@ import orders.pyblish
 class Node(object):
     def __init__(self, parent=None):
         self.parent = parent
-        self.instances = []
+        self.children = []
         self.state = 'uninitialized'
-
 
     # run on fail yes/no
     # dependencies/requires
 
     pass
-
 
 
 class Action(object):
@@ -50,8 +48,11 @@ class Action(object):
 class Collector(Node):  # session plugin (context), session is a node
     order = orders.pyblish.COLLECT
 
+    @property
+    def instances(self):
+        return self.children
+
     def __init__(self, parent):
-        self.instances = []
         self.actions = []
         super().__init__(parent=parent)
 
@@ -70,7 +71,6 @@ class Collector(Node):  # session plugin (context), session is a node
             # wrap result in instance
             # add to session
             # add to self.instances
-            self.instances
 
 
         # if not implemented, return empty list
@@ -83,7 +83,6 @@ class Validator(Node): # instance plugin
     order = orders.pyblish.VALIDATE
 
     def __init__(self, parent):
-        self.instances = []
         self.actions = []
         super().__init__(parent=parent)
 
@@ -93,16 +92,17 @@ class Validator(Node): # instance plugin
     # get the collect instances from session, get the mesh instances from collect instances,
     # run validate on the mesh instances, create backward link (to validate inst) in mesh instances
     def _run(self, session):  # create instances node(s)
-        print("validating")
         try:
             # get matching instances from session
-            for plugin_instance in session.instances:
-                for instance_wrap in plugin_instance.instances:
-                    print("validating", instance_wrap.instance)
+            for plugin_instance in session.plugin_instances:
+                for instance_wrap in plugin_instance.children:
                     try:
+                        self.state = 'running'
                         result = self.run(instance=instance_wrap.instance)
+                        self.state = 'success'
                     except:
-                        print("validation failed")
+                        self.state = 'failed'
+                    print("validate " + self.state, instance_wrap.instance)
         # if not implemented, return empty list
         except NotImplementedError:
             print('failed')
@@ -118,6 +118,10 @@ class Session(Node):
         self.registered_plugins = []
         self.instances = []  # plugin_instances
         super().__init__()
+
+    @property
+    def plugin_instances(self):
+        return self.instances
 
     def run(self):
         for plugin_class in self.registered_plugins:
@@ -159,13 +163,11 @@ class InstanceWrapper(Node):
 
 class CollectHelloWorld(Collector):
     def run(self):
-        print('CollectHelloWorld run')
         return ["Hello World"]
 
 
 class CollectHelloWorldList(Collector):
     def run(self):
-        print('CollectHelloWorldList run')
         return ["Hello", "World"]
 
 
@@ -177,10 +179,7 @@ class ValidateHelloWorld(Validator):
         self.state = 'not_yet_ran'
 
     def run(self, instance):
-        self.state = 'running'
-        print('ValidateHelloWorld run')
         assert instance == "Hello World"
-        self.state = 'success'
 
 
 session = Session()
@@ -189,8 +188,9 @@ session.registered_plugins.append(CollectHelloWorldList)
 session.registered_plugins.append(ValidateHelloWorld)
 session.run()
 
+print()
 # print validation results instances
-for plugin in session.instances:
+for plugin in session.plugin_instances:
     print(plugin)
     print(plugin.instances)
     for inst in plugin.instances:
