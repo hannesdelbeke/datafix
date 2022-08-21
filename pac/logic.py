@@ -83,7 +83,7 @@ class Node(object):
             InstanceWrapper (World)==>> initialized
           ValidateHelloWorld ==>> failed
         """
-        txt = '  '*depth + self.__class__.__name__ + ' ==>> ' + self.state + '\n'
+        txt = '  '*depth + self.__class__.__name__ + ' ==>> ' + str(self.state) + '\n'
         for child in self.children:
             try:
                 txt += child.pp_tree(depth=depth+1).replace('==>>', f'({child.instance})==>>')
@@ -206,6 +206,7 @@ class InstanceWrapper(Node):
                     return state
             # if node == self:
             #     return state
+        return state
 
     @state.setter
     def state(self, state):
