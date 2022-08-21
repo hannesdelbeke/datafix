@@ -5,6 +5,12 @@ class ActionPrintHello(Action):
     def _run(self):
         return 'Hello'
 
+
+class ActionFail(Action):
+    def _run(self):
+        raise Exception('Fail')
+
+
 class CollectHelloWorld(Collector):
     def __init__(self, parent):
         super().__init__()
@@ -24,7 +30,7 @@ class ValidateHelloWorld(Validator):
         assert instance == "Hello World"
 
 
-def test_simple_session2():
+def test_simple_action():
     session = Session()
     session.registered_plugins.append(CollectHelloWorld)
     session.registered_plugins.append(CollectHelloWorldList)
@@ -33,3 +39,23 @@ def test_simple_session2():
 
     collector_instance = session.plugin_instances[0]
     assert 'Hello' == collector_instance.actions[0].run()
+
+
+def test_action_results():
+    # create a node with 2 actions, and store the action results for that node
+    # check if action results are stored, and is accessible from node
+
+    node = Node()
+    node.actions = [ActionPrintHello(parent=node), ActionFail(parent=node)]
+    # run both actions
+    for action in node.actions:
+        action.run()
+
+    action_1, action_2 = node.actions
+    assert action_1.results == ['success']
+    assert action_2.results == ['failed']
+
+    for action in node.actions:
+        action.run()
+    assert action_1.results == ['success', 'success']
+    # TODO better handle state and result. unify state and result.?

@@ -34,6 +34,7 @@ class Node(object):
     def __init__(self, parent=None, name=None):
         # self.action_class = None
         self.actions = []
+        self.results = []
 
         self.parent = parent  # node that created this node
         self.children = []  # nodes created by this node
@@ -59,14 +60,18 @@ class Node(object):
         """
         public method, don't overwrite this
         """
+        result = None
         try:
             self.state = 'running'
             result = self._run()
             self.state = 'success'
-            return result
         except Exception as e:
             self.state = 'failed'
             print(e)
+
+        self.results.append(self.state)
+
+        return result
 
     def pp_tree(self, depth=0):
         """
