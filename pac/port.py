@@ -1,4 +1,4 @@
-import orders.pyblish
+import pac.orders.pyblish
 
 # create collect n validation plugins
 # add fix action
@@ -46,7 +46,7 @@ class Action(object):
 
 
 class Collector(Node):  # session plugin (context), session is a node
-    order = orders.pyblish.COLLECT
+    order = pac.orders.pyblish.COLLECT
 
     @property
     def instances(self):
@@ -80,7 +80,7 @@ class Collector(Node):  # session plugin (context), session is a node
 
 # get all instances from session (from collectors) from type X (mesh) and validate
 class Validator(Node): # instance plugin
-    order = orders.pyblish.VALIDATE
+    order = pac.orders.pyblish.VALIDATE
 
     def __init__(self, parent):
         self.actions = []
@@ -180,61 +180,3 @@ class ValidateHelloWorld(Validator):
 
     def run(self, instance):
         assert instance == "Hello World"
-
-
-session = Session()
-session.registered_plugins.append(CollectHelloWorld)
-session.registered_plugins.append(CollectHelloWorldList)
-session.registered_plugins.append(ValidateHelloWorld)
-session.run()
-
-print()
-# print validation results instances
-for plugin in session.plugin_instances:
-    print(plugin)
-    print(plugin.instances)
-    for inst in plugin.instances:
-        print('STATE', inst, inst.parent, inst.parent.state)  # TODO get validation state, atm we get parent(collect) state
-
-# CollectHelloWorld run
-# CollectHelloWorldList run
-# <__main__.CollectHelloWorld object at 0x0000018B2909D790>
-# 1 [InstanceWrapper(Hello World)]
-# <__main__.CollectHelloWorldList object at 0x0000018B2909A550>
-# 2 [InstanceWrapper(Hello), InstanceWrapper(World)]
-
-
-
-# register collector
-# register validator
-
-# run registered plugins in order
-
-
-
-# class collect_meshes_blender():
-#     def run(self):
-#         """Collect meshes from Blender"""
-#         meshes = []
-#         for obj in bpy.context.selected_objects:
-#             if obj.type == 'MESH':
-#                 meshes.append(obj)
-#         return meshes
-#
-#
-# class validate_meshes_vertcount():
-#     def run(self):
-#         """Validate meshes have the correct number of vertices"""
-#         for mesh in meshes:
-#             if len(mesh.data.vertices) < 3:
-#                 return False
-#         return True
-
-
-# class validate_meshes_vertcount_dependant():
-#     def run(self):
-#         """Validate meshes have the correct number of vertices"""
-#         for mesh in meshes:
-#             if len(mesh.data.vertices) < 3:
-#                 return False
-#         return True
