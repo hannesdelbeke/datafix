@@ -1,4 +1,4 @@
-from pac.port import *
+from pac.logic import *
 
 
 def collect_hello_world(*args, **kwargs):

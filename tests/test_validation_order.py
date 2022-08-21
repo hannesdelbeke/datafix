@@ -1,4 +1,4 @@
-from pac.port import *
+from pac.logic import *
 
 
 class CollectHelloWorld(Collector):
