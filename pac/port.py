@@ -215,8 +215,6 @@ class Validator(Node):  # instance plugin
                     except:
                         state = 'failed'
                     self.results.append([instance_wrap, state])
-
-                    print("validate " + self.state, instance_wrap.instance)
         # if not implemented, return empty list
         except NotImplementedError:
             print('failed')
@@ -242,10 +240,8 @@ class Session(Node):
 
     def run(self):
         for plugin_class in self.registered_plugins:
-            print("running", plugin_class)
             plugin_instance = plugin_class(parent=self)
             self.plugin_instances.append(plugin_instance)
-            # print("running", plugin_instance)
             plugin_instance.run()
 
         # create collector instance and track in session, create backward link in collect instance

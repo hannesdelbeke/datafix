@@ -16,7 +16,7 @@ class ValidateFail(Validator):
         raise Exception('Fail')
 
 
-def main():
+def test_validation_order():
     session = Session()
     session.registered_plugins.append(CollectHelloWorld)
     session.registered_plugins.append(ValidateFail)
@@ -25,9 +25,3 @@ def main():
 
     # if we first succeed, then fail validation, then instance wrap state should fail
     assert session.plugin_instances[0].instance_wrappers[0].state != 'success'
-
-    session.pp_tree()
-
-
-if __name__ == '__main__':
-    main()
