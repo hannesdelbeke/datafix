@@ -1,4 +1,4 @@
-@@ -1,289 +0,0 @@
+
 # session
 #  collect_node
 #    instance_wrap A
@@ -90,18 +90,6 @@ class Node(object):
 
 
 class Action(Node):
-    # TODO add connection when run on node
-
-    # an action is just a function with a name?
-
-    # def print_hello():
-    #     print("Hello World")
-    # action = Action(function=print_hello, 'print_hello')
-    #
-    # action = Action()
-    # action.function = print_hello
-    # action.name = 'print_hello'
-
     def __init__(self, parent, function=None, name=None):
         # parent, whatever initiated this action
         self.function = function
@@ -134,32 +122,10 @@ class Action(Node):
             print('Not implemented', self)
 
 
-# class ActionCollect(Action):
-#     def _run(self):  # create instances node(s)
-#         print(self._run)
-#         try:
-#             self.state = 'running'
-#
-#             result = self.run()
-#
-#             for instance in result:
-#                 wrap = InstanceWrapper(instance, parent=self)
-#                 self.parent.instance_wrappers.append(wrap)
-#
-#             self.state = 'success'
-#
-#         # if not implemented, return empty list
-#         except NotImplementedError:
-#             result = []
-
-
 class Collector(Node):  # session plugin (context), session is a node
     @property
     def instance_wrappers(self):
         return self.children
-
-    # def collect(self):
-    #     raise NotImplementedError
 
     def run(self):
         result = super().run()
@@ -172,19 +138,6 @@ class Collector(Node):  # session plugin (context), session is a node
 
     def _run(self):  # create instances node(s)
         raise NotImplementedError
-        # print(self._run)
-        # # if self.action_class:
-        #     # self.action = self.action_class(parent=self)
-        #     # result = self.action._run()
-        #
-        # # result = self.run()
-        # result = self.collect()
-        #
-        # for instance in result:
-        #     wrap = InstanceWrapper(instance, parent=self)
-        #     self.instance_wrappers.append(wrap)
-        #
-        # return result
 
 
 # get all instances from session (from collectors) from type X (mesh) and validate
@@ -192,7 +145,6 @@ class Validator(Node):  # instance plugin
     def __init__(self, parent):
         super().__init__(parent=parent)
         self.results = []  # store run stuff in here
-
 
     def validate_instance(self, instance):
         raise NotImplementedError()
