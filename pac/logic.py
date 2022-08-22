@@ -34,10 +34,16 @@ class AdapterBrain(object):
     def __init__(self):
         self.registered_adapters = []
 
-    def convert(self, instance, type):
+    def adapt(self, instance, required_type):
+        if not required_type:
+            return instance
+
+        if required_type == type(instance):
+            return instance
+
         for adapter in self.registered_adapters:
-            if adapter.type_output == type:
-                return adapter.adapt(instance)
+            if adapter.type_output == required_type and adapter.type_input == type(instance):
+                return adapter.run(instance)
         return None
 
     def register_adapter(self, adapter):
@@ -65,11 +71,14 @@ class Node(object):
     def __init__(self, parent=None, name=None):
         # self.action_class = None
         self.actions = []
+        self.result = [] # run result
         self.results = []
 
         self.parent = parent  # node that created this node
         self.children = []  # nodes created by this node
         self.connections = []  # related nodes
+        # TODO instead of storing result in 1 node, and then quering this node from the other node for the result.
+        #  we can store the result in the link/connection between nodes
 
         self.state = 'initialized'
         # self.name = name
@@ -100,7 +109,8 @@ class Node(object):
             self.state = 'failed'
             print(e)
 
-        self.results.append(self.state)
+        # self.results.append(self.state)
+        self.result = result
 
         return result
 
@@ -149,9 +159,15 @@ class Collector(Node):  # session plugin (context), session is a node
 
 # get all instances from session (from collectors) from type X (mesh) and validate
 class Validator(Node):  # instance plugin
+    required_type = None
     def __init__(self, parent):
         super().__init__(parent=parent)
-        self.results = []  # store run stuff in here
+        # self.results = []  # store run stuff in here
+        # self.required_type = None  # type of instance to validate
+
+    def _validate_instance(self, instance):
+        instance = self.session.adapter_brain.adapt(instance, self.required_type)
+        return self.validate_instance(instance)
 
     def validate_instance(self, instance):
         raise NotImplementedError()
@@ -170,9 +186,10 @@ class Validator(Node):  # instance plugin
 
                     try:
                         state = 'running'
-                        result = self.validate_instance(instance=instance_wrap.instance)
+                        result = self._validate_instance(instance=instance_wrap.instance)
                         state = 'success'
-                    except:
+                    except Exception as e:
+                        print(e)
                         state = 'failed'
                     self.results.append([instance_wrap, state])
         # if not implemented, return empty list
@@ -187,6 +204,7 @@ class Validator(Node):  # instance plugin
 
 class Session(Node):
     def __init__(self):
+        self.adapter_brain = AdapterBrain()
         self.registered_plugins = []
         super().__init__()
 
@@ -229,9 +247,16 @@ class InstanceWrapper(Node):
 
     @property
     def state(self):
+
+        # other nodes, ex validator, ran on an instance node.
+        # we collect the results of the nodes and return fail if any of them failed
+
         state = 'success'
+        # TODO make this a dict
         for node in self.connections:
             for result_node, result_state in node.results:
+                if result_node != self:
+                    continue
                 if result_state == 'failed':
                     state = 'failed'
                     return state
