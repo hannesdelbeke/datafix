@@ -174,12 +174,17 @@ class Validator(Node):  # instance plugin
     def validate_instance(self, instance):
         raise NotImplementedError()
 
+    # overwrite this one! no automated adapter though
+    def _validate_instance_wrapper(self, instance_wrapper):
+        return self._validate_instance(instance=instance_wrapper.instance)
+
+    # public func, dont overwrite
     def validate_instance_wrapper(self, instance_wrapper):
         self.connections.append(instance_wrapper)
         instance_wrapper.connections.append(self)
         try:
             state = 'running'
-            result = self._validate_instance(instance=instance_wrapper.instance)
+            result = self._validate_instance_wrapper(instance_wrapper=instance_wrapper)
             state = 'success'
         except Exception as e:
             print(e)
@@ -260,6 +265,9 @@ class InstanceWrapper(Node):
 
         state = 'success'
         # TODO make this a dict
+        # a connections is a node connected to 2 nodes
+        # a connection can contain data.
+
         for node in self.connections:
             for result_node, result_state in node.results:
                 if result_node != self:
