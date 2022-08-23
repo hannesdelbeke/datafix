@@ -24,6 +24,7 @@ class IntToStringAdapter(Adapter):
     # output: instance of type string
     type_input = int
     type_output = str
+
     def _run(self, instance):
         return str(instance)
 
@@ -39,6 +40,7 @@ class CollectNumbers(Collector):
         # return [1, 2, 3]
         return [1]
 
+
 class CollectStringNumbers(Collector):
     def _run(self):
         # return ["one", "two", "three"]
@@ -47,6 +49,7 @@ class CollectStringNumbers(Collector):
 
 class ValidateNumbers(Validator):
     required_type = int
+
     def validate_instance(self, instance):
         assert type(instance) == int
 
@@ -67,7 +70,3 @@ def test_adapter():
     # get both instances
     assert session.plugin_instances[0].instance_wrappers[0].state == 'success'
     assert session.plugin_instances[1].instance_wrappers[0].state == 'success'
-
-
-
-

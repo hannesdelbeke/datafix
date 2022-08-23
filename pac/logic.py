@@ -1,4 +1,3 @@
-
 # session
 #  collect_node
 #    instance_wrap A
@@ -29,6 +28,7 @@
 # nodes contain data and connections, and connect to action_nodes and instances
 # action nodes can be run
 # instances contain data like meshes, strings, ...
+
 
 class AdapterBrain(object):
     def __init__(self):
@@ -67,11 +67,12 @@ class Adapter(object):
     # input: instance(wrapper?)
     # output: int
 
+
 class Node(object):
     def __init__(self, parent=None, name=None):
         # self.action_class = None
         self.actions = []
-        self.result = [] # run result
+        self.result = None  # run result # TODO ensure this can be identified as not run yet? combine w state?
         self.results = []
 
         self.parent = parent  # node that created this node
@@ -124,12 +125,12 @@ class Node(object):
             InstanceWrapper (World)==>> initialized
           ValidateHelloWorld ==>> failed
         """
-        txt = '  '*depth + self.__class__.__name__ + ' ==>> ' + str(self.state) + '\n'
+        txt = '  ' * depth + self.__class__.__name__ + ' ==>> ' + str(self.state) + '\n'
         for child in self.children:
             try:
-                txt += child.pp_tree(depth=depth+1).replace('==>>', f'({child.instance})==>>')
+                txt += child.pp_tree(depth=depth + 1).replace('==>>', f'({child.instance})==>>')
             except AttributeError:
-                txt += child.pp_tree(depth=depth+1)
+                txt += child.pp_tree(depth=depth + 1)
         if depth == 0:
             print(txt)
         return txt
@@ -160,6 +161,7 @@ class Collector(Node):  # session plugin (context), session is a node
 # get all instances from session (from collectors) from type X (mesh) and validate
 class Validator(Node):  # instance plugin
     required_type = None
+
     def __init__(self, parent):
         super().__init__(parent=parent)
         # self.results = []  # store run stuff in here
@@ -196,13 +198,14 @@ class Validator(Node):  # instance plugin
 
         # if not implemented, return empty list
         except NotImplementedError:
-            print('failed')
+            print('NotImplementedError')
             pass
 
 
 # make this generic CICD / super simple.
 # then marketplace with premade packages/plugins
 # language agnostic ideally
+
 
 class Session(Node):
     def __init__(self):
@@ -226,22 +229,24 @@ class Session(Node):
 
         # create collector instance and track in session, create backward link in collect instance
         # collector.run(session)
-            # store mesh instances in the collector instance, create backward link in mesh instances
+        # store mesh instances in the collector instance, create backward link in mesh instances
 
         # create validator instance and track in session, create backward link in validator instance
         # validator.run(session)
-            # get the collect instances from session, get the mesh instances from collect instances,
-            # run validate on the mesh instances, create backward link (to validate inst) in mesh instances
+        # get the collect instances from session, get the mesh instances from collect instances,
+        # run validate on the mesh instances, create backward link (to validate inst) in mesh instances
 
         # create export instance and track in session, create backward link in export instance
         # export.run(session)
-            # get the collect instances from session, get mesh inst from collect inst.
-            # run export on the mesh instances, create backward link (to export inst) in mesh instances
+        # get the collect instances from session, get mesh inst from collect inst.
+        # run export on the mesh instances, create backward link (to export inst) in mesh instances
+
 
 class InstanceWrapper(Node):
     """
     instance wrapper can only contain 1 instance. But an instance can be a list of data
     """
+
     def __init__(self, instance, parent):
         # self.actions = []
         self.instance = instance

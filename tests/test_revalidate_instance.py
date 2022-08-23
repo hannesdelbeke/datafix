@@ -29,7 +29,6 @@ def test_revalidate_instance():
     session.registered_plugins.append(CollectString)
     session.registered_plugins.append(ValidateString)
     session.run()
-    session.pp_tree()
 
     # collector1 -> collects instance 1 'Hello World'
     # collector2 -> collects instance 2 'Hello World'

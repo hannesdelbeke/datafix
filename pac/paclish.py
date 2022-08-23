@@ -12,9 +12,11 @@ class CollectHelloWorld(Collector):
     def _run(self):
         return ["Hello World"]
 
+
 class CollectHelloWorld2(Collector):
     def _run(self):
         return ["Hello World2"]
+
 
 # TODO helper func session.add_collector(function=CollectHelloWorld)
 
@@ -34,10 +36,12 @@ class CollectHelloWorldPyblish(pyblish.api.Collector):
         asset = context.create_asset('HelloWorld', family="string")
         asset[:] = ["Hello World"]
 
+
 class CollectHelloWorldPyblish2(pyblish.api.Collector):
     def process(self, context):
         asset = context.create_asset('HelloWorld2', family="string")
         asset[:] = ["Hello World2"]
+
 
 # setup and run session
 pyblish.api.deregister_all_paths()
@@ -47,6 +51,6 @@ context = pyblish.util.publish()
 
 # print results
 print(type(context))
-plugin : pyblish.api.Plugin
+plugin: pyblish.api.Plugin
 for inst in context:
     print('  ', inst, type(inst))

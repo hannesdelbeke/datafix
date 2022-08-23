@@ -33,4 +33,3 @@ def test_simple_session():
     session.registered_plugins.append(CollecB)
     session.registered_plugins.append(ValidatorAB)
     session.run()
-

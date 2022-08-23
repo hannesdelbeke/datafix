@@ -1,4 +1,3 @@
-
 # class collect_meshes_blender():
 #     def run(self):
 #         """Collect meshes from Blender"""
