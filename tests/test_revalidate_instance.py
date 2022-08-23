@@ -3,9 +3,9 @@ from pac.logic import *
 
 # use case:
 # artist runs a validation pipeline on their 3d scene
-# the tool finds an issue with a mesh and informs the artist
-# the artist fixes the mesh, and wants to re-validate the mesh, without having to revalidate the whole scene.
-# (since depending on the pipeline this could take a long time)
+# pac informs the artist of an issue with a mesh
+# the artist fixes the mesh, and wants to re-validate the mesh without revalidating the whole scene.
+# (since this could take a long time)
 
 # run whole pipeline
 # then revalidate a node
