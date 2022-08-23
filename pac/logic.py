@@ -172,6 +172,18 @@ class Validator(Node):  # instance plugin
     def validate_instance(self, instance):
         raise NotImplementedError()
 
+    def validate_instance_wrapper(self, instance_wrapper):
+        self.connections.append(instance_wrapper)
+        instance_wrapper.connections.append(self)
+        try:
+            state = 'running'
+            result = self._validate_instance(instance=instance_wrapper.instance)
+            state = 'success'
+        except Exception as e:
+            print(e)
+            state = 'failed'
+        self.results.append([instance_wrapper, state])
+
     # get the collect instances from session, get the mesh instances from collect instances,
     # run validate on the mesh instances, create backward link (to validate inst) in mesh instances
     def _run(self):  # create instances node(s)
@@ -180,18 +192,8 @@ class Validator(Node):  # instance plugin
             # get matching instances from session
             for plugin_instance in self.session.plugin_instances:
                 for instance_wrap in plugin_instance.children:
+                    self.validate_instance_wrapper(instance_wrap)
 
-                    self.connections.append(instance_wrap)
-                    instance_wrap.connections.append(self)
-
-                    try:
-                        state = 'running'
-                        result = self._validate_instance(instance=instance_wrap.instance)
-                        state = 'success'
-                    except Exception as e:
-                        print(e)
-                        state = 'failed'
-                    self.results.append([instance_wrap, state])
         # if not implemented, return empty list
         except NotImplementedError:
             print('failed')
