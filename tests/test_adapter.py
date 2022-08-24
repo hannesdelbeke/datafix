@@ -68,5 +68,5 @@ def test_adapter():
     session.run()
 
     # get both instances
-    assert session.plugin_instances[0].instance_wrappers[0].state == 'success'
-    assert session.plugin_instances[1].instance_wrappers[0].state == 'success'
+    assert session.plugin_instances[0].instance_wrappers[0].state == NodeState.SUCCEED
+    assert session.plugin_instances[1].instance_wrappers[0].state == NodeState.SUCCEED

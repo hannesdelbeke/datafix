@@ -57,5 +57,5 @@ def test_revalidate_instance():
         connected_node.validate_instance_wrapper(instance_wrap_1)
         # connected_node.results == [[InstanceWrapper(Hello World), 'failed'], [InstanceWrapper(changed), 'success']]
 
-    assert instance_wrap_1.state == 'success'
-    assert instance_wrap_2.state != 'success'
+    assert instance_wrap_1.state == NodeState.SUCCEED
+    assert instance_wrap_2.state == NodeState.FAIL

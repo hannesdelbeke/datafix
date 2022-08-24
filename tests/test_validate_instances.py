@@ -32,13 +32,13 @@ def test_all_instances_equal():
     session.registered_plugins.append(ValidateString)
     session.run()
 
-    assert session.plugin_instances[0].instance_wrappers[0].state == 'success'
-    assert session.plugin_instances[0].instance_wrappers[1].state == 'success'
-    assert session.plugin_instances[0].instance_wrappers[2].state == 'success'
+    assert session.plugin_instances[0].instance_wrappers[0].state == NodeState.SUCCEED
+    assert session.plugin_instances[0].instance_wrappers[1].state == NodeState.SUCCEED
+    assert session.plugin_instances[0].instance_wrappers[2].state == NodeState.SUCCEED
 
     session = Session()
     session.registered_plugins.append(CollectStringFail)
     session.registered_plugins.append(ValidateString)
     session.run()
 
-    assert session.plugin_instances[0].instance_wrappers[0].state == 'failed'
+    assert session.plugin_instances[0].instance_wrappers[0].state == NodeState.FAIL

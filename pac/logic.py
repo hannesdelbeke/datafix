@@ -30,6 +30,25 @@
 # instances contain data like meshes, strings, ...
 
 
+from enum import Enum
+
+
+# inspiration https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-map-state.html
+# success could be 0, everything else is a failure/warning ...
+class NodeState(Enum):
+    INIT = "initialized"  # not run
+    SUCCEED = "succeed"  # run and success, match AWS
+    FAIL = "exception"  # run and exception, match AWS
+    RUNNING = "running"  # run and running / in progress
+    # PAUSED = "paused"
+    # STOPPED = "stopped"
+    # SKIPPED = "skipped"
+    # DISABLED = "disabled"
+    # PASS
+    # WAIT
+    # CHOICE
+
+
 class AdapterBrain(object):
     def __init__(self):
         self.registered_adapters = []
@@ -103,11 +122,11 @@ class Node(object):
         """
         result = None
         try:
-            self.state = 'running'
+            self.state = NodeState.RUNNING
             result = self._run()
-            self.state = 'success'
+            self.state = NodeState.SUCCEED
         except Exception as e:
-            self.state = 'failed'
+            self.state = NodeState.FAIL
             print(e)
 
         # self.results.append(self.state)
@@ -118,9 +137,9 @@ class Node(object):
     def pp_tree(self, depth=0):
         """
         Session ==>> initialized
-          CollectHelloWorld ==>> success
+          CollectHelloWorld ==>> succeed
             InstanceWrapper (Hello World)==>> initialized
-          CollectHelloWorldList ==>> success
+          CollectHelloWorldList ==>> succeed
             InstanceWrapper (Hello)==>> initialized
             InstanceWrapper (World)==>> initialized
           ValidateHelloWorld ==>> failed
@@ -183,12 +202,12 @@ class Validator(Node):  # instance plugin
         self.connections.append(instance_wrapper)
         instance_wrapper.connections.append(self)
         try:
-            state = 'running'
+            state = NodeState.RUNNING
             result = self._validate_instance_wrapper(instance_wrapper=instance_wrapper)
-            state = 'success'
+            state = NodeState.SUCCEED
         except Exception as e:
             print(e)
-            state = 'failed'
+            state = NodeState.FAIL
         self.results.append([instance_wrapper, state])
 
     # get the collect instances from session, get the mesh instances from collect instances,
@@ -263,7 +282,7 @@ class InstanceWrapper(Node):
         # other nodes, ex validator, ran on an instance node.
         # we collect the results of the nodes and return fail if any of them failed
 
-        state = 'success'
+        state = NodeState.SUCCEED
         # TODO make this a dict
         # a connections is a node connected to 2 nodes
         # a connection can contain data.
@@ -272,8 +291,8 @@ class InstanceWrapper(Node):
             for result_node, result_state in node.results:
                 if result_node != self:
                     continue
-                if result_state == 'failed':
-                    state = 'failed'
+                if result_state == NodeState.FAIL:
+                    state = NodeState.FAIL
                     return state
             # if node == self:
             #     return state

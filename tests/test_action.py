@@ -52,10 +52,10 @@ def test_action_results():
         action.run()
 
     action_1, action_2 = node.actions
-    assert action_1.state == 'success'
-    assert action_2.state == 'failed'
+    assert action_1.state == NodeState.SUCCEED
+    assert action_2.state == NodeState.FAIL
 
     for action in node.actions:
         action.run()
-    assert action_1.state == 'success'
-    assert action_2.state == 'failed'
+    assert action_1.state == NodeState.SUCCEED
+    assert action_2.state == NodeState.FAIL
