@@ -49,24 +49,8 @@ class NodeState(Enum):
     # CHOICE
 
 
-class AdapterBrain(object):
-    def __init__(self):
-        self.registered_adapters = []
-
-    def adapt(self, instance, required_type):
-        if not required_type:
-            return instance
-
-        if required_type == type(instance):
-            return instance
-
-        for adapter in self.registered_adapters:
-            if adapter.type_output == required_type and adapter.type_input == type(instance):
-                return adapter.run(instance)
-        return None
-
-    def register_adapter(self, adapter):
-        self.registered_adapters.append(adapter)
+# class AdapterBrain(object):
+#     def __init__(self):
 
 
 class Adapter(object):
@@ -187,7 +171,7 @@ class Validator(Node):  # instance plugin
         # self.required_type = None  # type of instance to validate
 
     def _validate_instance(self, instance):
-        instance = self.session.adapter_brain.adapt(instance, self.required_type)
+        instance = self.session.adapt(instance, self.required_type)
         return self.validate_instance(instance)
 
     def validate_instance(self, instance):
@@ -233,8 +217,8 @@ class Validator(Node):  # instance plugin
 
 class Session(Node):
     def __init__(self):
-        self.adapter_brain = AdapterBrain()
         self.registered_plugins = []
+        self.registered_adapters = []
         super().__init__()
 
     @property
@@ -264,6 +248,21 @@ class Session(Node):
         # export.run(session)
         # get the collect instances from session, get mesh inst from collect inst.
         # run export on the mesh instances, create backward link (to export inst) in mesh instances
+
+    def adapt(self, instance, required_type):
+        if not required_type:
+            return instance
+
+        if required_type == type(instance):
+            return instance
+
+        for adapter in self.registered_adapters:
+            if adapter.type_output == required_type and adapter.type_input == type(instance):
+                return adapter.run(instance)
+        return None
+
+    def register_adapter(self, adapter):
+        self.registered_adapters.append(adapter)
 
 
 class InstanceWrapper(Node):

@@ -55,12 +55,9 @@ class ValidateNumbers(Validator):
 
 
 def test_adapter():
-    adapterBrain = AdapterBrain()
-    adapterBrain.register_adapter(StringToIntAdapter())
-    adapterBrain.register_adapter(IntToStringAdapter())
-
     session = Session()
-    session.adapter_brain = adapterBrain
+    session.register_adapter(StringToIntAdapter())
+    session.register_adapter(IntToStringAdapter())
 
     session.registered_plugins.append(CollectNumbers)
     session.registered_plugins.append(CollectStringNumbers)
