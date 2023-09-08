@@ -59,3 +59,19 @@ def test_action_results():
         action.run()
     assert action_1.state == NodeState.SUCCEED
     assert action_2.state == NodeState.FAIL
+    # TODO better handle state and result. unify state and result.?
+
+    # if we have a mixed result / success.
+    # action should return the lowest result
+    # CRITICAL 50
+    # ERROR 40
+    # WARNING 30
+    # INFO 20
+    # DEBUG 10
+    # NOTSET 0
+
+    # SUCCESS
+    # FAIL
+    # SKIPPED?
+    # NOT RUN
+    # FAIL BUT CONTINUE (WARNING)
