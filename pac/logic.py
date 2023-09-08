@@ -84,7 +84,7 @@ class Node(object):
         # TODO instead of storing result in 1 node, and then quering this node from the other node for the result.
         #  we can store the result in the link/connection between nodes
 
-        self.state = 'initialized'
+        self.state = NodeState.INIT
         # self.name = name
 
     @property
@@ -171,7 +171,9 @@ class Validator(Node):  # instance plugin
         # self.required_type = None  # type of instance to validate
 
     def _validate_instance(self, instance):
-        instance = self.session.adapt(instance, self.required_type)
+        instance = self.session.adapt(
+            instance, self.required_type
+        )  # todo validator shouldnt care about adapter, node should handle this itslef. or session manager
         return self.validate_instance(instance)
 
     def validate_instance(self, instance):
@@ -272,7 +274,7 @@ class InstanceWrapper(Node):
 
     def __init__(self, instance, parent):
         # self.actions = []
-        self.instance = instance
+        self.instance = instance  # custom data saved in the node
         super().__init__(parent=parent)
 
     @property
