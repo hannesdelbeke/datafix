@@ -23,12 +23,12 @@ class NodeState(Enum):
 
 # default nodes are data nodes, which contain data
 class Node:
-    def __init__(self, parent=None, data=None):
+    def __init__(self, parent=None, data=None, name=None):
         # self.id = None
         self.parent = parent  # node that created this node
         self.children = []  # nodes created by this node
         self.state = NodeState.INIT
-        self.name = self.__class__.__name__  # __name__
+        self.name = name or self.__class__.__name__  # __name__
         self.data = data
         self.__output_links = {}  # when node is an input node for another node # todo
 
@@ -40,12 +40,11 @@ class Node:
 
     def __getattribute__(self, item):
         value = super().__getattribute__(item)
-        # exception for __class__ attr which always is of type Node
-        if item == "__class__":
-            return value
         # if value is a Node, run it and return the result
-        if isinstance(value, Node):
-            return value.output()
+        # exception for __class__ attr which always is of type Node
+        if isinstance(value, Node) and item != "__class__":
+            value = value.output()
+        return value
 
     def __setattr__(self, key, value):
         super().__setattr__(key, value)
