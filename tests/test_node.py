@@ -24,19 +24,26 @@ class TestNode(TestCase):
     def test_parent(self):
         a = Node(name="a")
         b = Node(name="b")
+        c = Node(name="c")
         a.parent = b
 
         assert a.parent == b
 
-    # def test_config(self):
-    #     # todo serialise deserialise
-    #     a = Node(name="a")
-    #     b = Node(name="b")
-    #     a.parent = b
-    #
-    #     print("PARENT", a.parent)
-    #     data = a.to_config()
-    #     import pprint
-    #     pprint.pprint(data)
-    #     # save out this graph
-    #     # take a random node, and ask for the connected nodes to get graph
+        b.parent = c
+        c.parent = a  # to check we never have an infinite loop, not used in code
+        assert a.parent == b
+        assert b.parent == c
+        assert a.input_nodes == [b]
+
+    def test_config(self):
+        # todo serialise deserialise
+        a = Node(name="a")
+        b = Node(name="b")
+        a.parent = b
+
+        data = a.to_config()
+        import pprint
+
+        pprint.pprint(data)
+        # save out this graph
+        # take a random node, and ask for the connected nodes to get graph

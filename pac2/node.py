@@ -71,7 +71,6 @@ class Node:
             if not isinstance(child, Node):
                 raise TypeError(f"Children must be a list of Nodes, not '{type(child)}'")
 
-        print("children value", value)
         # disconnect from previous children
         for child in self.__children:
             child.parent = None
@@ -83,7 +82,6 @@ class Node:
 
     @property
     def parent(self) -> "typing.Optional[Node]":
-        print("get parent", self.__parent)
         return self.__parent
 
     @parent.setter
@@ -95,17 +93,12 @@ class Node:
 
         # disconnect from previous parent
         if self.__parent:
-            print("disconnect from previous parent", self.__parent, self.__parent.children)
             self.__parent.children.remove(self)
 
         # connect to new parent
-        print("connect to new parent", value)
         self.__parent = value
-        # if value:
-        #     value.children.append(self)
-
-        print("parent is now ", self.__parent)
-        print("value is now ", value)
+        if value:
+            value.children.append(self)
 
     # def __delattr__(self, item):
     #     print("del attr", item)
@@ -180,10 +173,11 @@ class Node:
 
     def iter_value_attrs(self) -> "typing.Generator[typing.Tuple[str, typing.Any]]":
         """iterate over all attributes that are not callable"""
-        for attr in dir(self):
+        # for attr in dir(self):
+        for attr, value in self.__dict__.items():
             if attr in ("input_nodes", "connected_nodes"):  # skip method that runs this method
                 continue
-            value = getattr(self, attr)
+            # value = getattr(self, attr)
             if callable(value):
                 continue
             # also skip method-wrappers & built-in methods
@@ -234,17 +228,17 @@ class Node:
     def serialize(self, bake_data=False):
         """convert to dict"""  # todo save data to json / needs lots of work cleanup
         dct = copy.deepcopy(self.__dict__)  # prevent mutating self.__dict__
-        # edges = [] # todo support edge attrs
-        for attr_name, value in dct.items():
-            if isinstance(value, Node):
-                if bake_data:
-                    dct[attr_name] = value.output()
-                # else:
-                #     dct[attr_name] = None
-                # edges.append((self.id, attr_name, value.id))
-
-            # todo recursive serialise. when we dont have a node.
-            #  e.g. support nodes in arrays in attributes
+        # # edges = [] # todo support edge attrs
+        # for attr_name, value in dct.items():
+        #     if isinstance(value, Node):
+        #         if bake_data:
+        #             dct[attr_name] = value.output()
+        #         # else:
+        #         #     dct[attr_name] = None
+        #         # edges.append((self.id, attr_name, value.id))
+        #
+        #     # todo recursive serialise. when we dont have a node.
+        #     #  e.g. support nodes in arrays in attributes
 
         return dct
 
@@ -253,23 +247,17 @@ class Node:
         config["nodes"] = nodes = []
         config["edges"] = edges = []  # todo support edge attrs
 
-        # print args and their vaslues of self
-        for attr_name, value in self.iter_value_attrs():
-            print(attr_name, value)
-
-        print("======parent", self.parent)
-
         # export node, and all connected nodes.
         for node in self.connected_nodes:
-            print("node", node)
+
             node_config = node.serialize()
             nodes.append(node_config)
+
             for attr_name, value in node_config.items():
+
                 if isinstance(value, Node):
                     edges.append((node.id, attr_name, value.id))
 
-        config["nodes"] = nodes
-        config["edges"] = edges
         return config
 
     # def _replace_node(self, value):
