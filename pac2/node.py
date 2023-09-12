@@ -164,6 +164,11 @@ class Node:
     def __setattr__(self, key, value) -> None:
         super().__setattr__(key, value)
 
+        # don't track if it's a property, else attributes are duplicated in the '.__output_links ' dict
+        # {'_Node__parent': Node(b), 'parent': Node(b)}
+        if key not in self.__dict__:
+            return
+
         # track connected nodes
         if isinstance(value, Node):
             value.__output_links[key] = self
@@ -242,16 +247,24 @@ class Node:
 
         return dct
 
-    def to_config(self):
-        config = {}
-        config["nodes"] = nodes = []
-        config["edges"] = edges = []  # todo support edge attrs
+    def to_config(self, _collected_nodes=None, _config=None):
+        config = _config or {}
+        config["nodes"] = node_configs = config.get("nodes", [])
+        config["edges"] = edges = config.get("edges", [])  # todo support edge attrs
+
+        collected_nodes = _collected_nodes or set()
 
         # export node, and all connected nodes.
         for node in self.connected_nodes:
 
+            if node in collected_nodes:
+                continue
+            collected_nodes.add(node)
+            node.to_config(collected_nodes, config)
+
+            # collect nodes
             node_config = node.serialize()
-            nodes.append(node_config)
+            node_configs.append(node_config)
 
             for attr_name, value in node_config.items():
 

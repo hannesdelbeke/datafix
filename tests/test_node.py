@@ -38,8 +38,10 @@ class TestNode(TestCase):
     def test_config(self):
         # todo serialise deserialise
         a = Node(name="a")
+        c = Node(name="c")
         b = Node(name="b")
         a.parent = b
+        b.parent = c
 
         data = a.to_config()
         import pprint
@@ -47,3 +49,9 @@ class TestNode(TestCase):
         pprint.pprint(data)
         # save out this graph
         # take a random node, and ask for the connected nodes to get graph
+
+    def test_output_links(self):
+        a = Node(name="a")
+        b = Node(name="b", data="hello")
+        a.parent = b
+        assert len(b.output_links) == 1, f"should have 1 output link, but has {len(b.output_links)}, {b.output_links}"
