@@ -39,11 +39,11 @@ class Node:
         #     i = 1
         return node_path
 
-    def __init__(self, parent=None, data=None, name=None):
+    def __init__(self, parent=None, data=None, name=None, state=None, id=None, children=None):
 
         #  --- CONNECTIONS ---
         # if we add a new node type attribute, add it to __getattribute__
-        self.__children = []  # nodes created by this node, this is a type of connection
+        self.__children = children or []  # nodes created by this node, this is a type of connection
         self.__output_links = {}  # when node is an input node for another node, dict with {attr name: node, ...}
         self.__parent = parent  # node that created this node, this is a type of connection
         if parent:  # init parents children
@@ -51,8 +51,8 @@ class Node:
 
         # id module + name
         self.name = name or self.__class__.__name__ or ""  # __name__
-        self.id = self.__unique_id(name=name)
-        self.state = Node.State.INIT
+        self.id = id or self.__unique_id(name=name)
+        self.state = state or Node.State.INIT  # todo convert str to enum
         self.data = data  # data (like int, str, array,...) or settings for a processNode
         # self.actions = []  # callables or other nodes, actions to run on this node, same as callable attributes? call/run is an action too
 
@@ -156,7 +156,7 @@ class Node:
             "parent",
             "output_links",
             "children",
-        ):  # , "__parent", "parent", "children", "output_links"):
+        ):
             value = value.output()
 
         return value
@@ -164,37 +164,33 @@ class Node:
     def __setattr__(self, key, value) -> None:
         super().__setattr__(key, value)
 
-        # don't track if it's a property, else attributes are duplicated in the '.__output_links ' dict
-        # {'_Node__parent': Node(b), 'parent': Node(b)}
+        # don't track Node if it's a property, else attributes are duplicated in self.__output_links
+        # e.g. {'_Node__parent': Node(b), 'parent': Node(b)}
         if key not in self.__dict__:
             return
-
-        # track connected nodes
         if isinstance(value, Node):
             value.__output_links[key] = self
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"  # e.g. Node(hello)
 
-    def iter_value_attrs(self) -> "typing.Generator[typing.Tuple[str, typing.Any]]":
-        """iterate over all attributes that are not callable"""
-        # for attr in dir(self):
-        for attr, value in self.__dict__.items():
-            if attr in ("input_nodes", "connected_nodes"):  # skip method that runs this method
-                continue
-            # value = getattr(self, attr)
-            if callable(value):
-                continue
-            # also skip method-wrappers & built-in methods
-            # if attr.startswith("__"):
-            #     continue
-            yield attr, value
-
     def iter_input_nodes(self) -> "typing.Generator[Node]":
         """iterate over all input nodes"""
-        for attr, value in self.iter_value_attrs():
+        for attr, value in self.__dict__.items():
+            if callable(value):
+                continue
+            if attr in ("input_nodes", "connected_nodes"):  # skip method that runs this method
+                continue
             if isinstance(value, Node):
                 yield value
+
+            # check list, set, dict, ...
+            try:
+                for item in value:
+                    if isinstance(item, Node):
+                        yield item
+            except TypeError:
+                pass
 
     @property
     def input_nodes(self) -> "typing.List[Node]":
@@ -212,9 +208,9 @@ class Node:
         return self.__output_links
 
     @property
-    def connected_nodes(self) -> "typing.List[Node]":
+    def connected_nodes(self) -> "typing.Set[Node]":
         """return all connected nodes"""
-        return self.input_nodes + self.output_nodes
+        return set(self.input_nodes) | set(self.output_nodes)
 
     # def graph(self):
     # get all connected nodes
@@ -232,7 +228,7 @@ class Node:
 
     def serialize(self, bake_data=False):
         """convert to dict"""  # todo save data to json / needs lots of work cleanup
-        dct = copy.deepcopy(self.__dict__)  # prevent mutating self.__dict__
+        node_config = copy.deepcopy(self.__dict__)  # prevent mutating self.__dict__
         # # edges = [] # todo support edge attrs
         # for attr_name, value in dct.items():
         #     if isinstance(value, Node):
@@ -245,9 +241,29 @@ class Node:
         #     # todo recursive serialise. when we dont have a node.
         #     #  e.g. support nodes in arrays in attributes
 
-        return dct
+        node_config["state"] = node_config["state"].name
 
-    def to_config(self, _collected_nodes=None, _config=None):
+        return node_config
+
+    def config(self):
+        config = self._to_config()
+
+        # cleanup config
+        for node_config in config["nodes"]:
+            for attr_name in ("_Node__children", "_Node__output_links", "_Node__parent"):
+                del node_config[attr_name]
+
+        return config
+
+    def graph_from_config(self, config):
+        node_configs = config["nodes"]
+        edge_configs = config["edges"]
+        for node_config in node_configs:
+            node = Node()
+            node.deserialize(node_config)
+            # todo add to graph
+
+    def _to_config(self, _collected_nodes=None, _config=None):
         config = _config or {}
         config["nodes"] = node_configs = config.get("nodes", [])
         config["edges"] = edges = config.get("edges", [])  # todo support edge attrs
@@ -257,17 +273,18 @@ class Node:
         # export node, and all connected nodes.
         for node in self.connected_nodes:
 
+            # recursive
             if node in collected_nodes:
                 continue
             collected_nodes.add(node)
-            node.to_config(collected_nodes, config)
+            node._to_config(collected_nodes, config)
 
             # collect nodes
             node_config = node.serialize()
             node_configs.append(node_config)
 
+            # edges
             for attr_name, value in node_config.items():
-
                 if isinstance(value, Node):
                     edges.append((node.id, attr_name, value.id))
 
@@ -294,7 +311,7 @@ class Node:
 
     # get all attrs, if any contains Nodes, recursive run this method on it.
     # dct = {}
-    # for attr, value in self.iter_value_attrs():
+    # for attr, value in self._iter_value_attrs():
     #     # value = getattr(self, attr)
     #     if isinstance(value, Node):  # todo do we need exception for __class__ ?
     #         dct[attr] = value.serialize()

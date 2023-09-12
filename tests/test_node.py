@@ -30,10 +30,16 @@ class TestNode(TestCase):
         assert a.parent == b
 
         b.parent = c
-        c.parent = a  # to check we never have an infinite loop, not used in code
         assert a.parent == b
+        assert b.children == [a]
         assert b.parent == c
+        assert c.children == [b]
         assert a.input_nodes == [b]
+        assert b.output_nodes == [a]
+
+        c.parent = a  # to check we never enter an infinite loop, this should be avoided but just in case
+        assert a.children == [c]
+        assert a.connected_nodes == set([b, c]), f"should be [b, c] but is {a.connected_nodes}"
 
     def test_config(self):
         # todo serialise deserialise
@@ -43,7 +49,7 @@ class TestNode(TestCase):
         a.parent = b
         b.parent = c
 
-        data = a.to_config()
+        data = a.config()
         import pprint
 
         pprint.pprint(data)
