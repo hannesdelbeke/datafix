@@ -48,13 +48,9 @@ class TestNode(TestCase):
         b = Node(name="b")
         a.parent = b
         b.parent = c
-
-        data = a.config()
-        import pprint
-
-        pprint.pprint(data)
-        # save out this graph
-        # take a random node, and ask for the connected nodes to get graph
+        data = a.config()  # serialise
+        a2 = Node.graph_from_config(data)  # deserialise
+        assert a2.parent.id == b.id
 
     def test_output_links(self):
         a = Node(name="a")

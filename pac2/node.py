@@ -56,6 +56,8 @@ class Node:
         self.data = data  # data (like int, str, array,...) or settings for a processNode
         # self.actions = []  # callables or other nodes, actions to run on this node, same as callable attributes? call/run is an action too
 
+        self._nodes[self.id] = self  # store all nodes, to check for unqiue id
+
     @property
     def children(self):
         return self.__children
@@ -241,12 +243,16 @@ class Node:
         #     # todo recursive serialise. when we dont have a node.
         #     #  e.g. support nodes in arrays in attributes
 
-        node_config["state"] = node_config["state"].name
+        node_config["state"] = (
+            node_config["state"].name if isinstance(node_config["state"], Enum) else node_config["state"]
+        )  # todo cleanup
 
         return node_config
 
     def config(self):
         config = self._to_config()
+
+        config["root"] = self.id
 
         # cleanup config
         for node_config in config["nodes"]:
@@ -254,14 +260,6 @@ class Node:
                 del node_config[attr_name]
 
         return config
-
-    def graph_from_config(self, config):
-        node_configs = config["nodes"]
-        edge_configs = config["edges"]
-        for node_config in node_configs:
-            node = Node()
-            node.deserialize(node_config)
-            # todo add to graph
 
     def _to_config(self, _collected_nodes=None, _config=None):
         config = _config or {}
@@ -272,7 +270,6 @@ class Node:
 
         # export node, and all connected nodes.
         for node in self.connected_nodes:
-
             # recursive
             if node in collected_nodes:
                 continue
@@ -289,6 +286,36 @@ class Node:
                     edges.append((node.id, attr_name, value.id))
 
         return config
+
+    @classmethod
+    def graph_from_config(cls, config, new_if_exists=False):
+        """
+        create a graph from a config dict
+        you can also load multiple partial configs
+        """
+        node_configs = config["nodes"]
+        edge_configs = config["edges"]
+        root_id = config["root"]
+        root_node = None
+
+        # create or reuse existing nodes & set attributes
+        for node_config in node_configs:
+            if new_if_exists:
+                node = cls(**node_config)
+            else:
+                node = cls._nodes.get(node_config["id"])
+
+            if node.id == root_id:
+                root_node = node
+
+        # connect existing nodes
+        for edge_config in edge_configs:
+            node_id, attr_name, target_id = edge_config
+            node = cls._nodes[node_id]
+            target_node = cls._nodes[target_id]
+            setattr(node, attr_name, target_node)
+
+        return root_node
 
     # def _replace_node(self, value):
     #
