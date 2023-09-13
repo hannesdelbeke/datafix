@@ -122,6 +122,7 @@ class Node:
 
             frames = inspect.stack()
             # i = 0
+            # search the callstack for the first Node
             for f in frames:
                 caller_frame = f.frame.f_back
                 if not caller_frame:
@@ -135,6 +136,7 @@ class Node:
                     self.runtime_connections.add(caller_object)
                     caller_object.runtime_connections.add(self)
                     # i += 1
+                    break  # only save "direct" caller
 
         # if value is a Node, run it and return the result
         # exception for __class__ attr which always is of type Node

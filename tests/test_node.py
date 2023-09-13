@@ -86,4 +86,5 @@ class TestNode(TestCase):
         b.callable = get_c_output
         result = a.output()
         assert result == "hello2"
-        print(a.runtime_connections)
+        assert a.runtime_connections == {b}, f"should be [Node(b)] but is {a.runtime_connections}"
+        assert b.runtime_connections == {a, c}, f"should be [Node(a), Node(c)] but is {b.runtime_connections}"
