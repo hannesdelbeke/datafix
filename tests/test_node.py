@@ -57,3 +57,14 @@ class TestNode(TestCase):
         b = Node(name="b", data="hello")
         a.parent = b
         assert len(b.output_links) == 1, f"should have 1 output link, but has {len(b.output_links)}, {b.output_links}"
+
+    def test_runtime_connection(self):  # todo, currently fails
+        a = ProcessNode(name="a")
+        b = Node(name="b", data="hello")
+
+        def func():
+            return b.output()
+
+        a.callable = func
+        assert a.output() == "hello"
+        assert b in a.connected_nodes, f"connected_nodes should contain Node(b), but is {a.connected_nodes}"
