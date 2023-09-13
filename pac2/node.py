@@ -121,7 +121,7 @@ class Node:
             import inspect
 
             frames = inspect.stack()
-            i = 0
+            # i = 0
             for f in frames:
                 caller_frame = f.frame.f_back
                 if not caller_frame:
@@ -130,11 +130,11 @@ class Node:
                 caller_object = caller_frame.f_locals.get("self")
 
                 if isinstance(caller_object, Node) and caller_object != self:
-                    print("caller_object", caller_object.id, "is calling self", self.id, "level", i)
+                    # print("caller_object", caller_object.id, "is calling self", self.id, "level", i)
                     # todo also save method name / attr where the node is used
                     self.runtime_connections.add(caller_object)
                     caller_object.runtime_connections.add(self)
-                    i += 1
+                    # i += 1
 
         # if value is a Node, run it and return the result
         # exception for __class__ attr which always is of type Node
@@ -147,7 +147,10 @@ class Node:
             "parent",
             "output_links",
             "children",
+            "output",
+            "callable",
         ):
+            print(f"running node {value.name} from {self.id} for item {item}")
             value = value.output()
 
         return value
@@ -329,13 +332,13 @@ class Node:
 
 
 class ProcessNode(Node):
-    def __init__(self, callable=None, raise_exception=False, *args, **kwargs):
+    def __init__(self, callable=None, raise_exception=False, name=None, *args, **kwargs):
         """
         raise_exception: if True, raise exception when callable fails, else node saves exception in self.state. used for debugging
         """
         super().__init__(*args, **kwargs)
         self.callable = callable
-        self.name = callable.__name__ if callable else self.__class__.__name__
+        self.name = name or callable.__name__ if callable else self.__class__.__name__
         self.continue_on_error = False  # warning or error
         self.raise_exception = raise_exception
 
@@ -344,15 +347,14 @@ class ProcessNode(Node):
             return
         try:
             self.state = Node.State.RUNNING
-            print("-----------------------------------------self call", self.callable)
             result = self.callable(*args, **kwargs)  # todo does this pass self?
-            print("-------------------success")
             self.state = Node.State.SUCCEED
             self.data = result
             return result
         except Exception as e:
             self.state = Node.State.FAIL
             if self.raise_exception:
+                print(f"Failed to run {self.name}: {e}")
                 raise e
             else:
                 logging.error(f"Failed to run {self.name}: {e}")

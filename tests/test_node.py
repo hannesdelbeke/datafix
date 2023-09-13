@@ -65,22 +65,25 @@ class TestNode(TestCase):
         a = ProcessNode(name="a", raise_exception=True)
         b = ProcessNode(name="b", callable=temp_method, raise_exception=True)
 
-        def func():
+        def get_b_output():
             return b.output()
 
-        a.callable = func
+        a.callable = get_b_output
         result = a.output()
         assert result == "hello"
         assert a.runtime_connections == {b}, f"should be [Node(b)] but is {a.runtime_connections}"
         assert b in a.connected_nodes, f"connected_nodes should contain Node(b), but is {a.connected_nodes}"
 
-        # # test recursion level 2
-        # def temp_method2():
-        #     return "hello2"
-        #
-        # c = ProcessNode(name="c", callable=temp_method2, raise_exception=True)
-        # b.callable = c
-        #
-        # print("a call" , a.callable)
-        # result = a.output()
-        # print(result)
+        # test recursion level 2
+        def temp_method2():
+            return "hello2"
+
+        c = ProcessNode(name="c", callable=temp_method2, raise_exception=True)
+
+        def get_c_output():
+            return c.output()
+
+        b.callable = get_c_output
+        result = a.output()
+        assert result == "hello2"
+        print(a.runtime_connections)
