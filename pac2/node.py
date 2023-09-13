@@ -52,11 +52,14 @@ class Node:
         # id module + name
         self.name = name or self.__class__.__name__ or ""  # __name__
         self.id = id or self.__unique_id(name=name)
-        self.state = state or Node.State.INIT  # todo convert str to enum
         self.data = data  # data (like int, str, array,...) or settings for a processNode
         # self.actions = []  # callables or other nodes, actions to run on this node, same as callable attributes? call/run is an action too
 
         self._nodes[self.id] = self  # store all nodes, to check for unqiue id
+        self.runtime_connections = set()  # nodes used by this node during runtime, indirectly in callables
+
+        # set init state at the end, so we can query if the init has finished.
+        self.state = state or Node.State.INIT  # todo convert str to enum
 
     @property
     def children(self) -> "typing.List[Node]":
@@ -108,6 +111,30 @@ class Node:
 
     def __getattribute__(self, item) -> "typing.Any":
         value = super().__getattribute__(item)
+
+        if item in ("state"):
+            return value
+        finished_init = hasattr(self, "state")
+
+        if callable(value) and item != "__class__" and finished_init:
+
+            import inspect
+
+            frames = inspect.stack()
+            i = 0
+            for f in frames:
+                caller_frame = f.frame.f_back
+                if not caller_frame:
+                    continue
+
+                caller_object = caller_frame.f_locals.get("self")
+
+                if isinstance(caller_object, Node) and caller_object != self:
+                    print("caller_object", caller_object.id, "is calling self", self.id, "level", i)
+                    # todo also save method name / attr where the node is used
+                    self.runtime_connections.add(caller_object)
+                    caller_object.runtime_connections.add(self)
+                    i += 1
 
         # if value is a Node, run it and return the result
         # exception for __class__ attr which always is of type Node
@@ -302,24 +329,33 @@ class Node:
 
 
 class ProcessNode(Node):
-    def __init__(self, callable=None, *args, **kwargs):
+    def __init__(self, callable=None, raise_exception=False, *args, **kwargs):
+        """
+        raise_exception: if True, raise exception when callable fails, else node saves exception in self.state. used for debugging
+        """
         super().__init__(*args, **kwargs)
         self.callable = callable
         self.name = callable.__name__ if callable else self.__class__.__name__
         self.continue_on_error = False  # warning or error
+        self.raise_exception = raise_exception
 
     def output(self, *args, **kwargs) -> "typing.Any":  # protected method
         if self.state == Node.State.DISABLED:
             return
         try:
             self.state = Node.State.RUNNING
+            print("-----------------------------------------self call", self.callable)
             result = self.callable(*args, **kwargs)  # todo does this pass self?
+            print("-------------------success")
             self.state = Node.State.SUCCEED
             self.data = result
             return result
         except Exception as e:
             self.state = Node.State.FAIL
-            logging.error(f"Failed to run {self.name}: {e}")
+            if self.raise_exception:
+                raise e
+            else:
+                logging.error(f"Failed to run {self.name}: {e}")
             return
 
     # @classmethod

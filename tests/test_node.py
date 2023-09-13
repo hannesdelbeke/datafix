@@ -34,7 +34,7 @@ class TestNode(TestCase):
         assert b.children == [a]
         assert b.parent == c
         assert c.children == [b]
-        assert a.input_nodes == [b]
+        assert a.input_nodes == [b], f"should be '[Node(b)]' but is '{a.input_nodes}'"
         assert b.output_nodes == [a]
 
         c.parent = a  # to check we never enter an infinite loop, this should be avoided but just in case
@@ -59,12 +59,28 @@ class TestNode(TestCase):
         assert len(b.output_links) == 1, f"should have 1 output link, but has {len(b.output_links)}, {b.output_links}"
 
     def test_runtime_connection(self):  # todo, currently fails
-        a = ProcessNode(name="a")
-        b = Node(name="b", data="hello")
+        def temp_method():
+            return "hello"
+
+        a = ProcessNode(name="a", raise_exception=True)
+        b = ProcessNode(name="b", callable=temp_method, raise_exception=True)
 
         def func():
             return b.output()
 
         a.callable = func
-        assert a.output() == "hello"
+        result = a.output()
+        assert result == "hello"
+        assert a.runtime_connections == {b}, f"should be [Node(b)] but is {a.runtime_connections}"
         assert b in a.connected_nodes, f"connected_nodes should contain Node(b), but is {a.connected_nodes}"
+
+        # # test recursion level 2
+        # def temp_method2():
+        #     return "hello2"
+        #
+        # c = ProcessNode(name="c", callable=temp_method2, raise_exception=True)
+        # b.callable = c
+        #
+        # print("a call" , a.callable)
+        # result = a.output()
+        # print(result)
