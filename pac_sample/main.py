@@ -20,6 +20,6 @@ def register_node_folder(folder_path):
 
 
 # register pac modules / nodes / folder
-pac.manager.register_node_module(nodes)
-pac.manager.collect()  # runs collection on all registered modules
-pac.manager.validate()  # runs validation on all registered modules
+pac2.manager.register_node_module(nodes)
+pac2.manager.collect()  # runs collection on all registered modules
+pac2.manager.validate()  # runs validation on all registered modules

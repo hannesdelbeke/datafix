@@ -59,11 +59,11 @@ class Node:
         self._nodes[self.id] = self  # store all nodes, to check for unqiue id
 
     @property
-    def children(self):
+    def children(self) -> "typing.List[Node]":
         return self.__children
 
     @children.setter
-    def children(self, value):
+    def children(self, value: "typing.List[Node]"):
         # check if a list of nodes
         if not isinstance(value, list):
             raise TypeError(f"Children must be a list of Nodes, not '{type(value)}'")
@@ -87,11 +87,11 @@ class Node:
         return self.__parent
 
     @parent.setter
-    def parent(self, value):
+    def parent(self, value: "typing.Optional[Node]"):
 
         # double check if value is a node
         if value is not None and not isinstance(value, Node):
-            raise TypeError(f"Parent must be a Node, not '{type(value)}'")
+            raise TypeError(f"Parent must be a 'Node' or 'None', not '{type(value)}'")
 
         # disconnect from previous parent
         if self.__parent:
@@ -99,46 +99,8 @@ class Node:
 
         # connect to new parent
         self.__parent = value
-        if value:
+        if value is not None:
             value.children.append(self)
-
-    # def __delattr__(self, item):
-    #     print("del attr", item)
-    #     super().__delattr__(item)
-
-    # def __del__(self):
-    #     # cleanup connections before deleting
-    #     # todo de we also delete the children?
-    #     # disconnect children
-    #     # import traceback
-    #     # traceback.print_stack()
-    #
-    #     print("del", type(self))
-    #
-    #
-    #     for child in self.children:
-    #         print(self.children)
-    #         # try:
-    #         print(type(child))
-    #         print(child.name)
-    #         child.parent = None
-    #         # except AttributeError:
-    #         #     logging.warning(f"Failed to disconnect child {child} from parent {self}")
-    #
-    #     # remove self from parent
-    #     if self.parent:
-    #         # try:
-    #         self.parent.children.remove(self)
-    #         # except AttributeError:
-    #         #     logging.warning(f"Failed to disconnect parent {self.parent} from child {self}")
-    #
-    #     # remove self from nodes
-    #     if self.id in Node._nodes:
-    #         del Node._nodes[self.id]
-    #
-    #     # get all output links and set attr to none
-    #     for attr, node in self.__output_links.items():
-    #         setattr(node, attr, None)
 
     def output(self) -> "typing.Any":  # run py code
         """returns the stored data, or the callable output if it's a ProcessNode"""
@@ -270,6 +232,7 @@ class Node:
 
         # export node, and all connected nodes.
         for node in self.connected_nodes:
+
             # recursive
             if node in collected_nodes:
                 continue
@@ -280,7 +243,7 @@ class Node:
             node_config = node.serialize()
             node_configs.append(node_config)
 
-            # edges
+            # edges  # todo avoid collecting the same edge in 2 directions
             for attr_name, value in node_config.items():
                 if isinstance(value, Node):
                     edges.append((node.id, attr_name, value.id))
@@ -332,36 +295,6 @@ class Node:
     #         for i, item in enumerate(value):
     #             if isinstance(item, Node):
     #                 dct[attr_name][i] = item.id  # todo can you set set by index?
-
-    # def load_config(self, config_data, node):
-    # config_data is dict
-
-    # get all attrs, if any contains Nodes, recursive run this method on it.
-    # dct = {}
-    # for attr, value in self._iter_value_attrs():
-    #     # value = getattr(self, attr)
-    #     if isinstance(value, Node):  # todo do we need exception for __class__ ?
-    #         dct[attr] = value.serialize()
-    #     else:
-    #         dct[attr] = value
-    # return dct
-
-    # e.g. node = Node()
-    # {
-    #     "name": "node",
-    #     "data": None,
-    #     "state": "INIT",
-    #     "children": [],
-    #     "parent": None,
-    #     "output_links": {}
-    # }
-
-    # optimised
-    # {
-    #     "name": "node",
-    # }
-
-    # todo make data identify as node, e.g. with "is_node": True
 
 
 # def collector():
@@ -497,80 +430,3 @@ class ValidatorNode(ProcessNode):
 # run a process node, save  result in a data node
 # serialise it, deserialise it :)
 # now we can restart our workflow from a saved state
-
-if __name__ == '__main__':
-    from pac2.my_module import mesh_collection
-
-    import pac2.validators.deepnest
-
-    # collect validations
-    validate_nodes = list(ValidatorNode.iter_nodes_from_submodules(pac2.validators.deepnest))
-
-    # val_node.input_nodes = instance_nodes
-    print(validate_nodes)
-
-    # collect instances
-    strings = ["hello", "world", "hella", "hello"]
-    instance_nodes = [Node(data=s) for s in strings]
-
-    # node = DataNode(strings)  # todo good sample for adapter pattern
-
-    # val_node = ValidatorNode(input_nodes=instance_nodes)
-    # val_node.output()
-
-    # print(val_node)
-    # print(val_node.results)
-    # print(val_node.linked_nodes[0].linked_nodes)
-
-    # # validate instances
-    # for instance_node in instance_nodes:
-    #     for validate_node in validate_nodes:
-    #         validate_node.output(instance_node)
-
-    # validate
-    # for
-
-    # todo families / tags categories are set in config or second script. the logic/method is in sep module.
-
-    # a = object()
-    # b = 2
-    # print(Node().name)
-    # print(dir(get_node_tree))
-    # print(dir(a))
-    # print(dir(b))
-
-
-def mesh_collector():
-    import bpy
-
-    return [o for o in bpy.data.objects if o.type == "MESH"]
-
-
-class MeshCollector(ProcessNode):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def output(self):
-        result = mesh_collector()
-        for m in result:
-            Node(data=m, parent=self)
-
-
-# class NodeManager(Node):
-#     # def __int__(self):
-#
-#     # PUBLISH (run whole pipeline)
-#
-#     # discover all nodes from registered paths.
-#     # todo paths = [r"C:\Users\michael\Documents\GitHub\pac2\pac2\validators\deepnest.py"]
-#     # user is responsible for registering paths, need to have an importable py module.
-#     # helper function to add to path?
-#
-#     nodes = ProcessNode.iter_nodes_from_submodules(pac2.validators.deepnest)
-#
-#     # register (connect) all nodes to manager node
-#     manager_node = ProcessNode()  # if you call it, you publish it.
-#
-#     # run collectors, collect data nodes, tag them with categories/families
-#     # run validators (on tagged data nodes)
-#
