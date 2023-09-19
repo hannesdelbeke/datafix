@@ -328,6 +328,38 @@ class Node:
     #             if isinstance(item, Node):
     #                 dct[attr_name][i] = item.id  # todo can you set set by index?
 
+    @classmethod
+    def collect_node_classes_from_module(cls, module, recursive=True) -> "typing.Generator[ProcessNode]":
+        """find all Node classes in a module & its submodules"""
+
+        for attr_name in dir(module):
+            attr = getattr(module, attr_name)
+            if isinstance(attr, type) and issubclass(attr, Node):
+                yield attr
+
+        if recursive and hasattr(module, '__path__'):
+            import importlib
+            import pkgutil
+
+            for loader, submodule_name, is_pkg in pkgutil.walk_packages(module.__path__, module.__name__ + '.'):
+                spec = importlib.util.find_spec(submodule_name)
+                if spec is None:
+                    continue
+                submodule = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(submodule)
+                for _cls in cls.collect_node_classes_from_module(submodule, recursive=False): # recusrive false because walk_packages is already recursive
+                    # check node is not just imported in the module, but actually defined in the module
+                    if "pac2.node" in _cls.__module__:
+                        continue
+                    yield _cls
+
+    @classmethod
+    def create_nodes_from_module(cls, module, recursive=True) -> "typing.Generator[Node]":
+        """create nodes from all Node classes in a module"""
+        for node_class in cls.collect_node_classes_from_module(module, recursive=recursive):
+            node = node_class()
+            yield node
+
 
 # def collector():
 # wrap collector method in node
@@ -418,18 +450,6 @@ def import_module_from_path(module_path) -> "types.ModuleType|None":
         logging.error(f"Failed to import module from path: {module_path}")
         logging.error(f"Error: {e}")
         return None
-
-
-# def import_module_from_path(path):
-#     import pkgutil
-#     import importlib
-#
-#     module_info, name, is_pkg = list(pkgutil.iter_modules(path))[0]
-#     spec = module_info.find_spec(name)
-#     module = importlib.util.module_from_spec(spec)
-#     # todo parent_module
-#     module = importlib.import_module(f'{parent_module.__name__}.{module.__name__}')
-
 
 # todo validate different nodes, compared to each other
 # todo validate different nodes, each one individually

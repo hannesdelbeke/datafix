@@ -42,7 +42,6 @@ class TestNode(TestCase):
         assert a.connected_nodes == set([b, c]), f"should be [b, c] but is {a.connected_nodes}"
 
     def test_config(self):
-        # todo serialise deserialise
         a = Node(name="a")
         c = Node(name="c")
         b = Node(name="b")
@@ -58,7 +57,7 @@ class TestNode(TestCase):
         a.parent = b
         assert len(b.output_links) == 1, f"should have 1 output link, but has {len(b.output_links)}, {b.output_links}"
 
-    def test_runtime_connection(self):  # todo, currently fails
+    def test_runtime_connection(self):
         def temp_method():
             return "hello"
 
@@ -88,3 +87,9 @@ class TestNode(TestCase):
         assert result == "hello2"
         assert a.runtime_connections == {b}, f"should be [Node(b)] but is {a.runtime_connections}"
         assert b.runtime_connections == {a, c}, f"should be [Node(a), Node(c)] but is {b.runtime_connections}"
+
+    def test_collect_nodes_from_module(self):
+        from tests import test_modules
+
+        nodes = [x for x in Node.create_nodes_from_module(test_modules)]
+        print(nodes)
