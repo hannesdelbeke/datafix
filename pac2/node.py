@@ -11,7 +11,7 @@ class Node:
     a Node (output) can be connected to other Node attributes (input)
     """
 
-    _nodes = {}  # store all nodes, to check for unqiue id
+    _nodes = {}  # store all nodes, to check for unique id
 
     # inspiration https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-map-state.html
     # success could be 0, everything else is a failure/warning ...
@@ -31,6 +31,33 @@ class Node:
         # WAIT
         # CHOICE
 
+    def __init__(self, parent=None, data=None, name=None, state=None, id=None, children=None):
+
+        #  --- CONNECTIONS ---
+        # if we add a new node type attribute, add it to __getattribute__
+        self.__output_links = {}  # when node is an input node for another node, dict with {attr name: node, ...}
+
+        self.__children = children or []  # nodes created by this node, this is a type of connection
+        self.__parent = parent  # node that created this node, this is a type of connection
+        if parent:  # init parents children
+            parent.children.append(self)
+
+        # id module + name
+        self.name = name or self.__class__.__name__
+        self.id = id or self.__unique_id(name=name)
+        self.data = data  # data (like int, str, array,...) or settings for a processNode
+
+        # actions need a name, and a callable. not just a method.
+        # actions are optional.
+        # actions are nodes that run on another node
+        # self.actions = []  # callables or other nodes, actions to run on this node, same as callable attributes? call/run is an action too
+
+        self._nodes[self.id] = self  # store all nodes, to check for unique id
+        self.runtime_connections = set()  # nodes used by this node during runtime, indirectly in callables
+
+        # set init state at the end, so we can query if the init has finished.
+        self.state = state or Node.State.INIT  # todo convert str to enum
+
     def __unique_id(self, name):
         name = name or ""
         node_path = f"{self.__class__.__module__}.{self.__class__.__name__}.{name}"  # e.g. pac2.node.Node.hello
@@ -38,28 +65,6 @@ class Node:
         #     # add number to end of id
         #     i = 1
         return node_path
-
-    def __init__(self, parent=None, data=None, name=None, state=None, id=None, children=None):
-
-        #  --- CONNECTIONS ---
-        # if we add a new node type attribute, add it to __getattribute__
-        self.__children = children or []  # nodes created by this node, this is a type of connection
-        self.__output_links = {}  # when node is an input node for another node, dict with {attr name: node, ...}
-        self.__parent = parent  # node that created this node, this is a type of connection
-        if parent:  # init parents children
-            parent.children.append(self)
-
-        # id module + name
-        self.name = name or self.__class__.__name__ or ""  # __name__
-        self.id = id or self.__unique_id(name=name)
-        self.data = data  # data (like int, str, array,...) or settings for a processNode
-        # self.actions = []  # callables or other nodes, actions to run on this node, same as callable attributes? call/run is an action too
-
-        self._nodes[self.id] = self  # store all nodes, to check for unqiue id
-        self.runtime_connections = set()  # nodes used by this node during runtime, indirectly in callables
-
-        # set init state at the end, so we can query if the init has finished.
-        self.state = state or Node.State.INIT  # todo convert str to enum
 
     @property
     def children(self) -> "typing.List[Node]":
@@ -110,6 +115,11 @@ class Node:
         return self.data
 
     def __getattribute__(self, item) -> "typing.Any":
+
+        # todo this only triggers for attributes, not for indirect attributes like self.data.attr_name
+        #  also not handling iterables yet, and deep level iters.
+        #  also how to avoid triggering a generator, when you check the value is a node
+
         value = super().__getattribute__(item)
 
         if item in ("state"):
@@ -140,7 +150,7 @@ class Node:
 
         # if value is a Node, run it and return the result
         # exception for __class__ attr which always is of type Node
-        # todo doesnt work for .parent, where you want to get the node, not the output. Same with children and output_links
+        # doesnt work for .parent, where you want to get the node, not the output. Same with children and output_links
         if isinstance(value, Node) and item not in (
             "__class__",
             "_Node__parent",
@@ -158,6 +168,11 @@ class Node:
         return value
 
     def __setattr__(self, key, value) -> None:
+
+        # todo this only triggers for attributes, not for indirect attributes like self.data.attr_name
+        #  also not handling iterables yet, and deep level iters.
+        #  also how to avoid triggering a generator, when you check the value is a node
+
         super().__setattr__(key, value)
 
         # don't track Node if it's a property, else attributes are duplicated in self.__output_links
@@ -180,6 +195,8 @@ class Node:
             if isinstance(value, Node):
                 yield value
 
+            # todo avoid triggering a generator, when you check the value is a node
+            #  might be unwanted
             # check list, set, dict, ...
             try:
                 for item in value:
@@ -244,7 +261,8 @@ class Node:
         return node_config
 
     def config(self):
-        config = self._to_config()
+        """convert to config dict"""
+        config = self._raw_config()
 
         config["root"] = self.id
 
@@ -255,7 +273,8 @@ class Node:
 
         return config
 
-    def _to_config(self, _collected_nodes=None, _config=None):
+    def _raw_config(self, _collected_nodes=None, _config=None):
+        """helper func to convert to config dict, without cleanup"""
         config = _config or {}
         config["nodes"] = node_configs = config.get("nodes", [])
         config["edges"] = edges = config.get("edges", [])  # todo support edge attrs
@@ -269,7 +288,7 @@ class Node:
             if node in collected_nodes:
                 continue
             collected_nodes.add(node)
-            node._to_config(collected_nodes, config)
+            node._raw_config(collected_nodes, config)
 
             # collect nodes
             node_config = node.serialize()
@@ -347,7 +366,9 @@ class Node:
                     continue
                 submodule = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(submodule)
-                for _cls in cls.collect_node_classes_from_module(submodule, recursive=False): # recusrive false because walk_packages is already recursive
+                for _cls in cls.collect_node_classes_from_module(
+                    submodule, recursive=False
+                ):  # recusrive false because walk_packages is already recursive
                     # check node is not just imported in the module, but actually defined in the module
                     if "pac2.node" in _cls.__module__:
                         continue
@@ -383,7 +404,7 @@ class ProcessNode(Node):
             self.state = Node.State.RUNNING
             result = self.callable(*args, **kwargs)  # todo does this pass self?
             self.state = Node.State.SUCCEED
-            self.data = result
+            self.data = result  # todo choose if we use data to cache result, or if we use it for settings. e.g. which tri-count to validate against
             return result
         except Exception as e:
             self.state = Node.State.FAIL
@@ -414,28 +435,30 @@ class ProcessNode(Node):
     #     n = cls(callable)
     #     n.name = f"{module_name}.{method_name}"
 
-    # @classmethod  # todo comment out because swap to callable
-    # def node_from_module(cls, module, method_name=None) -> "ProcessNode":  # todo can we combine module & method_name kwarg
-    #     """create a ProcessNode from a module with method 'main'"""
-    #     method_name = method_name or 'main'
-    #     callable = getattr(module, method_name)
-    #     n = cls(callable)
-    #     n.name = f"{module.__name__}.{method_name}"  # module + method name
-    #     return n
+    @classmethod  # todo comment out because swap to callable
+    def node_from_module_method(
+        cls, module, method_name=None
+    ) -> "ProcessNode":  # todo can we combine module & method_name kwarg
+        """create a ProcessNode from a module with method 'main'"""
+        method_name = method_name or 'main'
+        callable = getattr(module, method_name)
+        n = cls(callable)
+        n.name = f"{module.__name__}.{method_name}"  # module + method name
+        return n
 
-    # @classmethod
-    # def iter_nodes_from_submodules(cls, parent_module) -> "typing.Generator[ProcessNode]":
-    #     """create ProcessNodes generator from all submodules in a module"""
-    #     import pkgutil
-    #     import importlib
-    #
-    #     for module_info, name, is_pkg in list(pkgutil.iter_modules(parent_module.__path__)):
-    #         spec = module_info.find_spec(name)
-    #         module = importlib.util.module_from_spec(spec)
-    #         module = importlib.import_module(f'{parent_module.__name__}.{module.__name__}')
-    #
-    #         node = cls.node_from_module(module)
-    #         yield node
+    @classmethod
+    def iter_nodes_from_submodules(cls, parent_module) -> "typing.Generator[ProcessNode]":
+        """create ProcessNodes generator from all submodules in a module"""
+        import pkgutil
+        import importlib
+
+        for module_info, name, is_pkg in list(pkgutil.iter_modules(parent_module.__path__)):
+            spec = module_info.find_spec(name)
+            module = importlib.util.module_from_spec(spec)
+            module = importlib.import_module(f'{parent_module.__name__}.{module.__name__}')
+
+            node = cls.node_from_module(module)
+            yield node
 
 
 def import_module_from_path(module_path) -> "types.ModuleType|None":
@@ -450,6 +473,7 @@ def import_module_from_path(module_path) -> "types.ModuleType|None":
         logging.error(f"Failed to import module from path: {module_path}")
         logging.error(f"Error: {e}")
         return None
+
 
 # todo validate different nodes, compared to each other
 # todo validate different nodes, each one individually

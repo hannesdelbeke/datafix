@@ -1,5 +1,5 @@
-from pac2 import ProcessNode, DataNode, ValidatorNode, NodeState
-import pac2.validators.deepnest
+from pac2 import ProcessNode, Node, ValidatorNode
+import pac2.pipe_template.validators.deepnest
 
 
 # collect validations
@@ -10,11 +10,14 @@ print(validate_nodes)
 
 # collect instances
 strings = ["hello", "world", "hella", "hello"]
-instance_nodes = [DataNode(s) for s in strings]
+instance_nodes = [Node(s) for s in strings]
+print(instance_nodes)
 
 # node = DataNode(strings)  # todo good sample for adapter pattern
 
-val_node = ValidatorNode(input_nodes=instance_nodes, validation_node=validate_nodes[0])  # val node 2 - validation hokup
+val_node = ValidatorNode(
+    input_nodes=instance_nodes, validation_node=validate_nodes[0]
+)  # val node 2 - validation hookup
 val_node.eval()
 
 print(val_node)
