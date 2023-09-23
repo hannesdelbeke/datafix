@@ -44,27 +44,19 @@ class Node:
 
         # id module + name
         self.name = name or self.__class__.__name__
-        self.id = id or self.__unique_id(name=name)
-        self.data = data  # data (like int, str, array,...) or settings for a processNode
+        # self.id = id or self.__unique_id(name=name)
+        self.data = data  # data (like int, str, array,...) or settings for a processNode, class data vs instance data
 
         # actions need a name, and a callable. not just a method.
         # actions are optional.
         # actions are nodes that run on another node
         # self.actions = []  # callables or other nodes, actions to run on this node, same as callable attributes? call/run is an action too
 
-        self._nodes[self.id] = self  # store all nodes, to check for unique id
+        Node._nodes[id(self)] = self  # store all nodes, to check for unique id
         self.runtime_connections = set()  # nodes used by this node during runtime, indirectly in callables
 
         # set init state at the end, so we can query if the init has finished.
-        self.state = state or Node.State.INIT  # todo convert str to enum
-
-    def __unique_id(self, name):
-        name = name or ""
-        node_path = f"{self.__class__.__module__}.{self.__class__.__name__}.{name}"  # e.g. pac2.node.Node.hello
-        # if node_path in Node._nodes:  # todo check if id is unique, ensure unique
-        #     # add number to end of id
-        #     i = 1
-        return node_path
+        self.state = state or NodeState.INIT  # todo convert str to enum / property
 
     @property
     def children(self) -> "typing.List[Node]":
@@ -141,7 +133,7 @@ class Node:
                 caller_object = caller_frame.f_locals.get("self")
 
                 if isinstance(caller_object, Node) and caller_object != self:
-                    # print("caller_object", caller_object.id, "is calling self", self.id, "level", i)
+                    # print("caller_object", caller_object.id, "is calling self", id(self), "level", i)
                     # todo also save method name / attr where the node is used
                     self.runtime_connections.add(caller_object)
                     caller_object.runtime_connections.add(self)
@@ -162,8 +154,8 @@ class Node:
             "output",
             "callable",
         ):
-            print(f"running node {value.name} from {self.id} for item {item}")
             value = value.output()
+            print(f"running node {value.name} from {id(self)} for item {item}")
 
         return value
 
@@ -249,7 +241,7 @@ class Node:
         #             dct[attr_name] = value.output()
         #         # else:
         #         #     dct[attr_name] = None
-        #         # edges.append((self.id, attr_name, value.id))
+        #         # edges.append((id(self), attr_name, value.id))
         #
         #     # todo recursive serialise. when we dont have a node.
         #     #  e.g. support nodes in arrays in attributes
@@ -264,7 +256,7 @@ class Node:
         """convert to config dict"""
         config = self._raw_config()
 
-        config["root"] = self.id
+        config["root"] = id(self)
 
         # cleanup config
         for node_config in config["nodes"]:
@@ -297,7 +289,7 @@ class Node:
             # edges  # todo avoid collecting the same edge in 2 directions
             for attr_name, value in node_config.items():
                 if isinstance(value, Node):
-                    edges.append((node.id, attr_name, value.id))
+                    edges.append((id(node), attr_name, id(value)))
 
         return config
 
@@ -319,7 +311,7 @@ class Node:
             else:
                 node = cls._nodes.get(node_config["id"])
 
-            if node.id == root_id:
+            if id(node) == root_id:
                 root_node = node
 
         # connect existing nodes
