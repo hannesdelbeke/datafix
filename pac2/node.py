@@ -4,6 +4,24 @@ import copy
 import logging
 
 
+
+# inspiration https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-map-state.html
+# success could be 0, everything else is a failure/warning ...
+class NodeState(Enum):
+    # pre run states
+    INIT = "initialized"  # not run
+    DISABLED = "disabled"
+    # run states
+    RUNNING = "running"  # run and running / in progress # todo only process node can be running, succeed, fail
+    # PAUSED = "paused"
+    # post run states
+    SUCCEED = "succeed"  # run and success, match AWS
+    FAIL = "exception"  # run and exception, match AWS
+    # STOPPED = "stopped"
+    # SKIPPED = "skipped"
+    # PASS
+    # WAIT
+    # CHOICE
 # default nodes are data nodes, which contain data
 class Node:
     """
@@ -13,23 +31,6 @@ class Node:
 
     _nodes = {}  # store all nodes, to check for unique id
 
-    # inspiration https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-map-state.html
-    # success could be 0, everything else is a failure/warning ...
-    class State(Enum):
-        # pre run states
-        INIT = "initialized"  # not run
-        DISABLED = "disabled"
-        # run states
-        RUNNING = "running"  # run and running / in progress
-        # PAUSED = "paused"
-        # post run states
-        SUCCEED = "succeed"  # run and success, match AWS
-        FAIL = "exception"  # run and exception, match AWS
-        # STOPPED = "stopped"
-        # SKIPPED = "skipped"
-        # PASS
-        # WAIT
-        # CHOICE
 
     def __init__(self, parent=None, data=None, name=None, state=None, id=None, children=None):
 
@@ -102,7 +103,7 @@ class Node:
         if value is not None:
             value.children.append(self)
 
-    def output(self) -> "typing.Any":  # run py code
+    def __call__(self) -> "typing.Any":  # run py code
         """returns the stored data, or the callable output if it's a ProcessNode"""
         return self.data
 
@@ -151,11 +152,11 @@ class Node:
             "parent",
             "output_links",
             "children",
-            "output",
+            "__call__",
             "callable",
         ):
-            value = value.output()
             print(f"running node {value.name} from {id(self)} for item {item}")
+            value = value.__call__()
 
         return value
 
@@ -238,7 +239,7 @@ class Node:
         # for attr_name, value in dct.items():
         #     if isinstance(value, Node):
         #         if bake_data:
-        #             dct[attr_name] = value.output()
+        #             dct[attr_name] = value.__call__()
         #         # else:
         #         #     dct[attr_name] = None
         #         # edges.append((id(self), attr_name, value.id))
@@ -389,17 +390,18 @@ class ProcessNode(Node):
         self.continue_on_error = False  # warning or error
         self.raise_exception = raise_exception
 
-    def output(self, *args, **kwargs) -> "typing.Any":  # protected method
-        if self.state == Node.State.DISABLED:
+
+    def __call__(self, *args, **kwargs) -> "typing.Any":  # protected method
+        if self.state == NodeState.DISABLED:
             return
         try:
-            self.state = Node.State.RUNNING
+            self.state = NodeState.RUNNING
             result = self.callable(*args, **kwargs)  # todo does this pass self?
-            self.state = Node.State.SUCCEED
+            self.state = NodeState.SUCCEED
             self.data = result  # todo choose if we use data to cache result, or if we use it for settings. e.g. which tri-count to validate against
             return result
         except Exception as e:
-            self.state = Node.State.FAIL
+            self.state = NodeState.FAIL
             if self.raise_exception:
                 print(f"Failed to run {self.name}: {e}")
                 raise e
@@ -478,18 +480,18 @@ class ValidatorNode(ProcessNode):
 
         # self.add_input_nodes(input_nodes or [])  # todod option to link input node to any attribute of this node
 
-    def output(self):  # todo
-        if self.validation_node.state == Node.State.DISABLED:
+    def __call__(self):  # todo
+        if self.validation_node.state == NodeState.DISABLED:
             return
 
         for node in self.iter_input_nodes():
-            if self.validation_node.state == Node.State.FAIL:
-                self.state = Node.State.FAIL
+            if self.validation_node.state == NodeState.FAIL:
+                self.state = NodeState.FAIL
                 return  # todo stop or continue on fail
 
-            self.validation_node.output(node)
-            if node.state != Node.State.SUCCEED:
-                self.state = Node.State.FAIL
+            self.validation_node.__call__(node)
+            if node.state != NodeState.SUCCEED:
+                self.state = NodeState.FAIL
                 return
 
     # def add_input_nodes(self, nodes):  # todo link slotname node

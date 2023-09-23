@@ -17,7 +17,7 @@ class TestNode(TestCase):
     def test_cached_result(self):
         # test that a node's output is cached
         node = ProcessNode(callable=lambda x: x + 1)
-        result = node.output(3)  # process node
+        result = node(3)  # process node
         assert result == 4
         assert node.data == 4
 
@@ -65,10 +65,10 @@ class TestNode(TestCase):
         b = ProcessNode(name="b", callable=temp_method, raise_exception=True)
 
         def get_b_output():
-            return b.output()
+            return b()
 
         a.callable = get_b_output
-        result = a.output()
+        result = a()
         assert result == "hello"
         assert a.runtime_connections == {b}, f"should be [Node(b)] but is {a.runtime_connections}"
         assert b in a.connected_nodes, f"connected_nodes should contain Node(b), but is {a.connected_nodes}"
@@ -80,10 +80,10 @@ class TestNode(TestCase):
         c = ProcessNode(name="c", callable=temp_method2, raise_exception=True)
 
         def get_c_output():
-            return c.output()
+            return c()
 
         b.callable = get_c_output
-        result = a.output()
+        result = a()
         assert result == "hello2"
         assert a.runtime_connections == {b}, f"should be [Node(b)] but is {a.runtime_connections}"
         assert b.runtime_connections == {a, c}, f"should be [Node(a), Node(c)] but is {b.runtime_connections}"
