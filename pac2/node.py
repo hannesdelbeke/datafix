@@ -31,7 +31,7 @@ class Node:
 
     _nodes = {}  # store all nodes, to check for unique id
 
-    def __init__(self, data=None, name=None, state=None, id=None):
+    def __init__(self, data=None, name=None, state=None):
 
 
         #  --- CONNECTIONS ---
@@ -40,7 +40,6 @@ class Node:
 
         # id module + name
         self.name = name or self.__class__.__name__
-        # self.id = id or self.__unique_id(name=name)
         self.data = data  # data (like int, str, array,...) or settings for a processNode, class data vs instance data
 
         # actions need a name, and a callable. not just a method.
