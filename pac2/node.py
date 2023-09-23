@@ -2,6 +2,9 @@ import typing
 from enum import Enum
 import copy
 import logging
+import pkgutil
+import importlib
+import importlib.util
 
 
 
@@ -295,9 +298,6 @@ class Node:
                 yield attr
 
         if recursive and hasattr(module, '__path__'):
-            import importlib
-            import pkgutil
-
             for loader, submodule_name, is_pkg in pkgutil.walk_packages(module.__path__, module.__name__ + '.'):
                 spec = importlib.util.find_spec(submodule_name)
                 if spec is None:
@@ -388,8 +388,6 @@ class ProcessNode(Node):
     @classmethod
     def iter_nodes_from_submodules(cls, parent_module) -> "typing.Generator[ProcessNode]":
         """create ProcessNodes generator from all submodules in a module"""
-        import pkgutil
-        import importlib
 
         for module_info, name, is_pkg in list(pkgutil.iter_modules(parent_module.__path__)):
             spec = module_info.find_spec(name)
@@ -401,7 +399,6 @@ class ProcessNode(Node):
 
 
 def import_module_from_path(module_path) -> "types.ModuleType|None":
-    import importlib.util
 
     try:
         spec = importlib.util.spec_from_file_location("custom_module", str(module_path))
