@@ -21,36 +21,6 @@ class TestNode(TestCase):
         assert result == 4
         assert node.data == 4
 
-    def test_parent(self):
-        a = Node(name="a")
-        b = Node(name="b")
-        c = Node(name="c")
-        a.parent = b
-
-        assert a.parent == b
-
-        b.parent = c
-        assert a.parent == b
-        assert b.children == [a]
-        assert b.parent == c
-        assert c.children == [b]
-        assert a.input_nodes == [b], f"should be '[Node(b)]' but is '{a.input_nodes}'"
-        assert b.output_nodes == [a]
-
-        c.parent = a  # to check we never enter an infinite loop, this should be avoided but just in case
-        assert a.children == [c]
-        assert a.connected_nodes == set([b, c]), f"should be [b, c] but is {a.connected_nodes}"
-
-    def test_config(self):
-        a = Node(name="a")
-        c = Node(name="c")
-        b = Node(name="b")
-        a.parent = b
-        b.parent = c
-        data = a.config()  # serialise
-        a2 = Node.graph_from_config(data)  # deserialise
-        assert a2.parent.id == b.id
-
     def test_output_links(self):
         a = Node(name="a")
         b = Node(name="b", data="hello")

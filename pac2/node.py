@@ -31,17 +31,12 @@ class Node:
 
     _nodes = {}  # store all nodes, to check for unique id
 
+    def __init__(self, data=None, name=None, state=None, id=None):
 
-    def __init__(self, parent=None, data=None, name=None, state=None, id=None, children=None):
 
         #  --- CONNECTIONS ---
         # if we add a new node type attribute, add it to __getattribute__
         self.__output_links = {}  # when node is an input node for another node, dict with {attr name: node, ...}
-
-        self.__children = children or []  # nodes created by this node, this is a type of connection
-        self.__parent = parent  # node that created this node, this is a type of connection
-        if parent:  # init parents children
-            parent.children.append(self)
 
         # id module + name
         self.name = name or self.__class__.__name__
@@ -58,50 +53,6 @@ class Node:
 
         # set init state at the end, so we can query if the init has finished.
         self.state = state or NodeState.INIT  # todo convert str to enum / property
-
-    @property
-    def children(self) -> "typing.List[Node]":
-        return self.__children
-
-    @children.setter
-    def children(self, value: "typing.List[Node]"):
-        # check if a list of nodes
-        if not isinstance(value, list):
-            raise TypeError(f"Children must be a list of Nodes, not '{type(value)}'")
-
-        # check all values in list are nodes
-        for child in value:
-            if not isinstance(child, Node):
-                raise TypeError(f"Children must be a list of Nodes, not '{type(child)}'")
-
-        # disconnect from previous children
-        for child in self.__children:
-            child.parent = None
-
-        # connect to new children
-        self.__children = value
-        for child in value:
-            child.parent = self
-
-    @property
-    def parent(self) -> "typing.Optional[Node]":
-        return self.__parent
-
-    @parent.setter
-    def parent(self, value: "typing.Optional[Node]"):
-
-        # double check if value is a node
-        if value is not None and not isinstance(value, Node):
-            raise TypeError(f"Parent must be a 'Node' or 'None', not '{type(value)}'")
-
-        # disconnect from previous parent
-        if self.__parent:
-            self.__parent.children.remove(self)
-
-        # connect to new parent
-        self.__parent = value
-        if value is not None:
-            value.children.append(self)
 
     def __call__(self) -> "typing.Any":  # run py code
         """returns the stored data, or the callable output if it's a ProcessNode"""
@@ -143,15 +94,10 @@ class Node:
 
         # if value is a Node, run it and return the result
         # exception for __class__ attr which always is of type Node
-        # doesnt work for .parent, where you want to get the node, not the output. Same with children and output_links
         if isinstance(value, Node) and item not in (
             "__class__",
-            "_Node__parent",
             "_Node__output_links",
-            "_Node__children",
-            "parent",
             "output_links",
-            "children",
             "__call__",
             "callable",
         ):
