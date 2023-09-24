@@ -129,23 +129,23 @@ class Node:
 
     def iter_input_nodes(self) -> "typing.Generator[Node]":
         """iterate over all input nodes"""
-        for attr, value in self.__dict__.items():
-            if callable(value):
+        for attr_name, value in self.__dict__.items():
+            if callable(value) and not isinstance(value, Node):
                 continue
-            if attr in ("input_nodes", "connected_nodes"):  # skip method that runs this method
+            if attr_name in ("input_nodes", "connected_nodes", "OUT"):  # skip methods that call this method
                 continue
             if isinstance(value, Node):
                 yield value
 
-            # todo avoid triggering a generator, when you check the value is a node
-            #  might be unwanted
-            # check list, set, dict, ...
-            try:
-                for item in value:
-                    if isinstance(item, Node):
-                        yield item
-            except TypeError:
-                pass
+            # # todo avoid triggering a generator, when you check the value is a node
+            # #  might be unwanted
+            # # check list, set, dict, ...
+            # try:
+            #     for item in value:
+            #         if isinstance(item, Node):
+            #             yield item
+            # except TypeError:
+            #     pass
 
     @property
     def input_nodes(self) -> "typing.List[Node]":
@@ -327,13 +327,51 @@ class ProcessNode(Node):  # todo rename CallNode
         raise_exception: if True, raise exception when callable fails, else node saves exception in self.state. used for debugging
         """
         super().__init__(*args, **kwargs)
+        self.IN = None  # input trigger, nodes (callables) to run this node
+
+        # todo can OUT be same as data?
+        self.OUT = None  # output trigger to run the next node, requires IN nodes to SUCCEED
+
         self.callable = callable  # could be a callable, or a NodeModel. result cached in self.data
         self.name = name or callable.__name__ if callable else self.__class__.__name__
         self.continue_on_error = False  # warning or error. stop or continue the node flow on exception
         self.raise_exception = raise_exception  # debugging
 
+    def start(self, *args, **kwargs):
+        """
+        starts the pipeline. call this node, then start the next node, until finished or exception
+        passes args and kwargs to all callables/nodes
+        """
+        self(*args, **kwargs)
+        if self.OUT:
+            self.OUT.start(*args, **kwargs)
+
+    def __setattr__(self, key, value):
+        super().__setattr__(key, value)
+        if key == "OUT":
+            # if provided None with a node stored, reset it, and reset the connection on the node
+            if value is None and self.OUT:
+                self.OUT.IN = None
+                self.OUT = None
+                return
+
+            # assume it's a node and create a bidirectional link
+            if value:
+                value.IN = self
+
 
     def __call__(self, *args, **kwargs) -> "typing.Any":  # protected method
+        # check if all input nodes have run
+        for node in self.iter_input_nodes():
+            # check if type is process node
+            if isinstance(node, ProcessNode):
+                if node.state == NodeState.INIT:  # if DISABLED or already run, don't run
+                    node()
+                    if node.state != NodeState.SUCCEED:
+                        self.state = NodeState.FAIL
+                        if not self.continue_on_error:
+                            return
+
         if self.state == NodeState.DISABLED:
             return
         try:
