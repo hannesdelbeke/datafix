@@ -1,5 +1,5 @@
 from unittest import TestCase
-from pac2.node import Node, ProcessNode
+from pac2.node import Node, ProcessNode, NodeState
 
 
 class TestNode(TestCase):
@@ -61,5 +61,111 @@ class TestNode(TestCase):
     def test_collect_nodes_from_module(self):
         from tests import test_modules
 
-        nodes = [x for x in Node.create_nodes_from_module(test_modules)]
-        print(nodes)
+        nodes = [x for x in Node.nodes_from_module(test_modules)]
+        assert [x.name for x in nodes] == ["NodeA1", "NodeA2", "NodeB1", "NodeB2", "NodeC1", "NodeC2", "NodeD1", "NodeD2"]
+
+    def test_linear_pipeline(self):
+        """
+        connect nodes in a linear pipeline.
+        Running the last node should run all nodes in the pipeline
+        """
+        temp = []
+        a = ProcessNode(name="A", callable=lambda : temp.append("a"))
+        b = ProcessNode(name="B", callable=lambda : temp.append("b"))
+        c = ProcessNode(name="C", callable=lambda : temp.append("c"))
+        d = ProcessNode(callable=lambda : temp.append("d"))
+
+        a.OUT = b  # same as b.IN = a, except IN can have multiple inputs
+        b.OUT = c
+        # todo how to not confuse this with b.my_input_attr = c
+        #  which means b.my_input_attr = c.data (__call__)
+
+        c()
+
+        assert a.state == NodeState.SUCCEED
+        assert b.state == NodeState.SUCCEED
+        assert c.state == NodeState.SUCCEED
+        assert d.state == NodeState.INIT  # d is not hooked up to the pipeline
+        assert temp == ["a", "b", "c"]
+
+    def test_linear_pipeline(self):
+        """
+        connect nodes in a linear pipeline.
+        Running the last node should run all nodes in the pipeline
+        """
+        temp = []
+        a = ProcessNode(name="A", callable=lambda: temp.append("a"))
+        b = ProcessNode(name="B", callable=lambda: temp.append("b"))
+        c = ProcessNode(name="C", callable=lambda: temp.append("c"))
+
+        a.OUT = b  # same as b.IN = a, except IN can have multiple inputs
+        c.IN = b
+        # todo how to not confuse this with b.my_input_attr = c
+        #  which means b.my_input_attr = c.data (__call__)
+
+        c()
+
+        assert a.state == NodeState.SUCCEED
+        assert b.state == NodeState.SUCCEED
+        assert c.state == NodeState.SUCCEED
+        assert temp == ["a", "b", "c"]
+        # assert b.OUT == c # todo
+
+    def test_linear_pipeline_greater_than(self):
+        """
+        connect nodes in a linear pipeline.
+        Running the last node should run all nodes in the pipeline
+        """
+        temp = []
+        a = ProcessNode(name="A", callable=lambda: temp.append("a"))
+        b = ProcessNode(name="B", callable=lambda: temp.append("b"))
+        c = ProcessNode(name="C", callable=lambda: temp.append("c"))
+
+        a > b > c  # todo how not to confuse this with 5 > a.my_int (returning a bool)
+
+        c()
+
+        assert a.state == NodeState.SUCCEED
+        assert b.state == NodeState.SUCCEED
+        assert c.state == NodeState.SUCCEED
+        assert temp == ["a", "b", "c"]
+
+        # # test changing pipeline -------
+        # temp = []
+        #
+        # b.IN = None
+        # b.OUT = a
+        # a.OUT = c
+        # c()
+        # assert temp == ["c", "a"]
+        # # ---------------------------
+
+
+        # # try:
+        # b.OUT = a  # attempt to make a loop, should fail
+        # #     raise Exception("should not be able to make a loop")
+        # # except Exception as e: # todo what exception should this be?
+        # #     pass
+
+    # def test_non_linear_pipeline(self):
+    #     """
+    #     connect nodes in a non-linear pipeline.
+    #     Running the last node should run all nodes in the pipeline
+    #     """
+    #     temp = []
+    #     a = ProcessNode(callable=lambda : temp.append("a"))
+    #     b = ProcessNode(callable=lambda : temp.append("b"))
+    #     c = ProcessNode(callable=lambda : temp.append("c"))
+    #     d = ProcessNode(callable=lambda : temp.append("d"))
+    #
+    #     a > c
+    #     b > c > d
+    #
+    #     print("START D==============")
+    #     d()
+    #
+    #     assert a.state == NodeState.SUCCEED
+    #     assert b.state == NodeState.SUCCEED
+    #     assert c.state == NodeState.SUCCEED
+    #     assert d.state == NodeState.SUCCEED
+    #     assert temp == ["a", "b", "c", "d"]

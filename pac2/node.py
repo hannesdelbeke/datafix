@@ -362,6 +362,14 @@ class ProcessNode(Node):  # todo rename CallNode
                 value.IN = self
 
 
+
+    def __gt__(self, other):
+        # link nodes
+        print("linking", self, other)
+        self.OUT = other
+        return other
+
+
     def __call__(self, *args, **kwargs) -> "typing.Any":  # protected method
         # check if all input nodes have run
         for node in self.iter_input_nodes():
