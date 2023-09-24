@@ -295,6 +295,8 @@ class Node:
         """find all Node classes in a module & its submodules"""
 
         for attr_name in dir(module):
+            if attr_name.startswith('_'):  # skip private classes
+                continue
             attr = getattr(module, attr_name)
             if isinstance(attr, type) and issubclass(attr, Node):
                 yield attr
