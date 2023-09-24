@@ -1,6 +1,4 @@
 from pac2 import ProcessNode, Node, ValidatorNode
-import pac2.pipe_template.validators.deepnest
-
 
 # collect validations
 validate_nodes = list(

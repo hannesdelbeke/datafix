@@ -1,41 +1,46 @@
 import typing
-from enum import Enum
 import copy
 import logging
 import pkgutil
 import importlib
 import importlib.util
-
-
+import inspect
+from enum import Enum
 
 # inspiration https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-map-state.html
-# success could be 0, everything else is a failure/warning ...
+# only process nodes can have these states: running, succeed, fail
+# todo return code: success could be 0, everything else is a failure/warning ...
 class NodeState(Enum):
     # pre run states
     INIT = "initialized"  # not run
     DISABLED = "disabled"
+    # PASS # passes its input to its output, without performing work, mainly debugging
+
     # run states
-    RUNNING = "running"  # run and running / in progress # todo only process node can be running, succeed, fail
+    RUNNING = "running"  # run and running / in progress
     # PAUSED = "paused"
+
     # post run states
     SUCCEED = "succeed"  # run and success, match AWS
     FAIL = "exception"  # run and exception, match AWS
-    # STOPPED = "stopped"
-    # SKIPPED = "skipped"
-    # PASS
-    # WAIT
-    # CHOICE
+    # PASSED = "passed"
+
+PRE_RUN_STATES = (NodeState.INIT, NodeState.DISABLED)
+RUN_STATES = (NodeState.RUNNING,)
+POST_RUN_STATES = (NodeState.SUCCEED, NodeState.FAIL)
 # default nodes are data nodes, which contain data
 class Node:
     """
     a Node contains data or callable
     a Node (output) can be connected to other Node attributes (input)
     """
-
-    _nodes = {}  # store all nodes, to check for unique id
+    _nodes = {}
 
     def __init__(self, data=None, name=None, state=None):
+        """
 
+        self.data contains pure data. if process node, it contains cached result?
+        """
 
         #  --- CONNECTIONS ---
         # if we add a new node type attribute, add it to __getattribute__
@@ -68,16 +73,14 @@ class Node:
 
         value = super().__getattribute__(item)
 
+        # state should never contain a node, return to prevent a getattribute loop
         if item in ("state"):
             return value
+
         finished_init = hasattr(self, "state")
 
         if callable(value) and item != "__class__" and finished_init:
-
-            import inspect
-
             frames = inspect.stack()
-            # i = 0
             # search the callstack for the first Node
             for f in frames:
                 caller_frame = f.frame.f_back
@@ -87,12 +90,10 @@ class Node:
                 caller_object = caller_frame.f_locals.get("self")
 
                 if isinstance(caller_object, Node) and caller_object != self:
-                    # print("caller_object", caller_object.id, "is calling self", id(self), "level", i)
                     # todo also save method name / attr where the node is used
                     self.runtime_connections.add(caller_object)
                     caller_object.runtime_connections.add(self)
-                    # i += 1
-                    break  # only save "direct" caller
+                    break
 
         # if value is a Node, run it and return the result
         # exception for __class__ attr which always is of type Node
@@ -103,7 +104,6 @@ class Node:
             "__call__",
             "callable",
         ):
-            print(f"running node {value.name} from {id(self)} for item {item}")
             value = value.__call__()
 
         return value
@@ -120,6 +120,7 @@ class Node:
         # e.g. {'_Node__parent': Node(b), 'parent': Node(b)}
         if key not in self.__dict__:
             return
+
         if isinstance(value, Node):
             value.__output_links[key] = self
 
@@ -258,6 +259,7 @@ class Node:
             if new_if_exists:
                 node = cls(**node_config)
             else:
+                # todo not just check id, maybe match by name
                 node = cls._nodes.get(node_config["id"])
 
             if id(node) == root_id:
@@ -304,36 +306,31 @@ class Node:
                     continue
                 submodule = importlib.util.module_from_spec(spec)
                 spec.loader.exec_module(submodule)
-                for _cls in cls.collect_node_classes_from_module(
-                    submodule, recursive=False
-                ):  # recusrive false because walk_packages is already recursive
+                # recursive=False because walk_packages is already recursive
+                for _cls in cls.collect_node_classes_from_module(submodule, recursive=False):
                     # check node is not just imported in the module, but actually defined in the module
                     if "pac2.node" in _cls.__module__:
                         continue
                     yield _cls
 
     @classmethod
-    def create_nodes_from_module(cls, module, recursive=True) -> "typing.Generator[Node]":
+    def nodes_from_module(cls, module, recursive=True) -> "typing.Generator[Node]":
         """create nodes from all Node classes in a module"""
         for node_class in cls.collect_node_classes_from_module(module, recursive=recursive):
             node = node_class()
             yield node
 
 
-# def collector():
-# wrap collector method in node
-
-
-class ProcessNode(Node):
+class ProcessNode(Node):  # todo rename CallNode
     def __init__(self, callable=None, raise_exception=False, name=None, *args, **kwargs):
         """
         raise_exception: if True, raise exception when callable fails, else node saves exception in self.state. used for debugging
         """
         super().__init__(*args, **kwargs)
-        self.callable = callable
+        self.callable = callable  # could be a callable, or a NodeModel. result cached in self.data
         self.name = name or callable.__name__ if callable else self.__class__.__name__
-        self.continue_on_error = False  # warning or error
-        self.raise_exception = raise_exception
+        self.continue_on_error = False  # warning or error. stop or continue the node flow on exception
+        self.raise_exception = raise_exception  # debugging
 
 
     def __call__(self, *args, **kwargs) -> "typing.Any":  # protected method
@@ -343,6 +340,8 @@ class ProcessNode(Node):
             self.state = NodeState.RUNNING
             result = self.callable(*args, **kwargs)  # todo does this pass self?
             self.state = NodeState.SUCCEED
+            # todo no need to cache result, instead create a new datanode with the result
+            # for a validation, result would be true or false, with failed instances.
             self.data = result  # todo choose if we use data to cache result, or if we use it for settings. e.g. which tri-count to validate against
             return result
         except Exception as e:
@@ -363,8 +362,6 @@ class ProcessNode(Node):
     #         module: module name or module object
     #         method_name: method name to run, default is 'main'
     #     """
-    #     import importlib
-    #
     #     if isinstance(module, str):
     #         module_name = module
     #         method_name = method_name or 'main'
@@ -409,6 +406,7 @@ def import_module_from_path(module_path) -> "types.ModuleType|None":
         logging.error(f"Failed to import module from path: {module_path}")
         logging.error(f"Error: {e}")
         return None
+
 
 
 # todo validate different nodes, compared to each other
