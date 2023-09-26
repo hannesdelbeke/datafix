@@ -25,15 +25,122 @@ class NodeState(Enum):
     FAIL = "exception"  # run and exception, match AWS
     # PASSED = "passed"
 
+
 PRE_RUN_STATES = (NodeState.INIT, NodeState.DISABLED)
 RUN_STATES = (NodeState.RUNNING,)
 POST_RUN_STATES = (NodeState.SUCCEED, NodeState.FAIL)
+
+
+connections = {}
+# {
+#     node_in: {attr_in_1: (node_out, attr_out, )), ...
+# }
+
+# __call__ is both IN and OUT
+# { (all attrs from MODEL only, not NODE
+#     node_in: {"__call__": (node_out, "__call__", )), ...  <--- trigger, after __call__out finished, start __call__in
+#     node_in: {"mesh_name": (node_out, "__call__", )), ...  <--- get mesh name from a node __call__
+#  XX don't do this --- node_in: {"__call__": (node_out, "test", )), ...  <--- trigger maybe? ignore for now
+# }
+
+
+# TODO convert to connections dict compatible w UI
+# [ {
+#       "out":[
+#         "0x23d30810eb0",
+#         "out"
+#       ],
+#       "in":[
+#         "0x23d30813c70",
+#         "in"
+#       ]
+#     }, ... ]
+
+
+class NodeModel:
+    def __init__(self):
+        self._node_meta_ = None
+
+    def __getattribute__(self, item):
+        value = super().__getattribute__(item)
+        if item == "_node_meta_":
+            return value
+        if isinstance(value, Node):
+            return value.__call__()
+        return value
+
+    def __setattr__(self, key, value):
+        # e.g.
+        # node_model.test = 2
+        # key == "test", value == 2
+
+        # nodeA = Node()
+        # nodeB = ProcessNode()
+        # node_model = NodeModel()
+        # node_model.test = node
+        # key == "test", value == node
+        # if the nodeModel attr is set to a node, we link node to the node parent
+
+        super().__setattr__(key, value)
+        if key == "_node_meta_":
+            return
+        if isinstance(value, Node):
+            value.__output_links[key] = (self._node_meta_, "__call__")
+
+    # todo set get attr for connection
+
+
+# if a node is callable, the class is callable?
+# a pipeline is just hooking up methods with some config input.
+
+# # todo do we need a wrapper for this. just data
+# class NodeString(NodeModel):
+#     def __init__(self, node):
+#         super().__init__()
+#         self.string = ""
+#
+#     def __call__(self, *args, **kwargs):
+#         return self.string
+
+# convert a class into a node
+class NodeModelSample(NodeModel):
+    # complete independent class, no overlap.
+    # all methods are actions
+    # all attributes are input/output controlled with GET SET
+    # use _ for private/hidden attributes / properties
+
+    def __init__(self, node):
+        # super().__init__()
+        self.mesh = None
+        self.mesh_name: str = "cube"
+        self.prefix: str = "p_"
+        self.dupe_action = self.action_1  # could also insert callable node here.
+
+    def action_1(self):
+        print(self.mesh_name)
+
+    def action_2(self):
+        print("hello_world", self.prefix)
+        # todo get node connections?
+
+        # todo we want to know if the node failed or succeeded. access the node meta data _node_meta_
+        # e.g. set material from failed meshes on a validation node. (can be done with self.failed_meshes)
+        # todo store connection outside e.g. a global var
+
+    def __call__(self, *args, **kwargs):
+        # e.g. validate mesh
+        assert self.mesh.name == self.mesh_name
+
+    # TODO get set attr can be changed when we wrap in nodemeta
+
+
 # default nodes are data nodes, which contain data
 class Node:
     """
     a Node contains data or callable
     a Node (output) can be connected to other Node attributes (input)
     """
+
     _nodes = {}
 
     def __init__(self, data=None, name=None, state=None):
@@ -56,73 +163,91 @@ class Node:
         # self.actions = []  # callables or other nodes, actions to run on this node, same as callable attributes? call/run is an action too
 
         Node._nodes[id(self)] = self  # store all nodes, to check for unique id
-        self.runtime_connections = set()  # nodes used by this node during runtime, indirectly in callables
+        # self.runtime_connections = set()  # nodes used by this node during runtime, indirectly in callables
 
         # set init state at the end, so we can query if the init has finished.
-        self.state = state or NodeState.INIT  # todo convert str to enum / property
+        self._state = state or NodeState.INIT  # todo convert str to enum / property
+        self.callbacks_state_changed = []
 
     def __call__(self) -> "typing.Any":  # run py code
-        """returns the stored data, or the callable output if it's a ProcessNode"""
+        """returns the stored data, or the callable output if it's a CallableNodeBase"""
         return self.data
 
-    def __getattribute__(self, item) -> "typing.Any":
+    def connect(self, node_out, attr_in: str, attr_out: str):
+        """
+        connect 2 nodes, assuming self is the input node
+        """
+        node_in = self
 
-        # todo this only triggers for attributes, not for indirect attributes like self.data.attr_name
-        #  also not handling iterables yet, and deep level iters.
-        #  also how to avoid triggering a generator, when you check the value is a node
+        # todo check if attr-in is an input, and attr_out is an output
+        # defaults to input, if not specified
+        # GET means output, SET means input
+        # GET SET means both
+        # we assume user didn't make a mistake, else Python will raise error for us.
+        # attr_in_value = getattr(node_in, attr_in)
+        # attr_out_value = getattr(node_out, attr_out)
 
-        value = super().__getattribute__(item)
+        # check if node is already connected
 
-        # state should never contain a node, return to prevent a getattribute loop
-        if item in ("state"):
-            return value
+        pass
 
-        finished_init = hasattr(self, "state")
+    # def __getattribute__(self, item) -> "typing.Any":
+    #
+    #     # todo this only triggers for attributes, not for indirect attributes like self.data.attr_name
+    #     #  also not handling iterables yet, and deep level iters.
+    #     #  also how to avoid triggering a generator, when you check the value is a node
+    #
+    #     value = super().__getattribute__(item)
+    #
+    #     # state should never contain a node, return to prevent a getattribute loop
+    #     if item in ("_state"):
+    #         return value
+    #     # # track runtime connections between Nodes
+    #     # finished_init = hasattr(self, "_state")
+    #     # if callable(value) and item != "__class__" and finished_init:
+    #     #     frames = inspect.stack()
+    #     #     # search the callstack for the first Node
+    #     #     for f in frames:
+    #     #         caller_frame = f.frame.f_back
+    #     #         if not caller_frame:
+    #     #             continue
+    #     #         caller_object = caller_frame.f_locals.get("self")
+    #     #         if isinstance(caller_object, Node) and caller_object != self:
+    #     #             # todo also save method name / attr where the node is used
+    #     #             self.runtime_connections.add(caller_object)
+    #     #             caller_object.runtime_connections.add(self)
+    #     #             break
+    #
+    #     # TODO only IN trigger, and OUT trigger should contain nodes
+    #
+    #     # if value is a Node, run it and return the result
+    #     # exception for __class__ attr which always is of type Node
+    #     if isinstance(value, Node) and item not in (
+    #         "__class__",
+    #         "_Node__output_links",
+    #         "output_links",
+    #         "__call__",
+    #         "callable",
+    #     ):
+    #         value = value.__call__()
+    #
+    #     return value
 
-        if callable(value) and item != "__class__" and finished_init:
-            frames = inspect.stack()
-            # search the callstack for the first Node
-            for f in frames:
-                caller_frame = f.frame.f_back
-                if not caller_frame:
-                    continue
-
-                caller_object = caller_frame.f_locals.get("self")
-
-                if isinstance(caller_object, Node) and caller_object != self:
-                    # todo also save method name / attr where the node is used
-                    self.runtime_connections.add(caller_object)
-                    caller_object.runtime_connections.add(self)
-                    break
-
-        # if value is a Node, run it and return the result
-        # exception for __class__ attr which always is of type Node
-        if isinstance(value, Node) and item not in (
-            "__class__",
-            "_Node__output_links",
-            "output_links",
-            "__call__",
-            "callable",
-        ):
-            value = value.__call__()
-
-        return value
-
-    def __setattr__(self, key, value) -> None:
-
-        # todo this only triggers for attributes, not for indirect attributes like self.data.attr_name
-        #  also not handling iterables yet, and deep level iters.
-        #  also how to avoid triggering a generator, when you check the value is a node
-
-        super().__setattr__(key, value)
-
-        # don't track Node if it's a property, else attributes are duplicated in self.__output_links
-        # e.g. {'_Node__parent': Node(b), 'parent': Node(b)}
-        if key not in self.__dict__:
-            return
-
-        if isinstance(value, Node):
-            value.__output_links[key] = self
+    # def __setattr__(self, key, value) -> None:
+    #
+    #     # todo this only triggers for attributes, not for indirect attributes like self.data.attr_name
+    #     #  also not handling iterables yet, and deep level iters.
+    #     #  also how to avoid triggering a generator, when you check the value is a node
+    #
+    #     super().__setattr__(key, value)
+    #
+    #     # don't track Node if it's a property, else attributes are duplicated in self.__output_links
+    #     # e.g. {'_Node__parent': Node(b), 'parent': Node(b)}
+    #     if key not in self.__dict__:
+    #         return
+    #
+    #     if isinstance(value, Node):
+    #         value.__output_links[key] = self
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"  # e.g. Node(hello)
@@ -148,6 +273,17 @@ class Node:
             #     pass
 
     @property
+    def state(self) -> "NodeState":
+        return self._state
+
+    @state.setter
+    def state(self, state: "NodeState") -> None:
+        """set the node state and run callbacks"""
+        self._state = state
+        for callback in self.callbacks_state_changed:
+            callback(state)
+
+    @property
     def input_nodes(self) -> "typing.List[Node]":
         """nodes connected to attributes of this node"""
         return list(self.iter_input_nodes())
@@ -155,7 +291,7 @@ class Node:
     @property
     def output_nodes(self) -> "typing.List[Node]":
         """nodes connected to this node output"""
-        return list(self.__output_links.values())
+        return [node for node, attr_out in self.__output_links.values()]
 
     @property
     def output_links(self) -> "typing.Dict[str, Node]":
@@ -196,8 +332,8 @@ class Node:
         #     # todo recursive serialise. when we dont have a node.
         #     #  e.g. support nodes in arrays in attributes
 
-        node_config["state"] = (
-            node_config["state"].name if isinstance(node_config["state"], Enum) else node_config["state"]
+        node_config["_state"] = (
+            node_config["_state"].name if isinstance(node_config["_state"], Enum) else node_config["_state"]
         )  # todo cleanup
 
         return node_config
@@ -291,7 +427,7 @@ class Node:
     #                 dct[attr_name][i] = item.id  # todo can you set set by index?
 
     @classmethod
-    def collect_node_classes_from_module(cls, module, recursive=True) -> "typing.Generator[ProcessNode]":
+    def collect_node_classes_from_module(cls, module, recursive=True) -> "typing.Generator[CallableNodeBase]":
         """find all Node classes in a module & its submodules"""
 
         for attr_name in dir(module):
@@ -344,6 +480,7 @@ class ProcessNode(Node):  # todo rename CallNode
         starts the pipeline. call this node, then start the next node, until finished or exception
         passes args and kwargs to all callables/nodes
         """
+        print("START", self, args, kwargs)
         self(*args, **kwargs)
         if self.OUT:
             self.OUT.start(*args, **kwargs)
@@ -358,10 +495,21 @@ class ProcessNode(Node):  # todo rename CallNode
                 return
 
             # assume it's a node and create a bidirectional link
-            if value:
+            if value and value.IN != self:
+                print("seeting out", value, self, "current out", value.OUT)
                 value.IN = self
 
-
+        # if key == "IN":
+        #     # if provided None with a node stored, reset it, and reset the connection on the node
+        #     if value is None and self.IN:
+        #         self.IN.OUT = None
+        #         self.IN = None
+        #         return
+        #
+        #     # assume it's a node and create a bidirectional link
+        #     if value and value.OUT != self:
+        #         print("seeting out", value, self, "current out", value.OUT)
+        #         value.OUT = self
 
     def __gt__(self, other):
         # link nodes
@@ -369,9 +517,9 @@ class ProcessNode(Node):  # todo rename CallNode
         self.OUT = other
         return other
 
-
     def __call__(self, *args, **kwargs) -> "typing.Any":  # protected method
         # check if all input nodes have run
+        print("CALL", self, args, kwargs)
         for node in self.iter_input_nodes():
             # check if type is process node
             if isinstance(node, ProcessNode):
@@ -399,12 +547,15 @@ class ProcessNode(Node):  # todo rename CallNode
                 raise e
             else:
                 logging.error(f"Failed to run {self.name}: {e}")
+                import traceback
+
+                traceback.print_exc()
             return
 
     # @classmethod
-    # def from_module(cls, module: "str|types.ModuleType", method_name=None) -> "ProcessNode":
+    # def from_module(cls, module: "str|types.ModuleType", method_name=None) -> "CallableNodeBase":
     #     """
-    #     create a ProcessNode from a module with method'
+    #     create a CallableNodeBase from a module with method'
     #
     #     Args:
     #         module: module name or module object
@@ -422,8 +573,8 @@ class ProcessNode(Node):  # todo rename CallNode
     @classmethod  # todo comment out because swap to callable
     def node_from_module_method(
         cls, module, method_name=None
-    ) -> "ProcessNode":  # todo can we combine module & method_name kwarg
-        """create a ProcessNode from a module with method 'main'"""
+    ) -> "CallableNodeBase":  # todo can we combine module & method_name kwarg
+        """create a CallableNodeBase from a module with method 'main'"""
         method_name = method_name or 'main'
         callable = getattr(module, method_name)
         n = cls(callable)
@@ -431,7 +582,7 @@ class ProcessNode(Node):  # todo rename CallNode
         return n
 
     @classmethod
-    def iter_nodes_from_submodules(cls, parent_module) -> "typing.Generator[ProcessNode]":
+    def iter_nodes_from_submodules(cls, parent_module) -> "typing.Generator[CallableNodeBase]":
         """create ProcessNodes generator from all submodules in a module"""
 
         for module_info, name, is_pkg in list(pkgutil.iter_modules(parent_module.__path__)):
@@ -454,7 +605,6 @@ def import_module_from_path(module_path) -> "types.ModuleType|None":
         logging.error(f"Failed to import module from path: {module_path}")
         logging.error(f"Error: {e}")
         return None
-
 
 
 # todo validate different nodes, compared to each other
@@ -496,3 +646,12 @@ class ValidatorNode(ProcessNode):
 # run a process node, save  result in a data node
 # serialise it, deserialise it :)
 # now we can restart our workflow from a saved state
+
+
+class MeshVal(ProcessNode):
+    class SlotsIn:
+        actions = []
+        mesh_name_prefix = ""
+
+    class SlotsOut:
+        output = None
