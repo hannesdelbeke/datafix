@@ -6,6 +6,8 @@ import importlib
 import importlib.util
 import inspect
 from enum import Enum
+import traceback
+
 
 # inspiration https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-map-state.html
 # only process nodes can have these states: running, succeed, fail
@@ -43,6 +45,30 @@ connections = {}
 #  XX don't do this --- node_in: {"__call__": (node_out, "test", )), ...  <--- trigger maybe? ignore for now
 # }
 
+# def add_connection(node_in, attr_in, node_out, attr_out="__call__"):
+#     """add a connection between 2 nodes"""
+#     data = connections.setdefault(node_in, {})
+#     data[attr_in] = (node_out, attr_out)
+#
+# def remove_connection(node_in, attr_in):
+#     """remove a connection between 2 nodes"""
+#     data = connections.get(node_in, {})
+#     data.pop(attr_in)
+#
+# def get_connections(node_in, attr_in):
+#     """get all connections for a node attribute"""
+#     data = connections.get(node_in, {})
+#     return data.get(attr_in)
+#
+# def get_input_connections(node_in):
+#     """get all input connections for a node"""
+#     return connections.get(node_in, {})
+#
+# def iter_output_connections(node_out):
+#     for node_in, data in connections.items():
+#         for attr_in, value in data.items():
+#             if value[0] == node_out:
+#                 yield node_in, attr_in
 
 # TODO convert to connections dict compatible w UI
 # [ {
@@ -58,6 +84,14 @@ connections = {}
 
 
 class NodeModel:
+    """
+    A (callable) data container that's stored in a Node, to avoid name clashes with Node attributes.
+    The NodeModel lets you use any attribute name, except for '_node_meta_'
+    self._node_meta_ is a reference to the Node that contains this NodeModel
+    inherit and override __init__ to add attributes (use super!)
+    override __call__ with the main callable
+    """
+
     def __init__(self):
         self._node_meta_ = None
 
@@ -66,28 +100,17 @@ class NodeModel:
         if item == "_node_meta_":
             return value
         if isinstance(value, Node):
-            return value.__call__()
+            return value()
         return value
 
     def __setattr__(self, key, value):
-        # e.g.
-        # node_model.test = 2
-        # key == "test", value == 2
-
-        # nodeA = Node()
-        # nodeB = ProcessNode()
-        # node_model = NodeModel()
-        # node_model.test = node
-        # key == "test", value == node
-        # if the nodeModel attr is set to a node, we link node to the node parent
-
+        # e.g. key=="mesh" and value==Node
+        if key != "_node_meta_" and isinstance(value, Node):
+            self.connect(key, value, "__call__")
         super().__setattr__(key, value)
-        if key == "_node_meta_":
-            return
-        if isinstance(value, Node):
-            value.__output_links[key] = (self._node_meta_, "__call__")
 
-    # todo set get attr for connection
+    # def connect(self, attr_in, node_out, attr_out):
+    #     self._node_meta_.connect(node_out=node_out, attr_in=attr_in, attr_out=attr_out)
 
 
 # if a node is callable, the class is callable?
@@ -151,7 +174,9 @@ class Node:
 
         #  --- CONNECTIONS ---
         # if we add a new node type attribute, add it to __getattribute__
-        self.__output_links = {}  # when node is an input node for another node, dict with {attr name: node, ...}
+        # self is node_IN
+        self._output_links = {}  # {attr name_out: [(node_in, attr_name_IN), ...], ...}
+        self._input_links = {}  # {attr name_in: (node_out, attr_name_OUT), ...}
 
         # id module + name
         self.name = name or self.__class__.__name__
@@ -173,23 +198,74 @@ class Node:
         """returns the stored data, or the callable output if it's a CallableNodeBase"""
         return self.data
 
-    def connect(self, node_out, attr_in: str, attr_out: str):
+    def break_out_connection(self, attr_out, node_in, attr_in):
         """
-        connect 2 nodes, assuming self is the input node
+        attr_out, the output attribute name
+        node_in, the node that's connected to the output
+        attr_in, the input attribute name from node_in, connected to attr_out
         """
-        node_in = self
+        # remove in connection on node_in
+        node_in._input_links.pop(attr_in)
 
-        # todo check if attr-in is an input, and attr_out is an output
-        # defaults to input, if not specified
-        # GET means output, SET means input
-        # GET SET means both
-        # we assume user didn't make a mistake, else Python will raise error for us.
-        # attr_in_value = getattr(node_in, attr_in)
-        # attr_out_value = getattr(node_out, attr_out)
+        # remove out connection on self
+        out_list = self._output_links.setdefault(attr_out, [])
+        for node, attr in out_list:
+            if node == node_in and attr == attr_in:
+                out_list.remove((node, attr))
+                break
 
-        # check if node is already connected
+        # don't track attr_out if connection list is empty
+        if not out_list:
+            self._output_links.pop(attr_out)
 
-        pass
+    def connect(self, node_in, attr_out=None, attr_in=None):
+        """
+        node_in is the node with the IN port
+        (self) node_out is the node with the OUT port
+        A -> B: node A is the out node since its output is connected to node B input
+        """
+        node_out = self
+        # method chat gpt, based on connect_in, but reversed
+        # todo double check logic
+
+        if not attr_out:
+            attr_out = "__call__"
+        if not attr_in:
+            attr_in = "__call__"
+
+        # todo check if attr exists
+
+        # cleanup old out connection, on the old node_out
+        # from node in, get the old out node, and the old out attr
+        data = node_in._input_links.get(attr_in)  # get (B, __call__) from C
+        if data:
+            old_out_node, old_out_attr = data
+            old_out_node.break_out_connection(old_out_attr, node_in, attr_in)
+
+        # Override old out connection
+        # todo check not already connected
+        node_out._output_links.setdefault(attr_out, []).append((node_in, attr_in))
+
+        # Set new in connection
+        node_in._input_links[attr_in] = (node_out, attr_out)
+
+    # def connect(self, node_out, attr_in: str, attr_out: str):
+    #     """
+    #     connect 2 nodes, assuming self is the input node
+    #     """
+    #     node_in = self
+    #
+    #     # todo check if attr-in is an input, and attr_out is an output
+    #     # defaults to input, if not specified
+    #     # GET means output, SET means input
+    #     # GET SET means both
+    #     # we assume user didn't make a mistake, else Python will raise error for us.
+    #     # attr_in_value = getattr(node_in, attr_in)
+    #     # attr_out_value = getattr(node_out, attr_out)
+    #
+    #     # check if node is already connected
+    #
+    #     pass
 
     # def __getattribute__(self, item) -> "typing.Any":
     #
@@ -241,36 +317,36 @@ class Node:
     #
     #     super().__setattr__(key, value)
     #
-    #     # don't track Node if it's a property, else attributes are duplicated in self.__output_links
+    #     # don't track Node if it's a property, else attributes are duplicated in self._output_links
     #     # e.g. {'_Node__parent': Node(b), 'parent': Node(b)}
     #     if key not in self.__dict__:
     #         return
     #
     #     if isinstance(value, Node):
-    #         value.__output_links[key] = self
+    #         value._output_links[key] = self
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.name})"  # e.g. Node(hello)
 
-    def iter_input_nodes(self) -> "typing.Generator[Node]":
-        """iterate over all input nodes"""
-        for attr_name, value in self.__dict__.items():
-            if callable(value) and not isinstance(value, Node):
-                continue
-            if attr_name in ("input_nodes", "connected_nodes", "OUT"):  # skip methods that call this method
-                continue
-            if isinstance(value, Node):
-                yield value
+    # def iter_input_nodes(self) -> "typing.Generator[Node]":
+    #     """iterate over all input nodes"""
+    #     for attr_name, value in self.__dict__.items():
+    #         if callable(value) and not isinstance(value, Node):
+    #             continue
+    #         if attr_name in ("input_nodes", "connected_nodes", "OUT"):  # skip methods that call this method
+    #             continue
+    #         if isinstance(value, Node):
+    #             yield value
 
-            # # todo avoid triggering a generator, when you check the value is a node
-            # #  might be unwanted
-            # # check list, set, dict, ...
-            # try:
-            #     for item in value:
-            #         if isinstance(item, Node):
-            #             yield item
-            # except TypeError:
-            #     pass
+    # # todo avoid triggering a generator, when you check the value is a node
+    # #  might be unwanted
+    # # check list, set, dict, ...
+    # try:
+    #     for item in value:
+    #         if isinstance(item, Node):
+    #             yield item
+    # except TypeError:
+    #     pass
 
     @property
     def state(self) -> "NodeState":
@@ -286,17 +362,25 @@ class Node:
     @property
     def input_nodes(self) -> "typing.List[Node]":
         """nodes connected to attributes of this node"""
-        return list(self.iter_input_nodes())
+        # return list(self.iter_input_nodes())
+        # print("self._input_links", self._input_links)
+        return [node for node, attr_name in self._input_links.values()]
 
     @property
     def output_nodes(self) -> "typing.List[Node]":
         """nodes connected to this node output"""
-        return [node for node, attr_out in self.__output_links.values()]
+        # _output_links is a dict with attr_name: [(node, attr_name), ...]
+        # convert to list of nodes
+        nodes = []
+        for tuple_list in self._output_links.values():
+            for node, attr_name in tuple_list:
+                nodes.append(node)
+        return nodes
 
     @property
     def output_links(self) -> "typing.Dict[str, Node]":
         """return dict of output links, where key is the attribute name, and value is the node"""
-        return self.__output_links
+        return self._output_links
 
     @property
     def connected_nodes(self) -> "typing.Set[Node]":
@@ -465,10 +549,10 @@ class ProcessNode(Node):  # todo rename CallNode
         raise_exception: if True, raise exception when callable fails, else node saves exception in self.state. used for debugging
         """
         super().__init__(*args, **kwargs)
-        self.IN = None  # input trigger, nodes (callables) to run this node
+        # self.IN = None  # input trigger, nodes (callables) to run this node
 
         # todo can OUT be same as data?
-        self.OUT = None  # output trigger to run the next node, requires IN nodes to SUCCEED
+        # self.OUT = None  # output trigger to run the next node, requires IN nodes to SUCCEED
 
         self.callable = callable  # could be a callable, or a NodeModel. result cached in self.data
         self.name = name or callable.__name__ if callable else self.__class__.__name__
@@ -485,42 +569,44 @@ class ProcessNode(Node):  # todo rename CallNode
         if self.OUT:
             self.OUT.start(*args, **kwargs)
 
-    def __setattr__(self, key, value):
-        super().__setattr__(key, value)
-        if key == "OUT":
-            # if provided None with a node stored, reset it, and reset the connection on the node
-            if value is None and self.OUT:
-                self.OUT.IN = None
-                self.OUT = None
-                return
+    # def __setattr__(self, key, value):
+    #     super().__setattr__(key, value)
+    #     if key == "OUT":
+    #         # if provided None with a node stored, reset it, and reset the connection on the node
+    #         if value is None and self.OUT:
+    #             self.OUT.IN = None
+    #             self.OUT = None
+    #             return
+    #
+    #         # assume it's a node and create a bidirectional link
+    #         if value and value.IN != self:
+    #             print("seeting out", value, self, "current out", value.OUT)
+    #             value.IN = self
 
-            # assume it's a node and create a bidirectional link
-            if value and value.IN != self:
-                print("seeting out", value, self, "current out", value.OUT)
-                value.IN = self
+    # if key == "IN":
+    #     # if provided None with a node stored, reset it, and reset the connection on the node
+    #     if value is None and self.IN:
+    #         self.IN.OUT = None
+    #         self.IN = None
+    #         return
+    #
+    #     # assume it's a node and create a bidirectional link
+    #     if value and value.OUT != self:
+    #         print("seeting out", value, self, "current out", value.OUT)
+    #         value.OUT = self
 
-        # if key == "IN":
-        #     # if provided None with a node stored, reset it, and reset the connection on the node
-        #     if value is None and self.IN:
-        #         self.IN.OUT = None
-        #         self.IN = None
-        #         return
-        #
-        #     # assume it's a node and create a bidirectional link
-        #     if value and value.OUT != self:
-        #         print("seeting out", value, self, "current out", value.OUT)
-        #         value.OUT = self
-
-    def __gt__(self, other):
-        # link nodes
-        print("linking", self, other)
-        self.OUT = other
-        return other
+    # def __gt__(self, other):
+    #     # link nodes
+    #     print("linking", self, other)
+    #     self.OUT = other
+    #     return other
 
     def __call__(self, *args, **kwargs) -> "typing.Any":  # protected method
         # check if all input nodes have run
-        print("CALL", self, args, kwargs)
-        for node in self.iter_input_nodes():
+        if self.state == NodeState.SUCCEED:
+            return self.data
+
+        for node in self.input_nodes:
             # check if type is process node
             if isinstance(node, ProcessNode):
                 if node.state == NodeState.INIT:  # if DISABLED or already run, don't run
@@ -543,12 +629,9 @@ class ProcessNode(Node):  # todo rename CallNode
         except Exception as e:
             self.state = NodeState.FAIL
             if self.raise_exception:
-                print(f"Failed to run {self.name}: {e}")
                 raise e
             else:
                 logging.error(f"Failed to run {self.name}: {e}")
-                import traceback
-
                 traceback.print_exc()
             return
 

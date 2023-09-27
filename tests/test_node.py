@@ -11,7 +11,7 @@ class TestNode(TestCase):
         # test connecting a node to another node's attribute
         a = Node(name="a")
         b = Node(name="b", data="hello")
-        a.name = b
+        a.name = b  # todo nodemodel
         assert a.name == "hello"
 
     def test_cached_result(self):
@@ -34,8 +34,8 @@ class TestNode(TestCase):
     def test_output_links(self):
         a = Node(name="a")
         b = Node(name="b", data="hello")
-        a.parent = b  # todo replace
-        assert len(b.output_links) == 1, f"should have 1 output link, but has {len(b.output_links)}, {b.output_links}"
+        a.connect(b)  # todo replace
+        assert len(a.output_links) == 1, f"should have 1 output link, but has {len(a.output_links)}, {a.output_links}"
 
     # def test_runtime_connection(self):
     #     def temp_method():
@@ -94,10 +94,8 @@ class TestNode(TestCase):
         c = ProcessNode(name="C", callable=lambda: temp.append("c"))
         d = ProcessNode(callable=lambda: temp.append("d"))
 
-        a.OUT = b  # same as b.IN = a, except IN can have multiple inputs
-        b.OUT = c
-        # todo how to not confuse this with b.my_input_attr = c
-        #  which means b.my_input_attr = c.data (__call__)
+        a.connect(b)
+        b.connect(c)
 
         c()
 
@@ -117,73 +115,31 @@ class TestNode(TestCase):
         b = ProcessNode(name="B", callable=lambda: temp.append("b"))
         c = ProcessNode(name="C", callable=lambda: temp.append("c"))
 
-        a.OUT = b  # same as b.IN = a, except IN can have multiple inputs
-        c.IN = b
-        # todo how to not confuse this with b.my_input_attr = c
-        #  which means b.my_input_attr = c.data (__call__)
+        # A - B - C
+        a.connect(b)  # A in B
+        b.connect(c)  # A in B out C
+        a.connect(c)  # disconnect b
+        # A in C, connects to call slot, overrides b
+        # get node c, get attr in (call slot),
 
         c()
 
         assert a.state == NodeState.SUCCEED
-        assert b.state == NodeState.SUCCEED
+        assert b.state == NodeState.INIT
         assert c.state == NodeState.SUCCEED
-        assert temp == ["a", "b", "c"]
-        # assert b.OUT == c # todo
+        assert temp == ["a", "c"]
+        assert b.output_nodes == [], f"b.output_nodes should be empty, but is {b.output_nodes}"
 
-    def test_linear_pipeline_greater_than(self):
-        """
-        connect nodes in a linear pipeline.
-        Running the last node should run all nodes in the pipeline
-        """
-        temp = []
-        a = ProcessNode(name="A", callable=lambda: temp.append("a"))
-        b = ProcessNode(name="B", callable=lambda: temp.append("b"))
-        c = ProcessNode(name="C", callable=lambda: temp.append("c"))
-
-        a > b > c  # todo how not to confuse this with 5 > a.my_int (returning a bool)
-
-        c()
-
+    def test_connection(self):
+        """test that we dont store duplicate connections"""
+        a = ProcessNode(name="A", callable=lambda: 1)
+        b = ProcessNode(name="B", callable=lambda: 1)
+        a.connect(b)
+        a.connect(b)
+        a.connect(b)
+        b()
         assert a.state == NodeState.SUCCEED
         assert b.state == NodeState.SUCCEED
-        assert c.state == NodeState.SUCCEED
-        assert temp == ["a", "b", "c"]
-
-        # # test changing pipeline -------
-        # temp = []
-        #
-        # b.IN = None
-        # b.OUT = a
-        # a.OUT = c
-        # c()
-        # assert temp == ["c", "a"]
-        # # ---------------------------
-
-        # # try:
-        # b.OUT = a  # attempt to make a loop, should fail
-        # #     raise Exception("should not be able to make a loop")
-        # # except Exception as e: # todo what exception should this be?
-        # #     pass
-
-    # def test_non_linear_pipeline(self):
-    #     """
-    #     connect nodes in a non-linear pipeline.
-    #     Running the last node should run all nodes in the pipeline
-    #     """
-    #     temp = []
-    #     a = CallableNodeBase(callable=lambda : temp.append("a"))
-    #     b = CallableNodeBase(callable=lambda : temp.append("b"))
-    #     c = CallableNodeBase(callable=lambda : temp.append("c"))
-    #     d = CallableNodeBase(callable=lambda : temp.append("d"))
-    #
-    #     a > c
-    #     b > c > d
-    #
-    #     print("START D==============")
-    #     d()
-    #
-    #     assert a.state == NodeState.SUCCEED
-    #     assert b.state == NodeState.SUCCEED
-    #     assert c.state == NodeState.SUCCEED
-    #     assert d.state == NodeState.SUCCEED
-    #     assert temp == ["a", "b", "c", "d"]
+        assert a.output_nodes == [b], f"should be [Node(b)] but is {a.output_nodes}"
+        assert len(a._output_links) == 1
+        assert len(b._input_links) == 1
