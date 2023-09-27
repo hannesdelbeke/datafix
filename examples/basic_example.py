@@ -18,7 +18,9 @@ if __name__ == '__main__':
 
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 
-    app = QtWidgets.QApplication([])
+    import sys
+
+    app = QtWidgets.QApplication(sys.argv + ['-platform', 'windows:darkmode=2'])
 
     # create graph controller.
     graph = NodeGraph()
@@ -192,4 +194,16 @@ if __name__ == '__main__':
     widget.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock_btn)
     widget.show()
 
+    # app = QApplication(sys.argv + ['-platform', 'windows:darkmode=2'])
+    # app.setStyle('Fusion')
+    # app.setPalette(get_darkModePalette(app))
+
+    # from qt_material import apply_stylesheet
+    # apply_stylesheet(app, theme='dark_amber.xml')
+    # import unreal_stylesheet
+    # unreal_stylesheet.setup(app)
+
+    import qdarktheme
+
+    qdarktheme.setup_theme()
     app.exec_()
