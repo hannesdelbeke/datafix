@@ -46,29 +46,33 @@ if __name__ == '__main__':
         def _print(self):
             print(f"str1{self.string_1}, str2{self.string_2}")
 
-    node_class = callable_node.create_callable_node_class(
-        PrintStrings, class_name="PrintStrings", node_name="Print String Test"
-    )  # todo
-    node_classes.append(node_class)
+    # node_class = callable_node.create_callable_node_class(
+    #     PrintStrings, class_name="PrintStrings", node_name="Print String Test"
+    # )  # todo
+    # node_classes.append(node_class)
 
-    def print_strings2(a, str1=2, str2=None):
+    def print_strings2(str1=2, str2=None):
         print(f"str1{str1}, str2{str2}")
 
-    node2 = ProcessNode.class_from_callable(print_strings2)
-    print("node2", node2)
     import pac2.node
 
-    pac_node = pac2.node.node_model_from_callable(print_strings2)
+    pac_node_class = pac2.node.node_model_from_callable(print_strings2)
+
+    node_class = ProcessNode.class_from_callable(pac_node_class())
+
+    print("node_class", node_class)
     node_class2 = callable_node.create_callable_node_class(
-        node2, class_name="PrintStrings2", node_name="Print String Test2"
+        node_class, class_name="PrintStrings2", node_name="Print String Test2"
     )  # todo
+
+    # print("------------")
     node_classes.append(node_class2)
-    print("node_class2", type(pac_node), pac_node, dir(pac_node))
-    print(dir(pac_node()))
-    n = pac_node()
-    print("RUN")
-    n()
-    print("RUN")
+    # print("node_class2", type(pac_node), pac_node, dir(pac_node))
+    # print(dir(pac_node()))
+    # n = pac_node()
+    # print("RUN")
+    # n()
+    # print("RUN")
     graph.register_nodes(node_classes)
 
     # show the node graph widget.
@@ -77,8 +81,8 @@ if __name__ == '__main__':
     # graph_widget.show()
 
     # create node with the custom port shapes.
-    process_node = graph.create_node('nodes.callable.PrintStrings')
-    process_node2 = graph.create_node('nodes.callable.PrintStrings')
+    process_node = graph.create_node('nodes.callable.PrintStrings2')
+    process_node2 = graph.create_node('nodes.callable.PrintStrings2')
 
     # create group node.
     n_group = graph.create_node('nodes.group.MyGroupNode', color=(100, 100, 100))

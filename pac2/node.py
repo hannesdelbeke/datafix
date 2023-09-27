@@ -87,7 +87,9 @@ def node_model_from_callable(callable):
     class NodeModel(NodeModelBase):
         def __init__(self):
             super().__init__()
-            self.__callable__ = callable
+            self.__name__ = callable.__name__
+            self._default_map_ = default_map
+            self._callable_ = callable
             for key, default_value in default_map.items():
                 setattr(self, key, default_value)
 
@@ -95,7 +97,7 @@ def node_model_from_callable(callable):
             for key in default_map.keys():
                 if key not in kwargs:
                     kwargs[key] = getattr(self, key)
-            return self.__callable__(*args, **kwargs)
+            return self._callable_(*args, **kwargs)
 
     return NodeModel
 

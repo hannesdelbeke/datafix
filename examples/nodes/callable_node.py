@@ -102,9 +102,19 @@ class CallableNodeBase(BaseNode):
 
 
 def create_callable_node_class(callable_node_class, class_name=None, identifier=None, node_name=None):
+
+    print("create_callable_node_class", callable_node_class)
+
     class CallableNode(CallableNodeBase):
         def __init__(self):
+            print("INIT callable_node_class", callable_node_class)
             super().__init__(callable_node_class)
+
+            print("self._callable_node", self._callable_node.callable)
+            print(type(self._callable_node.callable))
+            # get input slots from callable_node_class
+            for attr_name in self._callable_node.callable._default_map_.keys():
+                self.add_input(attr_name)  # , color=(255, 255, 255))
 
     if identifier:
         CallableNode.__identifier__ = identifier
@@ -112,4 +122,5 @@ def create_callable_node_class(callable_node_class, class_name=None, identifier=
         CallableNode.NODE_NAME = node_name
     if class_name:
         CallableNode.__name__ = class_name
+
     return CallableNode
