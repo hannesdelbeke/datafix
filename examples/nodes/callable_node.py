@@ -70,8 +70,10 @@ class CallableNodeBase(BaseNode):
         super().__init__()
 
         # create input and output port.
-        self.add_input('CALL', painter_func=draw_triangle_port, multi_input=True)  #  color=(200, 10, 0),
-        self.add_output('OUT', painter_func=draw_triangle_port)
+        self.add_input(
+            'CALL', painter_func=draw_triangle_port, multi_input=False, color=(255, 255, 255)
+        )  #  color=(200, 10, 0),
+        self.add_output('OUT', painter_func=draw_triangle_port, color=(255, 255, 255))
         self.add_output('output')
         # self._callable_node_class = callable_node_class
         self._callable_node: "pac2.ProcessNode" = callable_node_class()

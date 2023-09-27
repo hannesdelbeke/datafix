@@ -46,8 +46,29 @@ if __name__ == '__main__':
         def _print(self):
             print(f"str1{self.string_1}, str2{self.string_2}")
 
-    node_class = callable_node.create_callable_node_class(PrintStrings, class_name="PrintStrings")  # todo
+    node_class = callable_node.create_callable_node_class(
+        PrintStrings, class_name="PrintStrings", node_name="Print String Test"
+    )  # todo
     node_classes.append(node_class)
+
+    def print_strings2(a, str1=2, str2=None):
+        print(f"str1{str1}, str2{str2}")
+
+    node2 = ProcessNode.class_from_callable(print_strings2)
+    print("node2", node2)
+    import pac2.node
+
+    pac_node = pac2.node.node_model_from_callable(print_strings2)
+    node_class2 = callable_node.create_callable_node_class(
+        node2, class_name="PrintStrings2", node_name="Print String Test2"
+    )  # todo
+    node_classes.append(node_class2)
+    print("node_class2", type(pac_node), pac_node, dir(pac_node))
+    print(dir(pac_node()))
+    n = pac_node()
+    print("RUN")
+    n()
+    print("RUN")
     graph.register_nodes(node_classes)
 
     # show the node graph widget.
@@ -113,7 +134,38 @@ if __name__ == '__main__':
     from nodes.callable_node import CallableNodeBase
 
     #
-    def test():
+    def process_nodes():
+
+        import pac2
+
+        for n in pac2.Node._nodes.values():
+            n.dumb_disconnect_all()
+
+        # get connections from view, and transfer to model
+        data = graph.serialize_session()
+        # {
+        #   "out":[
+        #     "0x23d30810eb0",
+        #     "out"
+        #   ],
+        #   "in":[
+        #     "0x23d30813c70",
+        #     "in"
+        #   ]
+        # },
+        for connection in data["connections"]:
+            node_in_id, slot_in_name = connection["in"]
+            node_out_id, slot_out_name = connection["out"]
+
+            # get [VIEW node out] with node_out_id
+            qt_node_out = graph.get_node_by_id(node_out_id)
+            qt_node_in = graph.get_node_by_id(node_in_id)
+            # get pac node in the [VIEW node out]
+            pac_node_out = qt_node_out._callable_node
+            pac_node_in = qt_node_in._callable_node
+            # connect pac node to pac node in [VIEW node in]
+            pac_node_out.connect(pac_node_in, slot_out_name, slot_in_name)
+
         for node_id, node in graph.model.nodes.items():
             if isinstance(node, CallableNodeBase):
                 # get node connected to IN slot
@@ -127,7 +179,7 @@ if __name__ == '__main__':
 
                 return  # only run 1 node, which should triggert the next nodes. # todo
 
-    btn.clicked.connect(test)
+    btn.clicked.connect(process_nodes)
     dock_btn = QtWidgets.QDockWidget()
     dock_btn.setWidget(btn)
 

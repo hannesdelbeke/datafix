@@ -7,6 +7,8 @@ import importlib.util
 import inspect
 from enum import Enum
 import traceback
+from collections import OrderedDict
+import itertools
 
 
 # inspiration https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-map-state.html
@@ -33,11 +35,6 @@ RUN_STATES = (NodeState.RUNNING,)
 POST_RUN_STATES = (NodeState.SUCCEED, NodeState.FAIL)
 
 
-connections = {}
-# {
-#     node_in: {attr_in_1: (node_out, attr_out, )), ...
-# }
-
 # __call__ is both IN and OUT
 # { (all attrs from MODEL only, not NODE
 #     node_in: {"__call__": (node_out, "__call__", )), ...  <--- trigger, after __call__out finished, start __call__in
@@ -45,45 +42,8 @@ connections = {}
 #  XX don't do this --- node_in: {"__call__": (node_out, "test", )), ...  <--- trigger maybe? ignore for now
 # }
 
-# def add_connection(node_in, attr_in, node_out, attr_out="__call__"):
-#     """add a connection between 2 nodes"""
-#     data = connections.setdefault(node_in, {})
-#     data[attr_in] = (node_out, attr_out)
-#
-# def remove_connection(node_in, attr_in):
-#     """remove a connection between 2 nodes"""
-#     data = connections.get(node_in, {})
-#     data.pop(attr_in)
-#
-# def get_connections(node_in, attr_in):
-#     """get all connections for a node attribute"""
-#     data = connections.get(node_in, {})
-#     return data.get(attr_in)
-#
-# def get_input_connections(node_in):
-#     """get all input connections for a node"""
-#     return connections.get(node_in, {})
-#
-# def iter_output_connections(node_out):
-#     for node_in, data in connections.items():
-#         for attr_in, value in data.items():
-#             if value[0] == node_out:
-#                 yield node_in, attr_in
 
-# TODO convert to connections dict compatible w UI
-# [ {
-#       "out":[
-#         "0x23d30810eb0",
-#         "out"
-#       ],
-#       "in":[
-#         "0x23d30813c70",
-#         "in"
-#       ]
-#     }, ... ]
-
-
-class NodeModel:
+class NodeModelBase:
     """
     A (callable) data container that's stored in a Node, to avoid name clashes with Node attributes.
     The NodeModel lets you use any attribute name, except for '_node_meta_'
@@ -109,8 +69,35 @@ class NodeModel:
             self.connect(key, value, "__call__")
         super().__setattr__(key, value)
 
-    # def connect(self, attr_in, node_out, attr_out):
-    #     self._node_meta_.connect(node_out=node_out, attr_in=attr_in, attr_out=attr_out)
+
+def node_model_from_callable(callable):
+    """
+    convert a callable into a NodeModel class,
+    with the callable's args & kwargs as attributes from NodeModel
+    A helper function to enable wrapping the callable in the node framework
+    """
+    keys = list(inspect.signature(callable).parameters.keys())
+    default_values = [p.default for p in inspect.signature(callable).parameters.values()]
+    default_map = {}
+    for key, default_value in zip(keys, default_values):
+        if default_value == inspect._empty:
+            default_value = None
+        default_map[key] = default_value
+
+    class NodeModel(NodeModelBase):
+        def __init__(self):
+            super().__init__()
+            self.__callable__ = callable
+            for key, default_value in default_map.items():
+                setattr(self, key, default_value)
+
+        def __call__(self, *args, **kwargs):
+            for key in default_map.keys():
+                if key not in kwargs:
+                    kwargs[key] = getattr(self, key)
+            return self.__callable__(*args, **kwargs)
+
+    return NodeModel
 
 
 # if a node is callable, the class is callable?
@@ -126,7 +113,7 @@ class NodeModel:
 #         return self.string
 
 # convert a class into a node
-class NodeModelSample(NodeModel):
+class NodeModelSample(NodeModelBase):
     # complete independent class, no overlap.
     # all methods are actions
     # all attributes are input/output controlled with GET SET
@@ -217,6 +204,11 @@ class Node:
         # don't track attr_out if connection list is empty
         if not out_list:
             self._output_links.pop(attr_out)
+
+    def dumb_disconnect_all(self):
+        """disconnect all connections, doesn't disconnect self from other nodes"""
+        self._output_links = {}
+        self._input_links = {}
 
     def connect(self, node_in, attr_out=None, attr_in=None):
         """
@@ -566,8 +558,8 @@ class ProcessNode(Node):  # todo rename CallNode
         """
         print("START", self, args, kwargs)
         self(*args, **kwargs)
-        if self.OUT:
-            self.OUT.start(*args, **kwargs)
+        for n in self.output_nodes:
+            n.start(*args, **kwargs)
 
     # def __setattr__(self, key, value):
     #     super().__setattr__(key, value)
@@ -654,9 +646,8 @@ class ProcessNode(Node):  # todo rename CallNode
     #     n.name = f"{module_name}.{method_name}"
 
     @classmethod  # todo comment out because swap to callable
-    def node_from_module_method(
-        cls, module, method_name=None
-    ) -> "CallableNodeBase":  # todo can we combine module & method_name kwarg
+    def node_from_module_method(cls, module, method_name=None) -> "CallableNodeBase":
+        # todo can we combine module & method_name kwarg
         """create a CallableNodeBase from a module with method 'main'"""
         method_name = method_name or 'main'
         callable = getattr(module, method_name)
@@ -675,6 +666,16 @@ class ProcessNode(Node):  # todo rename CallNode
 
             node = cls.node_from_module(module)
             yield node
+
+    @classmethod
+    def class_from_callable(cls, callable):
+        """create a ProcessNode class from a callable"""
+
+        class ProcessNodeClass(ProcessNode):
+            def __init__(self, *args, **kwargs):
+                super().__init__(callable, *args, **kwargs)
+
+        return ProcessNodeClass
 
 
 def import_module_from_path(module_path) -> "types.ModuleType|None":
