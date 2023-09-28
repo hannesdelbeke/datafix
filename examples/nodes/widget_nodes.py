@@ -62,8 +62,11 @@ class CheckboxNode(BaseNode):
         super(CheckboxNode, self).__init__()
 
         # create the checkboxes.
-        self.add_checkbox('cb_1', '', 'Checkbox 1', True)
-        self.add_checkbox('cb_2', '', 'Checkbox 2', False)
+        self.add_checkbox('cb_1', '', '', True)
+
+        # self.view.width = 10 # todo
+        # self.model.width = 10 # todo
+        # self.view.update()
 
         # create input and output port.
         self.add_input('in', color=(200, 100, 0))

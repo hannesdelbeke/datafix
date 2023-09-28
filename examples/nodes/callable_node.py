@@ -1,4 +1,6 @@
 #!/usr/bin/python
+import logging
+
 from Qt import QtCore, QtGui
 import pac2.node
 from NodeGraphQt import BaseNode
@@ -90,37 +92,48 @@ class CallableNodeBase(BaseNode):
         self._callable_node.start()
 
     def on_state_changed(self, state):
+        color = (255, 255, 255)  # white init
         if state == pac2.node.NodeState.FAIL:
             if self._callable_node.continue_on_error:
-                self.set_color(255, 255, 0)  # yellow warning
+                color = (255, 255, 0)  # yellow warning
             else:
-                self.set_color(255, 0, 0)  # red error
+                color = (255, 0, 0)  # red error
         elif state == pac2.node.NodeState.SUCCEED:
-            self.set_color(0, 255, 0)  # green success
+            color = (0, 255, 0)  # green success
         elif state == pac2.node.NodeState.INIT:
-            self.set_color(0, 0, 0)  # black init
+            color = (255, 255, 255)  # white init
+        elif state == pac2.node.NodeState.INIT:
+            # pink
+            color = (255, 255, 255)  # white init
+        else:
+            color = (255, 0, 255)  # pink
+        # self.set_color(255, 255, 0)  # yellow warning
+        self.view.border_color = color
+        self.view.update()
+        self.graph.widget.repaint()
 
 
 def create_callable_node_class(callable_node_class, class_name=None, identifier=None, node_name=None):
-
-    print("create_callable_node_class", callable_node_class)
+    class_name = class_name or callable_node_class.__name__ + "Node"  # todo split name
 
     class CallableNode(CallableNodeBase):
         def __init__(self):
-            print("INIT callable_node_class", callable_node_class)
+            # print("INIT callable_node_class", callable_node_class)
             super().__init__(callable_node_class)
 
-            print("self._callable_node", self._callable_node.callable)
-            print(type(self._callable_node.callable))
+            # print("self._callable_node", self._callable_node.callable)
+            # print(type(self._callable_node.callable))
             # get input slots from callable_node_class
-            for attr_name in self._callable_node.callable._default_map_.keys():
-                self.add_input(attr_name)  # , color=(255, 255, 255))
+            try:
+                for attr_name in self._callable_node.callable._default_map_.keys():
+                    self.add_input(attr_name)  # , color=(255, 255, 255))
+            except AttributeError:
+                logging.warning(f"callable_node_class '{class_name}' has no callable attribute")
 
     if identifier:
         CallableNode.__identifier__ = identifier
-    if node_name:
-        CallableNode.NODE_NAME = node_name
-    if class_name:
-        CallableNode.__name__ = class_name
+
+    CallableNode.__name__ = class_name
+    CallableNode.NODE_NAME = node_name or class_name
 
     return CallableNode

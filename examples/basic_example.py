@@ -2,14 +2,17 @@
 # -*- coding: utf-8 -*-
 import os
 import signal
-
+import sys
 import Qt
 from Qt import QtCore, QtWidgets
-
 from NodeGraphQt import NodeGraph, PropertiesBinWidget, NodesTreeWidget, NodesPaletteWidget
 
 # import example nodes from the "example_nodes" package
 from nodes import basic_nodes, callable_node, group_node, widget_nodes
+from pac2 import ProcessNode
+import pac2.node
+from nodes.callable_node import CallableNodeBase
+
 
 if __name__ == '__main__':
 
@@ -17,8 +20,6 @@ if __name__ == '__main__':
     signal.signal(signal.SIGINT, signal.SIG_DFL)
 
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
-
-    import sys
 
     app = QtWidgets.QApplication(sys.argv + ['-platform', 'windows:darkmode=2'])
 
@@ -34,9 +35,8 @@ if __name__ == '__main__':
         # callable_node.CallableNodeBase,
         group_node.MyGroupNode,
         widget_nodes.TextInputNode,
+        widget_nodes.CheckboxNode,
     ]
-
-    from pac2 import ProcessNode
 
     class PrintStrings(ProcessNode):
         def __init__(self):
@@ -54,21 +54,95 @@ if __name__ == '__main__':
     # node_classes.append(node_class)
 
     def print_strings2(str1=2, str2=None):
-        print(f"str1{str1}, str2{str2}")
+        import time
 
-    import pac2.node
+        # graph.widget.repaint() # todo move
+        time.sleep(1)
+        print(f"str1{str1}, str2{str2}")
+        # graph.widget.repaint() # todo move
 
     pac_node_class = pac2.node.node_model_from_callable(print_strings2)
-
     node_class = ProcessNode.class_from_callable(pac_node_class())
-
-    print("node_class", node_class)
     node_class2 = callable_node.create_callable_node_class(
         node_class, class_name="PrintStrings2", node_name="Print String Test2"
     )  # todo
-
-    # print("------------")
     node_classes.append(node_class2)
+
+    import pac2.nodes
+
+    for node_class in pac2.Node._node_classes:
+        name = node_class.__name__.split("_callable")[0]
+        node_class2 = callable_node.create_callable_node_class(
+            node_class, class_name=name, identifier="operators"
+        )  # todo
+        node_classes.append(node_class2)
+
+    data_map = {
+        "Int": 0,
+        "Float": 0.0,
+        "Bool": False,
+        "Str": "",
+        "List": [],
+        "Dict": {},
+        "Tuple": (),
+        "Set": set(),
+        "None": None,
+    }
+    for key, default_value in data_map.items():
+
+        class _DataNode(pac2.Node):
+            def __init__(self):
+                super().__init__()
+                self.data = 0
+
+        _DataNode.__name__ = key  # + "Node"
+
+        node_class2 = callable_node.create_callable_node_class(_DataNode, identifier="datanodes")  # todo
+        node_classes.append(node_class2)
+
+    class FloatNode(pac2.Node):
+        def __init__(self):
+            super().__init__()
+            self.data = 0.0
+
+    class BoolNode(pac2.Node):
+        def __init__(self):
+            super().__init__()
+            self.data = False
+
+    class StrNode(pac2.Node):
+        def __init__(self):
+            super().__init__()
+            self.data = ""
+
+    class ListNode(pac2.Node):
+        def __init__(self):
+            super().__init__()
+            self.data = []
+
+    class DictNode(pac2.Node):
+        def __init__(self):
+            super().__init__()
+            self.data = {}
+
+    class TupleNode(pac2.Node):
+        def __init__(self):
+            super().__init__()
+            self.data = ()
+
+    class SetNode(pac2.Node):
+        def __init__(self):
+            super().__init__()
+            self.data = set()
+
+    class NoneNode(pac2.Node):
+        def __init__(self):
+            super().__init__()
+            self.data = None
+
+    print("node_classes", [x.__name__ for x in ProcessNode._node_classes])
+    # print("node_class", node_class)
+
     # print("node_class2", type(pac_node), pac_node, dir(pac_node))
     # print(dir(pac_node()))
     # n = pac_node()
@@ -86,16 +160,8 @@ if __name__ == '__main__':
     process_node = graph.create_node('nodes.callable.PrintStrings2')
     process_node2 = graph.create_node('nodes.callable.PrintStrings2')
 
-    # create group node.
-    n_group = graph.create_node('nodes.group.MyGroupNode', color=(100, 100, 100))
-
     process_node2.set_input(0, process_node.output(0))  # todo
     # (connect nodes using the .connect_to method from the port object)
-
-    # todo automate hookup based on view
-    # process_node2._callable_node.IN = process_node._callable_node
-    process_node._callable_node.OUT = process_node2._callable_node
-    print("input_nodes", process_node2._callable_node, "---", process_node2._callable_node.input_nodes)
 
     # auto layout nodes.
     graph.auto_layout_nodes()
@@ -133,11 +199,14 @@ if __name__ == '__main__':
     dock_tree = QtWidgets.QDockWidget()
     dock_tree.setWidget(nodes_tree)
 
+    # reset background color for category items stuck in white
+    for category, item in nodes_tree._category_items.items():
+        item.setBackground(0, QtCore.Qt.NoBrush)
+
     # add a button under the node tree to create a new node.
     btn = QtWidgets.QPushButton('PROCESS NODES')
-    # set green
-    btn.setStyleSheet("background-color: rgb(150, 255, 60);")
-    from nodes.callable_node import CallableNodeBase
+    # set green, set text color black
+    btn.setStyleSheet("background-color: rgb(100, 180, 50); color: rgb(0, 0, 0);")
 
     #
     def process_nodes():
@@ -159,7 +228,7 @@ if __name__ == '__main__':
         #     "in"
         #   ]
         # },
-        for connection in data["connections"]:
+        for connection in data.get("connections", []):
             node_in_id, slot_in_name = connection["in"]
             node_out_id, slot_out_name = connection["out"]
 

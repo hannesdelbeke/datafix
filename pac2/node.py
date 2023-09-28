@@ -99,6 +99,7 @@ def node_model_from_callable(callable):
                     kwargs[key] = getattr(self, key)
             return self._callable_(*args, **kwargs)
 
+    NodeModel.__name__ = callable.__name__
     return NodeModel
 
 
@@ -154,6 +155,7 @@ class Node:
     """
 
     _nodes = {}
+    _node_classes = []
 
     def __init__(self, data=None, name=None, state=None):
         """
@@ -597,10 +599,15 @@ class ProcessNode(Node):  # todo rename CallNode
 
     def __call__(self, *args, **kwargs) -> "typing.Any":  # protected method
         # check if all input nodes have run
+
+        if self.state == NodeState.DISABLED:
+            return
+
         if self.state == NodeState.SUCCEED:
             return self.data
 
         for node in self.input_nodes:
+            print(self, "is running input Node: ", node)
             # check if type is process node
             if isinstance(node, ProcessNode):
                 if node.state == NodeState.INIT:  # if DISABLED or already run, don't run
@@ -610,8 +617,6 @@ class ProcessNode(Node):  # todo rename CallNode
                         if not self.continue_on_error:
                             return
 
-        if self.state == NodeState.DISABLED:
-            return
         try:
             self.state = NodeState.RUNNING
             result = self.callable(*args, **kwargs)  # todo does this pass self?
@@ -670,13 +675,27 @@ class ProcessNode(Node):  # todo rename CallNode
             yield node
 
     @classmethod
-    def class_from_callable(cls, callable):
+    def class_from_callable(cls, callable_):
         """create a ProcessNode class from a callable"""
 
         class ProcessNodeClass(ProcessNode):
             def __init__(self, *args, **kwargs):
-                super().__init__(callable, *args, **kwargs)
+                super().__init__(callable_, *args, **kwargs)
 
+        ProcessNodeClass.__name__ = callable_.__name__
+        cls._node_classes.append(ProcessNodeClass)
+        return ProcessNodeClass
+
+    @classmethod
+    def class_from_callable_class(cls, callable_class):
+        """create a ProcessNode class from a callable class"""
+
+        class ProcessNodeClass(ProcessNode):
+            def __init__(self, *args, **kwargs):
+                super().__init__(callable_class(), *args, **kwargs)
+
+        ProcessNodeClass.__name__ = callable_class.__name__
+        cls._node_classes.append(ProcessNodeClass)
         return ProcessNodeClass
 
 
