@@ -13,8 +13,13 @@ from pac2 import ProcessNode
 import pac2.node
 from nodes.callable_node import CallableNodeBase
 
+"""
+import examples.basic_example as b
+b.main()
+"""
 
-if __name__ == '__main__':
+
+def main():
 
     # handle SIGINT to make the app terminate on CTRL+C
     signal.signal(signal.SIGINT, signal.SIG_DFL)
@@ -283,3 +288,7 @@ if __name__ == '__main__':
 
     if new_app:
         app.exec_()
+
+
+if __name__ == '__main__':
+    main()
