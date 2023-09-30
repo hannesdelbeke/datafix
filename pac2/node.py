@@ -177,6 +177,7 @@ class Node:
         # id module + name
         self.name = name or self.__class__.__name__
         self.data = data  # data (like int, str, array,...) or settings for a processNode, class data vs instance data
+        # self.dirty = False  # todo mark dirty when connections change
 
         # actions need a name, and a callable. not just a method.
         # actions are optional.
@@ -216,6 +217,18 @@ class Node:
         # optimisation: don't track attr_out if connection list is empty
         if not out_list:
             self._output_links.pop(attr_out)
+
+    def disconnect_in_link(self, attr_in, node_out, attr_out):
+        """
+        attr_in, the input attribute name
+        node_out, the node that's connected to the input
+        attr_out, the output attribute name from node_out, connected to attr_in
+        """
+        node_out.disconnect_out_link(attr_out, self, attr_in)
+
+    def disconnect_all(self):
+        # todo needed when deleting a Node
+        pass
 
     def dumb_disconnect_all(self):
         """disconnect all connections, doesn't disconnect self from other nodes"""
@@ -268,9 +281,9 @@ class Node:
         except AttributeError as e:
             print(e)
             import traceback
+
             traceback.print_exc()
             pass
-
 
     # def connect(self, node_out, attr_in: str, attr_out: str):
     #     """
@@ -591,35 +604,10 @@ class ProcessNode(Node):  # todo rename CallNode
         passes args and kwargs to all callables/nodes
         """
         print("START", self, args, kwargs)
-        self(*args, **kwargs)
-        for n in self.output_nodes:
-            n.start(*args, **kwargs)
-
-    # def __setattr__(self, key, value):
-    #     super().__setattr__(key, value)
-    #     if key == "OUT":
-    #         # if provided None with a node stored, reset it, and reset the connection on the node
-    #         if value is None and self.OUT:
-    #             self.OUT.IN = None
-    #             self.OUT = None
-    #             return
-    #
-    #         # assume it's a node and create a bidirectional link
-    #         if value and value.IN != self:
-    #             print("seeting out", value, self, "current out", value.OUT)
-    #             value.IN = self
-
-    # if key == "IN":
-    #     # if provided None with a node stored, reset it, and reset the connection on the node
-    #     if value is None and self.IN:
-    #         self.IN.OUT = None
-    #         self.IN = None
-    #         return
-    #
-    #     # assume it's a node and create a bidirectional link
-    #     if value and value.OUT != self:
-    #         print("seeting out", value, self, "current out", value.OUT)
-    #         value.OUT = self
+        self.__call__(*args, **kwargs)
+        for node in self.output_nodes:
+            if isinstance(node, ProcessNode):
+                node.start(*args, **kwargs)
 
     # def __gt__(self, other):
     #     # link nodes
@@ -705,7 +693,7 @@ class ProcessNode(Node):  # todo rename CallNode
             yield node
 
     @classmethod
-    def class_from_callable(cls, callable_):
+    def class_from_callable(cls, callable_: NodeModelBase):
         """create a ProcessNode class from a callable"""
 
         class ProcessNodeClass(ProcessNode):
