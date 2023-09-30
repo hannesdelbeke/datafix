@@ -7,11 +7,15 @@ import Qt
 from Qt import QtCore, QtWidgets
 from NodeGraphQt import NodeGraph, PropertiesBinWidget, NodesTreeWidget, NodesPaletteWidget
 
+import pac2
+
 # import example nodes from the "example_nodes" package
-from nodes import basic_nodes, callable_node, group_node, widget_nodes
+from examples.nodes import basic_nodes, callable_node, group_node, widget_nodes
 from pac2 import ProcessNode
+from pac2.node import node_model_class_from_callable
 import pac2.node
-from nodes.callable_node import CallableNodeBase
+from examples.nodes.callable_node import CallableNodeBase
+import pac2.nodes
 
 """
 import examples.basic_example as b
@@ -35,7 +39,21 @@ def main():
     # create graph controller.
     graph = NodeGraph()
 
+    # use chdir() to set too
+    os.chdir(os.path.dirname(__file__))
+
+    # # set up context menu for the node graph.
+    # # todo resources
+    # # for now get locations from this module
+    # from pathlib import Path
+    # mod_path = Path(__file__).parent / "hotkeys/hotkeys.json"
+    # print(mod_path )
+    # graph.set_context_menu_from_file(mod_path )
+
     # set up context menu for the node graph.
+    # todo resources
+    # for now get locations from this module
+    mod_path = os.path.dirname(__file__)
     graph.set_context_menu_from_file('../examples/hotkeys/hotkeys.json')
 
     # todo register pac nodes
@@ -70,14 +88,14 @@ def main():
         print(f"str1{str1}, str2{str2}")
         # graph.widget.repaint() # todo move
 
-    pac_node_class = pac2.node.node_model_from_callable(print_strings2)
+    pac_node_class = node_model_class_from_callable(print_strings2)
     node_class = ProcessNode.class_from_callable(pac_node_class())
     node_class2 = callable_node.create_callable_node_class(
         node_class, class_name="PrintStrings2", node_name="Print String Test2"
     )  # todo
     node_classes.append(node_class2)
 
-    import pac2.nodes
+    import pac2.blender
 
     for node_class in pac2.Node._node_classes:
         name = node_class.__name__.split("_callable")[0]
