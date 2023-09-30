@@ -77,6 +77,7 @@ if __name__ == '__main__':
         )  # todo
         node_classes.append(node_class2)
 
+    # create data nodes
     data_map = {
         "Int": 0,
         "Float": 0.0,
@@ -99,46 +100,46 @@ if __name__ == '__main__':
 
         node_class2 = callable_node.create_callable_node_class(_DataNode, identifier="datanodes")  # todo
         node_classes.append(node_class2)
-
-    class FloatNode(pac2.Node):
-        def __init__(self):
-            super().__init__()
-            self.data = 0.0
-
-    class BoolNode(pac2.Node):
-        def __init__(self):
-            super().__init__()
-            self.data = False
-
-    class StrNode(pac2.Node):
-        def __init__(self):
-            super().__init__()
-            self.data = ""
-
-    class ListNode(pac2.Node):
-        def __init__(self):
-            super().__init__()
-            self.data = []
-
-    class DictNode(pac2.Node):
-        def __init__(self):
-            super().__init__()
-            self.data = {}
-
-    class TupleNode(pac2.Node):
-        def __init__(self):
-            super().__init__()
-            self.data = ()
-
-    class SetNode(pac2.Node):
-        def __init__(self):
-            super().__init__()
-            self.data = set()
-
-    class NoneNode(pac2.Node):
-        def __init__(self):
-            super().__init__()
-            self.data = None
+    #
+    # class FloatNode(pac2.Node):
+    #     def __init__(self):
+    #         super().__init__()
+    #         self.data = 0.0
+    #
+    # class BoolNode(pac2.Node):
+    #     def __init__(self):
+    #         super().__init__()
+    #         self.data = False
+    #
+    # class StrNode(pac2.Node):
+    #     def __init__(self):
+    #         super().__init__()
+    #         self.data = ""
+    #
+    # class ListNode(pac2.Node):
+    #     def __init__(self):
+    #         super().__init__()
+    #         self.data = []
+    #
+    # class DictNode(pac2.Node):
+    #     def __init__(self):
+    #         super().__init__()
+    #         self.data = {}
+    #
+    # class TupleNode(pac2.Node):
+    #     def __init__(self):
+    #         super().__init__()
+    #         self.data = ()
+    #
+    # class SetNode(pac2.Node):
+    #     def __init__(self):
+    #         super().__init__()
+    #         self.data = set()
+    #
+    # class NoneNode(pac2.Node):
+    #     def __init__(self):
+    #         super().__init__()
+    #         self.data = None
 
     print("node_classes", [x.__name__ for x in ProcessNode._node_classes])
     # print("node_class", node_class)

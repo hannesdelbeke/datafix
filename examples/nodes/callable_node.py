@@ -59,6 +59,30 @@ def draw_triangle_port(painter, rect, info):
     painter.restore()
 
 
+class DataNodeBase(BaseNode):
+    """Node View for a callable Node"""
+
+    # set a unique node identifier.
+    __identifier__ = 'nodes.data'
+
+    # set the initial default node name.
+    NODE_NAME = 'data node'
+
+    def __init__(self, data_node_class):
+        super().__init__()
+
+        print("INIT CallableNodeBase", data_node_class)
+        # create input and output port.
+        self.add_output('data')
+        self._data_node: "pac2.ProcessNode" = data_node_class()
+        # self._data_node.callbacks_state_changed.append(self.on_state_changed)
+
+
+# todo graph.delete_node(node) # todo
+# graph.delete_nodes#
+# self.graph.nodes_deleted.emit(node_ids)
+
+
 class CallableNodeBase(BaseNode):
     """Node View for a callable Node"""
 
@@ -80,6 +104,9 @@ class CallableNodeBase(BaseNode):
         # self._callable_node_class = callable_node_class
         self._callable_node: "pac2.ProcessNode" = callable_node_class()
         self._callable_node.callbacks_state_changed.append(self.on_state_changed)
+        # trigger state change
+        # self._callable_node.state = self._callable_node.state
+        # todo doesnt work on copy paste node
 
     def set_callable_node(self, callable_node):
         self._callable_node = callable_node
@@ -110,19 +137,23 @@ class CallableNodeBase(BaseNode):
         # self.set_color(255, 255, 0)  # yellow warning
         self.view.border_color = color
         self.view.update()
-        self.graph.widget.repaint()
+        if self.graph:
+            self.graph.widget.repaint()
+
+    def on_input_connected(self, in_port, out_port):
+        pass
+
+    def on_input_disconnected(self, in_port, out_port):
+        pass
 
 
 def create_callable_node_class(callable_node_class, class_name=None, identifier=None, node_name=None):
-    class_name = class_name or callable_node_class.__name__ + "Node"  # todo split name
+    class_name = class_name or callable_node_class.__name__  # + "Node"  # todo split name
 
     class CallableNode(CallableNodeBase):
         def __init__(self):
-            # print("INIT callable_node_class", callable_node_class)
             super().__init__(callable_node_class)
 
-            # print("self._callable_node", self._callable_node.callable)
-            # print(type(self._callable_node.callable))
             # get input slots from callable_node_class
             try:
                 for attr_name in self._callable_node.callable._default_map_.keys():
