@@ -225,6 +225,7 @@ def main():
 
         for n in pac2.Node._nodes.values():
             n.dumb_disconnect_all()
+            n.state = pac2.node.NodeState.INIT
 
         # get connections from view, and transfer to model
         data = graph.serialize_session()
