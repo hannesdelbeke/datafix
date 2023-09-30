@@ -21,7 +21,11 @@ if __name__ == '__main__':
 
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 
-    app = QtWidgets.QApplication(sys.argv + ['-platform', 'windows:darkmode=2'])
+    new_app = False
+    app = QtWidgets.QApplication.instance()
+    if not app:
+        app = QtWidgets.QApplication(sys.argv + ['-platform', 'windows:darkmode=2'])
+        new_app = True
 
     # create graph controller.
     graph = NodeGraph()
@@ -276,4 +280,6 @@ if __name__ == '__main__':
     import qdarktheme
 
     qdarktheme.setup_theme()
-    app.exec_()
+
+    if new_app:
+        app.exec_()
