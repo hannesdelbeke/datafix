@@ -1,5 +1,6 @@
 from unittest import TestCase
 from pac2.node import Node, ProcessNode, NodeState
+import pac2.node
 
 
 class TestNode(TestCase):
@@ -33,9 +34,32 @@ class TestNode(TestCase):
 
     def test_output_links(self):
         a = Node(name="a")
-        b = Node(name="b", data="hello")
+        b = Node(name="b")
         a.connect(b)  # todo replace
         assert len(a.output_links) == 1, f"should have 1 output link, but has {len(a.output_links)}, {a.output_links}"
+
+    def test_output_links(self):
+        print("test_output_links---")
+        a = Node(name="a", data="hello")
+
+        has_run = []
+
+        def print_string(string):
+            print("print string", string)
+            has_run.append(string)
+
+        print("make node model")
+        node_model = pac2.node.node_model_class_from_callable(print_string)
+        print("make node class")
+        node_class = ProcessNode.class_from_callable_class(node_model)
+        print("make node")
+        b = node_class(name="b")
+        print("connect")
+        a.connect(b, attr_in="string")  # todo replace
+        print("--- run b ---")
+        b()
+        print("--- finish run b ---")
+        assert has_run == ["hello"], f"should have run once, but has run {has_run}"
 
     # def test_runtime_connection(self):
     #     def temp_method():

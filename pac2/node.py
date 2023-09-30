@@ -53,7 +53,7 @@ class NodeModelBase:
     """
 
     def __init__(self):
-        self._node_meta_ = None
+        self._node_meta_: "pac2.node.Node" = None
 
     def __getattribute__(self, item):
         value = super().__getattribute__(item)
@@ -63,14 +63,17 @@ class NodeModelBase:
             return value()
         return value
 
-    def __setattr__(self, key, value):
-        # e.g. key=="mesh" and value==Node
-        if key != "_node_meta_" and isinstance(value, Node):
-            self.connect(key, value, "__call__")
-        super().__setattr__(key, value)
+    # def __setattr__(self, key, value):
+    #     # e.g. key=="mesh" and value==Node
+    #     if key != "_node_meta_" and isinstance(value, Node):
+    #         value.connect(node_in=self._node_meta_, attr_in=key, attr_out="__call__")
+    #     super().__setattr__(key, value)
+
+    def __repr__(self):
+        return f"NodeModel<{self.__class__.__name__}>"
 
 
-def node_model_from_callable(callable):
+def node_model_class_from_callable(callable, model_name=None):
     """
     convert a callable into a NodeModel class,
     with the callable's args & kwargs as attributes from NodeModel
@@ -84,10 +87,12 @@ def node_model_from_callable(callable):
             default_value = None
         default_map[key] = default_value
 
+    model_name = model_name or callable.__name__
+
     class NodeModel(NodeModelBase):
         def __init__(self):
             super().__init__()
-            self.__name__ = callable.__name__
+            self.__name__ = model_name
             self._default_map_ = default_map
             self._callable_ = callable
             for key, default_value in default_map.items():
@@ -99,7 +104,7 @@ def node_model_from_callable(callable):
                     kwargs[key] = getattr(self, key)
             return self._callable_(*args, **kwargs)
 
-    NodeModel.__name__ = callable.__name__
+    NodeModel.__name__ = model_name
     return NodeModel
 
 
@@ -189,12 +194,15 @@ class Node:
         """returns the stored data, or the callable output if it's a CallableNodeBase"""
         return self.data
 
-    def break_out_connection(self, attr_out, node_in, attr_in):
+    def disconnect_out_link(self, attr_out, node_in, attr_in):
         """
         attr_out, the output attribute name
         node_in, the node that's connected to the output
         attr_in, the input attribute name from node_in, connected to attr_out
         """
+        #  node_out       node_in
+        # [attr_out]•---•[attr_in]
+
         # remove in connection on node_in
         node_in._input_links.pop(attr_in)
 
@@ -205,7 +213,7 @@ class Node:
                 out_list.remove((node, attr))
                 break
 
-        # don't track attr_out if connection list is empty
+        # optimisation: don't track attr_out if connection list is empty
         if not out_list:
             self._output_links.pop(attr_out)
 
@@ -214,7 +222,7 @@ class Node:
         self._output_links = {}
         self._input_links = {}
 
-    def connect(self, node_in, attr_out=None, attr_in=None):
+    def connect(self, node_in: "Node", attr_out: str = None, attr_in: str = None):
         """
         node_in is the node with the IN port
         (self) node_out is the node with the OUT port
@@ -236,7 +244,7 @@ class Node:
         data = node_in._input_links.get(attr_in)  # get (B, __call__) from C
         if data:
             old_out_node, old_out_attr = data
-            old_out_node.break_out_connection(old_out_attr, node_in, attr_in)
+            old_out_node.disconnect_out_link(old_out_attr, node_in, attr_in)
 
         # Override old out connection
         # todo check not already connected
@@ -244,6 +252,25 @@ class Node:
 
         # Set new in connection
         node_in._input_links[attr_in] = (node_out, attr_out)
+
+        # get nodemodel and set attr to Node
+        print("set OUT", node_out)
+        try:
+            setattr(node_out.callable, attr_out, node_in)
+            print("set attr", attr_out, "to", node_in)
+        except AttributeError as e:
+            print(e)
+            pass
+        print("set IN", node_in)
+        try:
+            setattr(node_in.callable, attr_in, node_out)
+            print("set attr", attr_in, "to", node_out)
+        except AttributeError as e:
+            print(e)
+            import traceback
+            traceback.print_exc()
+            pass
+
 
     # def connect(self, node_out, attr_in: str, attr_out: str):
     #     """
@@ -554,6 +581,9 @@ class ProcessNode(Node):  # todo rename CallNode
         self.name = name or callable.__name__ if callable else self.__class__.__name__
         self.continue_on_error = False  # warning or error. stop or continue the node flow on exception
         self.raise_exception = raise_exception  # debugging
+
+        if hasattr(callable, "_node_meta_"):
+            self.callable._node_meta_ = self
 
     def start(self, *args, **kwargs):
         """
