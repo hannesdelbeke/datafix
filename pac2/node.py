@@ -73,7 +73,7 @@ class NodeModelBase:
         return f"NodeModel<{self.__class__.__name__}>"
 
 
-def node_model_class_from_callable(callable, model_name=None):
+def node_model_class_from_callable(callable, model_name=None, default_map=None):
     """
     convert a callable into a NodeModel class,
     with the callable's args & kwargs as attributes from NodeModel
@@ -84,21 +84,22 @@ def node_model_class_from_callable(callable, model_name=None):
     # arguments.apply_defaults()
     # print(arguments)
 
-    keys = list(inspect.signature(callable).parameters.keys())
-    default_values = [p.default for p in inspect.signature(callable).parameters.values()]
-    param_types = [p.annotation for p in inspect.signature(callable).parameters.values()]
-    # if inspect._empty then replace with Any annotation
-    param_types = [t if t != inspect._empty else typing.Any for t in param_types]
-    # todo support types
+    if not default_map:
+        keys = list(inspect.signature(callable).parameters.keys())
+        default_values = [p.default for p in inspect.signature(callable).parameters.values()]
+        param_types = [p.annotation for p in inspect.signature(callable).parameters.values()]
+        # if inspect._empty then replace with Any annotation
+        param_types = [t if t != inspect._empty else typing.Any for t in param_types]
+        # todo support types
 
-    print("param_types", param_types)
-    default_map = {}
-    for key, default_value in zip(keys, default_values):
-        if default_value == inspect._empty:
-            default_value = None
-        # convert string value to int if int, float if float, dict if dict, etc
+        print("param_types", param_types)
+        default_map = {}
+        for key, default_value in zip(keys, default_values):
+            if default_value == inspect._empty:
+                default_value = None
+            # convert string value to int if int, float if float, dict if dict, etc
 
-        default_map[key] = default_value
+            default_map[key] = default_value
 
     model_name = model_name or callable.__name__
 
@@ -112,13 +113,13 @@ def node_model_class_from_callable(callable, model_name=None):
             self._default_map_ = self._default_map
             self._callable_ = callable
             for key, default_value in default_map.items():
-                print("setattr", key, default_value, self)
                 setattr(self, key, default_value)
 
         def __call__(self, *args, **kwargs):
             for key in default_map.keys():
                 if key not in kwargs:
                     kwargs[key] = getattr(self, key)
+            print(f"Running {self._callable_} with args:", args, "kwargs:", kwargs)
             return self._callable_(*args, **kwargs)
 
     NodeModel.__name__ = model_name
@@ -626,6 +627,9 @@ class ProcessNode(Node):  # todo rename CallNode
             if isinstance(node, ProcessNode):
                 node.start(*args, **kwargs)
 
+        # import bpy
+        # bpy.ops.mesh.primitive_cube_add()
+
     # def __gt__(self, other):
     #     # link nodes
     #     print("linking", self, other)
@@ -654,6 +658,7 @@ class ProcessNode(Node):  # todo rename CallNode
 
         try:
             self.state = NodeState.RUNNING
+            print("Running", self.callable, "with args:", args, "kwargs:", kwargs)
             result = self.callable(*args, **kwargs)  # todo does this pass self?
             self.state = NodeState.SUCCEED
             # todo no need to cache result, instead create a new datanode with the result

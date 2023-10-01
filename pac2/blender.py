@@ -45,27 +45,37 @@ for attr_name in dir(bpy.ops.mesh):
         logging.warning(f"attr '{attr_name}' is private, skip node")
         continue
 
-    # if not callable(getattr(bpy.ops.mesh, attr)):
-    node_model_class = pac2.node.node_model_class_from_callable(attr, model_name=attr._func)
-
-    node_model = node_model_class()
-
     try:
-        kwargs = extract_kwargs(attr.__doc__.split("/n")[0].strip())
+        default_map = {}
+        doc_input = attr.__doc__.split("/n")[0].strip()
+        doc_input = doc_input.replace("scale=(0, 0, 0)", "scale=(1, 1, 1)")  # fix blender bug
+        if "scale" in doc_input:
+            print("scale", doc_input)
+        kwargs = extract_kwargs(doc_input)
         for key, value in kwargs:
-            node_model._default_map_[key] = value
-            setattr(node_model, key, value)
+            # node_model._default_map_[key] = value
+            default_map[key] = value
+            # setattr(node_model, key, value)
             # todo make it so we dont have to both set the default_map and the attribute
         # remove args and kwargs from _default_map_
-        node_model._default_map_.pop("args")
-        node_model._default_map_.pop("kw")
+        # node_model._default_map_.pop("args")
+        # node_model._default_map_.pop("kw")
     except Exception as e:
         logging.warning(e)
         print("docstring", attr.__doc__)
 
+    def wrap_blender_hack(*args, **kwargs):
+        # with context.temp_override(window=context.window_manager.windows[0]):
+        return attr(*args, **kwargs)
+
+    # if not callable(getattr(bpy.ops.mesh, attr)):
+    node_model_class = pac2.node.node_model_class_from_callable(attr, model_name=attr._func, default_map=default_map)
+
+    # node_model = node_model_class()
+
     # print("node_model", node_model, dir(node_model))
 
-    node = pac2.ProcessNode.class_from_callable(node_model)  # todo change to class stuff
+    node = pac2.ProcessNode.class_from_callable_class(node_model_class)
     node.__category__ = MESH  # todo set identifier
 
 

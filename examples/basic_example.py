@@ -206,10 +206,15 @@ def main():
         pass
 
     for node_class in ProcessNode._node_classes:
-        name = node_class.__name__.split("_callable")[0]
-        node_class2 = callable_node.create_callable_node_class(
-            node_class, class_name=name, identifier="operators"
-        )  # todo
+        if issubclass(node_class, ProcessNode):
+            name = node_class.__name__.split("_callable")[0]
+            node_class2 = callable_node.create_callable_node_class(
+                node_class, class_name=name, identifier="operators"
+            )  # todo
+        else:  # datanode
+            name = node_class.__name__
+            node_class2 = callable_node.create_data_node_class(node_class, class_name=name, identifier="data")
+
         node_classes.append(node_class2)
 
     # create data nodes
@@ -253,7 +258,13 @@ def main():
     # print("RUN")
     # n()
     # print("RUN")
-    graph.register_nodes(node_classes)
+
+    try:
+        graph.register_nodes(node_classes)
+    except:
+        import traceback
+
+        traceback.print_exc()
 
     # show the node graph widget.
     graph_widget = graph.widget
@@ -298,7 +309,7 @@ def main():
     nodes_tree.set_category_label('nodes.group', 'Group Nodes')
     # nodes_tree.show()
 
-    widget = QtWidgets.QMainWindow()
+    main_widget = QtWidgets.QMainWindow()
 
     dock_tree = QtWidgets.QDockWidget()
     dock_tree.setWidget(nodes_tree)
@@ -345,7 +356,7 @@ def main():
             pac_node_out.connect(pac_node_in, slot_out_name, slot_in_name)
 
         for node_id, node in graph.model.nodes.items():
-            if isinstance(node, CallableNodeBase):
+            if isinstance(node, CallableNodeBase) and isinstance(node._callable_node, ProcessNode):
                 # get node connected to IN slot
                 ports = node.inputs()["CALL"].connected_ports()
                 if ports:
@@ -353,7 +364,7 @@ def main():
                     print("IN NODE", in_node)
                     in_node.start()
                 else:
-                    node.start()
+                    node.start()  # todo
 
                 return  # only run 1 node, which should triggert the next nodes. # todo
 
@@ -389,11 +400,11 @@ def main():
     graph.node_created.connect(node_created)
     graph.node_selected.connect(node_selected)
 
-    widget.setCentralWidget(graph_widget)
-    widget.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock_tree)
-    widget.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock_btn)
-    widget.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock_attr_editor)
-    widget.show()
+    main_widget.setCentralWidget(graph_widget)
+    main_widget.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock_tree)
+    main_widget.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock_btn)
+    main_widget.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock_attr_editor)
+    main_widget.show()
 
     # app = QApplication(sys.argv + ['-platform', 'windows:darkmode=2'])
     # app.setStyle('Fusion')
@@ -413,6 +424,8 @@ def main():
 
     if new_app:
         app.exec_()
+
+    return main_widget
 
 
 if __name__ == '__main__':

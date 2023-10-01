@@ -77,6 +77,9 @@ class DataNodeBase(BaseNode):
         self._data_node: "pac2.ProcessNode" = data_node_class()
         # self._data_node.callbacks_state_changed.append(self.on_state_changed)
 
+    # def start(self):
+    #     self._callable_node.start()
+
 
 # todo graph.delete_node(node) # todo
 # graph.delete_nodes#
@@ -108,9 +111,9 @@ class CallableNodeBase(BaseNode):
         # self._callable_node.state = self._callable_node.state
         # todo doesnt work on copy paste node
 
-    def set_callable_node(self, callable_node):
-        self._callable_node = callable_node
-        self._callable_node.callbacks_state_changed.append(self.on_state_changed)
+    # def set_callable_node(self, callable_node):
+    #     self._callable_node = callable_node
+    #     self._callable_node.callbacks_state_changed.append(self.on_state_changed)
 
     def run(self):
         self._callable_node()  # run the node, the node fails, warns, succeeds.
@@ -171,3 +174,29 @@ def create_callable_node_class(callable_node_class, class_name=None, identifier=
     CallableNode.NODE_NAME = node_name or class_name
 
     return CallableNode
+
+
+def create_data_node_class(callable_node_class, class_name=None, identifier=None, node_name=None):
+    class_name = class_name or callable_node_class.__name__  # + "Node"  # todo split name
+
+    class DataNode(DataNodeBase):
+        def __init__(self):
+            super().__init__(callable_node_class)
+
+            # get input slots from callable_node_class
+            try:
+                for attr_name in self._callable_node.callable._default_map_.keys():
+                    self.add_input(attr_name)  # , color=(255, 255, 255))
+            except AttributeError:
+                logging.warning(f"callable_node_class '{class_name}' has no callable attribute")
+
+    if hasattr(callable_node_class, "__category__"):
+        identifier += "." + callable_node_class.__category__
+
+    if identifier:
+        DataNode.__identifier__ = identifier
+
+    DataNode.__name__ = class_name
+    DataNode.NODE_NAME = node_name or class_name
+
+    return DataNode
