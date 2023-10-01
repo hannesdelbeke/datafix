@@ -54,6 +54,8 @@ for attr_name in dir(bpy.ops.mesh):
         kwargs = extract_kwargs(attr.__doc__.split("/n")[0].strip())
         for key, value in kwargs:
             node_model._default_map_[key] = value
+            setattr(node_model, key, value)
+            # todo make it so we dont have to both set the default_map and the attribute
         # remove args and kwargs from _default_map_
         node_model._default_map_.pop("args")
         node_model._default_map_.pop("kw")
@@ -63,11 +65,12 @@ for attr_name in dir(bpy.ops.mesh):
 
     # print("node_model", node_model, dir(node_model))
 
-    node = pac2.ProcessNode.class_from_callable(node_model)
+    node = pac2.ProcessNode.class_from_callable(node_model)  # todo change to class stuff
     node.__category__ = MESH  # todo set identifier
 
 
 # node_model_class = pac2.node.node_model_class_from_callable(extract_kwargs)
 # node_model = node_model_class()
 # node_model._default_map_["test_var"] = 1
+# setattr(node_model, "test_var", 1)
 # node = pac2.ProcessNode.class_from_callable(node_model)

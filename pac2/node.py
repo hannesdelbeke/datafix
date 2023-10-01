@@ -79,23 +79,40 @@ def node_model_class_from_callable(callable, model_name=None):
     with the callable's args & kwargs as attributes from NodeModel
     A helper function to enable wrapping the callable in the node framework
     """
+    # bound_args = inspect.signature(callable).bind_partial()
+    # arguments = bound_args.arguments
+    # arguments.apply_defaults()
+    # print(arguments)
+
     keys = list(inspect.signature(callable).parameters.keys())
     default_values = [p.default for p in inspect.signature(callable).parameters.values()]
+    param_types = [p.annotation for p in inspect.signature(callable).parameters.values()]
+    # if inspect._empty then replace with Any annotation
+    param_types = [t if t != inspect._empty else typing.Any for t in param_types]
+    # todo support types
+
+    print("param_types", param_types)
     default_map = {}
     for key, default_value in zip(keys, default_values):
         if default_value == inspect._empty:
             default_value = None
+        # convert string value to int if int, float if float, dict if dict, etc
+
         default_map[key] = default_value
 
     model_name = model_name or callable.__name__
 
     class NodeModel(NodeModelBase):
+
+        _default_map = default_map
+
         def __init__(self):
             super().__init__()
             self.__name__ = model_name
-            self._default_map_ = default_map
+            self._default_map_ = self._default_map
             self._callable_ = callable
             for key, default_value in default_map.items():
+                print("setattr", key, default_value, self)
                 setattr(self, key, default_value)
 
         def __call__(self, *args, **kwargs):
@@ -267,17 +284,17 @@ class Node:
         node_in._input_links[attr_in] = (node_out, attr_out)
 
         # get nodemodel and set attr to Node
-        print("set OUT", node_out)
+        # print("set OUT", node_out)
         try:
             setattr(node_out.callable, attr_out, node_in)
-            print("set attr", attr_out, "to", node_in)
+            # print("set attr", attr_out, "to", node_in)
         except AttributeError as e:
             print(e)
             pass
-        print("set IN", node_in)
+        # print("set IN", node_in)
         try:
             setattr(node_in.callable, attr_in, node_out)
-            print("set attr", attr_in, "to", node_out)
+            # print("set attr", attr_in, "to", node_out)
         except AttributeError as e:
             print(e)
             import traceback
@@ -641,6 +658,7 @@ class ProcessNode(Node):  # todo rename CallNode
             self.state = NodeState.SUCCEED
             # todo no need to cache result, instead create a new datanode with the result
             # for a validation, result would be true or false, with failed instances.
+            print("set data", result)
             self.data = result  # todo choose if we use data to cache result, or if we use it for settings. e.g. which tri-count to validate against
             return result
         except Exception as e:
@@ -692,17 +710,17 @@ class ProcessNode(Node):  # todo rename CallNode
             node = cls.node_from_module(module)
             yield node
 
-    @classmethod
-    def class_from_callable(cls, callable_: NodeModelBase):
-        """create a ProcessNode class from a callable"""
-
-        class ProcessNodeClass(ProcessNode):
-            def __init__(self, *args, **kwargs):
-                super().__init__(callable_, *args, **kwargs)
-
-        ProcessNodeClass.__name__ = callable_.__name__
-        cls._node_classes.append(ProcessNodeClass)
-        return ProcessNodeClass
+    # @classmethod
+    # def class_from_callable(cls, callable_: NodeModelBase):
+    #     """create a ProcessNode class from a callable"""
+    #
+    #     class ProcessNodeClass(ProcessNode):
+    #         def __init__(self, *args, **kwargs):
+    #             super().__init__(callable_, *args, **kwargs)
+    #
+    #     ProcessNodeClass.__name__ = callable_.__name__
+    #     cls._node_classes.append(ProcessNodeClass)
+    #     return ProcessNodeClass
 
     @classmethod
     def class_from_callable_class(cls, callable_class):

@@ -11,16 +11,120 @@ import pac2
 
 # import example nodes from the "example_nodes" package
 from examples.nodes import basic_nodes, callable_node, group_node, widget_nodes
-from pac2 import ProcessNode
-from pac2.node import node_model_class_from_callable
-import pac2.node
+from pac2 import ProcessNode, Node
+from pac2.node import node_model_class_from_callable, NodeState
+
+# import pac2.node
 from examples.nodes.callable_node import CallableNodeBase
+
 import pac2.nodes
 
 """
 import examples.basic_example as b
 b.main()
 """
+
+from Qt.QtWidgets import (
+    QApplication,
+    QPushButton,
+    QWidget,
+    QVBoxLayout,
+    QTableWidget,
+    QTableWidgetItem,
+    QCheckBox,
+    QLineEdit,
+    QLabel,
+)
+import Qt.QtCore
+
+
+class AttributeEditorWidget(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.obj = None
+        self.init_ui()
+
+    def init_ui(self):
+
+        layout = QVBoxLayout()
+        self.table_widget = QTableWidget()
+        self.table_widget.setColumnCount(2)
+        self.table_widget.setHorizontalHeaderLabels(['Attribute', 'Value'])
+        layout.addWidget(self.table_widget)  # , stretch=1)
+        self.setLayout(layout)
+
+        # self.table_widget.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+
+    def load_ui(self, obj, attrs=None):
+        self.table_widget.clearContents()
+        self.table_widget.setRowCount(0)
+
+        if not obj:
+            self.obj = None
+            return
+
+        self.obj = obj
+
+        attributes = vars(obj)
+        for attribute_name, attribute_value in attributes.items():
+            # filter
+            if attrs and attribute_name not in attrs:
+                continue
+
+            row_position = self.table_widget.rowCount()
+            self.table_widget.insertRow(row_position)
+
+            label_item = QTableWidgetItem(attribute_name)
+            self.table_widget.setItem(row_position, 0, label_item)
+
+            edit_widget = self.create_edit_widget(attribute_name, attribute_value)
+            self.table_widget.setCellWidget(row_position, 1, edit_widget)
+
+            # disable row if start with _
+            if attribute_name.startswith("_"):
+                edit_widget.setEnabled(False)
+                label_item.setFlags(QtCore.Qt.NoItemFlags)
+
+    def create_edit_widget(self, attribute_name, value):
+        if isinstance(value, bool):
+            checkbox = QCheckBox()
+            checkbox.setChecked(value)
+            checkbox.stateChanged.connect(
+                lambda state, name=attribute_name: self.update_obj_attribute(name, state == QtCore.Qt.Checked)
+            )
+            return checkbox
+        elif isinstance(value, int):
+            line_edit = QtWidgets.QSpinBox()
+            line_edit.setValue(value)
+            line_edit.editingFinished.connect(
+                lambda name=attribute_name, widget=line_edit: self.update_obj_attribute(name, int(widget.text()))
+            )
+            return line_edit
+        elif isinstance(value, str):
+            line_edit = QLineEdit()
+            line_edit.setText(value)
+            line_edit.editingFinished.connect(
+                lambda name=attribute_name, widget=line_edit: self.update_obj_attribute(name, widget.text())
+            )
+            return line_edit
+        elif isinstance(value, float):
+            line_edit = QtWidgets.QDoubleSpinBox()
+            line_edit.setValue(value)
+            line_edit.editingFinished.connect(
+                lambda name=attribute_name, widget=line_edit: self.update_obj_attribute(name, float(widget.text()))
+            )
+            return line_edit
+        else:
+            label = QLabel(str(value))
+            return label
+
+    @QtCore.Slot(str, int)
+    @QtCore.Slot(str, str)
+    def update_obj_attribute(self, attribute_name, new_value):
+        # Assuming obj is a QObject or a similar class with a signal attribute_changed
+        print("update_obj_attribute", attribute_name, new_value, self.obj)
+        setattr(self.obj, attribute_name, new_value)
+        # self.obj_attribute_changed.emit(attribute_name, new_value)
 
 
 def main():
@@ -80,7 +184,7 @@ def main():
     # )  # todo
     # node_classes.append(node_class)
 
-    def print_strings2(str1=2, str2=None):
+    def print_strings2(str1: str = 2, str2: str = None):
         import time
 
         # graph.widget.repaint() # todo move
@@ -89,15 +193,19 @@ def main():
         # graph.widget.repaint() # todo move
 
     pac_node_class = node_model_class_from_callable(print_strings2)
-    node_class = ProcessNode.class_from_callable(pac_node_class())
+    node_class = ProcessNode.class_from_callable_class(pac_node_class)
     node_class2 = callable_node.create_callable_node_class(
         node_class, class_name="PrintStrings2", node_name="Print String Test2"
     )  # todo
     node_classes.append(node_class2)
 
-    import pac2.blender
+    try:
+        import pac2.blender
+    except ImportError as e:
+        print("Failed to import pac2.blender", e)
+        pass
 
-    for node_class in pac2.Node._node_classes:
+    for node_class in ProcessNode._node_classes:
         name = node_class.__name__.split("_callable")[0]
         node_class2 = callable_node.create_callable_node_class(
             node_class, class_name=name, identifier="operators"
@@ -116,57 +224,25 @@ def main():
         "Set": set(),
         "None": None,
     }
-    for key, default_value in data_map.items():
 
-        class _DataNode(pac2.Node):
+    # copy import
+    from copy import copy
+
+    for key, default_value in data_map.items():
+        print("key", key, default_value)
+
+        class _DataNode(Node):
+            _default_value = default_value
+
             def __init__(self):
                 super().__init__()
-                self.data = 0
+                self.data = copy(self._default_value)
+                print("set data", self.data)
 
         _DataNode.__name__ = key  # + "Node"
 
         node_class2 = callable_node.create_callable_node_class(_DataNode, identifier="datanodes")  # todo
         node_classes.append(node_class2)
-    #
-    # class FloatNode(pac2.Node):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.data = 0.0
-    #
-    # class BoolNode(pac2.Node):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.data = False
-    #
-    # class StrNode(pac2.Node):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.data = ""
-    #
-    # class ListNode(pac2.Node):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.data = []
-    #
-    # class DictNode(pac2.Node):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.data = {}
-    #
-    # class TupleNode(pac2.Node):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.data = ()
-    #
-    # class SetNode(pac2.Node):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.data = set()
-    #
-    # class NoneNode(pac2.Node):
-    #     def __init__(self):
-    #         super().__init__()
-    #         self.data = None
 
     print("node_classes", [x.__name__ for x in ProcessNode._node_classes])
     # print("node_class", node_class)
@@ -239,11 +315,9 @@ def main():
     #
     def process_nodes():
 
-        import pac2
-
-        for n in pac2.Node._nodes.values():
+        for n in Node._nodes.values():
             n.dumb_disconnect_all()
-            n.state = pac2.node.NodeState.INIT
+            n.state = NodeState.INIT
 
         # get connections from view, and transfer to model
         data = graph.serialize_session()
@@ -287,9 +361,38 @@ def main():
     dock_btn = QtWidgets.QDockWidget()
     dock_btn.setWidget(btn)
 
+    # create a dock widget for AttributeEditorWidget
+    dock_attr_editor = QtWidgets.QDockWidget()
+    widget_attr_editor = AttributeEditorWidget()
+    dock_attr_editor.setWidget(widget_attr_editor)
+    # ensure widget stretches to fill dock
+
+    # def on_node_selection_changed(sel_nodes, unsel_nodes):
+    #     print("sel_nodes", sel_nodes, unsel_nodes)
+    #     view_node = sel_nodes[0] if len(sel_nodes) else None
+
+    def node_created(view_node):
+        load_ui_from_view_node(view_node)
+
+    def node_selected(view_node):
+        load_ui_from_view_node(view_node)
+
+    def load_ui_from_view_node(view_node):
+        if not view_node:
+            widget_attr_editor.load_ui(None)
+            return
+        elif isinstance(view_node._callable_node, ProcessNode):
+            widget_attr_editor.load_ui(view_node._callable_node.callable)
+        elif isinstance(view_node._callable_node, Node):
+            widget_attr_editor.load_ui(view_node._callable_node, attrs=["data"])
+
+    graph.node_created.connect(node_created)
+    graph.node_selected.connect(node_selected)
+
     widget.setCentralWidget(graph_widget)
     widget.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock_tree)
     widget.addDockWidget(QtCore.Qt.LeftDockWidgetArea, dock_btn)
+    widget.addDockWidget(QtCore.Qt.RightDockWidgetArea, dock_attr_editor)
     widget.show()
 
     # app = QApplication(sys.argv + ['-platform', 'windows:darkmode=2'])
@@ -301,9 +404,12 @@ def main():
     # import unreal_stylesheet
     # unreal_stylesheet.setup(app)
 
-    import qdarktheme
+    try:
+        import qdarktheme
 
-    qdarktheme.setup_theme()
+        qdarktheme.setup_theme()
+    except:
+        pass
 
     if new_app:
         app.exec_()
