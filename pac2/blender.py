@@ -33,6 +33,7 @@ import logging
 
 import bpy
 
+MESH = "MESH"
 for attr_name in dir(bpy.ops.mesh):
     attr = getattr(bpy.ops.mesh, attr_name)
     # print(attr, type(attr))
@@ -63,6 +64,7 @@ for attr_name in dir(bpy.ops.mesh):
     # print("node_model", node_model, dir(node_model))
 
     node = pac2.ProcessNode.class_from_callable(node_model)
+    node.__category__ = MESH  # todo set identifier
 
 
 # node_model_class = pac2.node.node_model_class_from_callable(extract_kwargs)

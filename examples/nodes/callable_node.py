@@ -161,6 +161,9 @@ def create_callable_node_class(callable_node_class, class_name=None, identifier=
             except AttributeError:
                 logging.warning(f"callable_node_class '{class_name}' has no callable attribute")
 
+    if hasattr(callable_node_class, "__category__"):
+        identifier += "." + callable_node_class.__category__
+
     if identifier:
         CallableNode.__identifier__ = identifier
 
