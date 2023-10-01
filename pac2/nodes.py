@@ -34,8 +34,8 @@ def not_callable(a):
     return not a
 
 
-def str_callable(a):
-    return str(a)
+# def str_callable(a):  # cast
+#     return str(a)
 
 
 def print_callable(text, *args, **kwargs):
@@ -118,7 +118,7 @@ OrModel = pac2.node.node_model_class_from_callable(or_callable)
 EqModel = pac2.node.node_model_class_from_callable(eq_callable)
 NeModel = pac2.node.node_model_class_from_callable(ne_callable)
 NotModel = pac2.node.node_model_class_from_callable(not_callable)
-StrModel = pac2.node.node_model_class_from_callable(str_callable)
+# StrModel = pac2.node.node_model_class_from_callable(str_callable)
 PrintModel = pac2.node.node_model_class_from_callable(print_callable)
 WaitModel = pac2.node.node_model_class_from_callable(wait_callable)
 AddModel = pac2.node.node_model_class_from_callable(add_callable)
@@ -144,7 +144,7 @@ OrNode = pac2.ProcessNode.class_from_callable_class(OrModel)
 EqNode = pac2.ProcessNode.class_from_callable_class(EqModel)
 NeNode = pac2.ProcessNode.class_from_callable_class(NeModel)
 NotNode = pac2.ProcessNode.class_from_callable_class(NotModel)
-StrNode = pac2.ProcessNode.class_from_callable_class(StrModel)
+# StrNode = pac2.ProcessNode.class_from_callable_class(StrModel)
 PrintNode = pac2.ProcessNode.class_from_callable_class(PrintModel)
 WaitNode = pac2.ProcessNode.class_from_callable_class(WaitModel)
 AddNode = pac2.ProcessNode.class_from_callable_class(AddModel)
