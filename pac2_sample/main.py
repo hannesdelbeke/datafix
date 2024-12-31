@@ -1,5 +1,6 @@
-from pac_sample import nodes
+from pac2_sample import nodes
 from pac2 import Node, ProcessNode
+import pac2
 
 
 

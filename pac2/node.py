@@ -762,7 +762,7 @@ class ValidatorNode(ProcessNode):
         super().__init__(*args, **kwargs)
         self.continue_on_fail = continue_on_fail
 
-        # self.add_input_nodes(input_nodes or [])  # todod option to link input node to any attribute of this node
+        # self.add_input_nodes(input_nodes or [])  # todo option to link input node to any attribute of this node
 
     def __call__(self):  # todo
         if self.validation_node.state == NodeState.DISABLED:
@@ -778,7 +778,7 @@ class ValidatorNode(ProcessNode):
                 self.state = NodeState.FAIL
                 return
 
-    # def add_input_nodes(self, nodes):  # todo link slotname node
+    # def add_input_nodes(self, nodes):  # todo link slot name node
     #     self.input_nodes.extend(nodes)
     #     for node in nodes:
     #         node.linked_nodes.append(self)

@@ -93,7 +93,7 @@ class TestNode(TestCase):
     #     assert b.runtime_connections == {a, c}, f"should be [Node(a), Node(c)] but is {b.runtime_connections}"
 
     def test_collect_nodes_from_module(self):
-        from tests import test_modules
+        from tests2 import test_modules
 
         nodes = [x for x in Node.nodes_from_module(test_modules)]
         assert [x.name for x in nodes] == [
