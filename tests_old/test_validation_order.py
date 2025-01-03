@@ -26,6 +26,4 @@ def test_validation_order():
     # if we first succeed, then fail validation, then instance wrap state should fail
     assert session.node_instances[0].data_nodes[0]._state == NodeState.FAIL
 
-    session.pp_tree()
-
 test_validation_order()

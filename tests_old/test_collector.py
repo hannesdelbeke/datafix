@@ -11,7 +11,6 @@ def test_single_collect() -> Session:
     session = Session()
     session.nodes.append(CollectHelloWorld)
     session.run()
-    # session.pp_tree()
     assert session.state == NodeState.SUCCEED
     assert session.node_instances[0].data_nodes[0].data == "Hello World"
     return session
@@ -27,7 +26,7 @@ def test_double_collect() -> Session:
     session = Session()
     session.nodes.append(CollectHelloWorldList)
     session.run()
-    # session.pp_tree()
+    print(session.report())
 
     assert session.state == NodeState.SUCCEED
     assert session.node_instances[0].data_nodes[0].data == "Hello"
@@ -47,7 +46,6 @@ def test_fail_collect() -> Session:
     session.nodes.append(CollectFail)
     session.nodes.append(CollectHelloWorld)
     session.run()
-    # session.pp_tree()
     assert session.state == NodeState.FAIL
     assert session.node_instances[0].state == NodeState.FAIL
     assert session.node_instances[1].state == NodeState.SUCCEED
@@ -63,7 +61,6 @@ def test_fail_collect() -> Session:
 #     session.nodes.append(CollectHelloWorld)
 #     CollectHelloWorld.continue_on_fail = True  # same as allow fail?
 #     session.run()
-#     session.pp_tree()
 #     assert session.state == NodeState.WARNING
 #     assert session.node_instances[0].state == NodeState.WARNING
 #     assert session.node_instances[1].state == NodeState.SUCCEED

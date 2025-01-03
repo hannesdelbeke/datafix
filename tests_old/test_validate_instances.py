@@ -31,11 +31,11 @@ def test_all_instances_equal():
     session.nodes.append(CollectorString)
     session.nodes.append(ValidatorSameStrings)
     session.run()
-    session.pp_tree()
     collector = session.node_instances[0]
-    assert collector.data_nodes[0]._state == NodeState.SUCCEED
-    assert collector.data_nodes[1]._state == NodeState.SUCCEED
-    assert collector.data_nodes[2]._state == NodeState.SUCCEED
+    assert collector.data_nodes[0].state == NodeState.SUCCEED
+    assert collector.data_nodes[1].state == NodeState.SUCCEED
+    assert collector.data_nodes[2].state == NodeState.SUCCEED
+    print(session.report())
 
     # test fail
     session = Session()
@@ -43,7 +43,8 @@ def test_all_instances_equal():
     session.nodes.append(ValidatorSameStrings)
     session.run()
 
-    assert session.node_instances[0].data_nodes[0]._state == NodeState.FAIL
+    assert session.node_instances[0].data_nodes[0].state == NodeState.FAIL
+    print(session.report())
 
 
 class CollectorInts(Collector):
@@ -58,16 +59,15 @@ def test_incompatible_types():
     session.add(CollectorInts)
     session.add(ValidatorSameStrings)
     session.run()
-    session.pp_tree()
 
     validator = session.node_instances[2]
-    validator.print_result()
+    print(session.report())
 
 
 if __name__ == '__main__':
-    # test_all_instances_equal()
+    test_all_instances_equal()
 
     # set the logging level to info
     logging.basicConfig(level=logging.INFO)
 
-    test_incompatible_types()
+    # test_incompatible_types()

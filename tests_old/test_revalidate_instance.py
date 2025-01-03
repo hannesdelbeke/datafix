@@ -64,5 +64,4 @@ def test_revalidate_instance():
 
 if __name__ == '__main__':
     session = test_revalidate_instance()
-    session.pp_tree()
 

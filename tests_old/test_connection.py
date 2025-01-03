@@ -41,4 +41,3 @@ def test_simple_session():
 
 if __name__ == '__main__':
     session = test_simple_session()
-    session.pp_tree()

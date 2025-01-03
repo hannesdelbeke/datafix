@@ -26,9 +26,6 @@ session.nodes.append(CollectHelloWorld)
 session.nodes.append(CollectHelloWorld2)
 session.run()
 
-# print results
-session.pp_tree()
-
 
 # ======== PYBLISH ================================================================
 class CollectHelloWorldPyblish(pyblish.api.Collector):

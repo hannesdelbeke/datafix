@@ -22,7 +22,6 @@ def test_simple_session2() -> Session:
     session.nodes.append(CollectHelloWorldList)
     session.nodes.append(ValidateHelloWorld)
     session.run()
-    session.pp_tree()
     return session
 
     # wrap_a = session.node_instances[0].data_nodes[0]
