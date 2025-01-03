@@ -262,7 +262,7 @@ class Validator(Node):
 
     @property
     def state(self):
-        # a validator fails if any of the datanodes it runs on fails
+        # a validator fails if any of the DataNodes it runs on fails
         # or if the validator itself fails
         for result_node in self.children:
             if result_node.state == NodeState.FAIL:
@@ -284,7 +284,6 @@ class Validator(Node):
         return self._validate_data(data=data_node.data)
 
     def validate_data_node(self, data_node):
-        self.children = []
         # public method, don't override this
 
         # todo we alrdy save this in results.
@@ -313,6 +312,7 @@ class Validator(Node):
         # 3. run validate on the mesh instances,
         # 4. create a backward link (to validate instance) in mesh instances
         for data_node in self.iter_data_nodes():
+            print("validating", data_node)
             self.validate_data_node(data_node)
 
     def iter_data_nodes(self):

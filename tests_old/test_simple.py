@@ -24,7 +24,7 @@ def test_simple_session2() -> Session:
     session.run()
     return session
 
-    # wrap_a = session.node_instances[0].data_nodes[0]
 
-s = test_simple_session2()
-print(s.state)
+if __name__ == '__main__':
+    s = test_simple_session2()
+    print(s.state)

@@ -69,3 +69,9 @@ def test_adapter():
     string_numbers = session.node_instances[1]
     assert int_numbers.data_nodes[0]._state == NodeState.SUCCEED
     assert string_numbers.data_nodes[0]._state == NodeState.SUCCEED
+
+    print(session.report())
+
+
+if __name__ == '__main__':
+    test_adapter()

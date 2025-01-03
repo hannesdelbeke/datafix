@@ -62,6 +62,7 @@ def test_revalidate_instance():
 
     return session
 
+
 if __name__ == '__main__':
     session = test_revalidate_instance()
 

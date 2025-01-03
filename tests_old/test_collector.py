@@ -8,6 +8,7 @@ class CollectHelloWorld(Collector):
 
 
 def test_single_collect() -> Session:
+    """test we can collect a data_node from a collector node"""
     session = Session()
     session.nodes.append(CollectHelloWorld)
     session.run()
@@ -23,6 +24,7 @@ class CollectHelloWorldList(Collector):
 
 
 def test_double_collect() -> Session:
+    """test we can collect 2 data_nodes from 1 collector node"""
     session = Session()
     session.nodes.append(CollectHelloWorldList)
     session.run()
@@ -42,6 +44,7 @@ class CollectFail(Collector):
 
 
 def test_fail_collect() -> Session:
+    """test the Collector node can fail, and the session will continue to the next node"""
     session = Session()
     session.nodes.append(CollectFail)
     session.nodes.append(CollectHelloWorld)
