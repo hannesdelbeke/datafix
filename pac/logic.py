@@ -264,23 +264,10 @@ class Validator(Node):
     def state(self):
         # a validator fails if any of the datanodes it runs on fails
         # or if the validator itself fails
-        # TODO
-        ...
-        return self._state
-
-        # if self.children:
-        #     # if this node has children, it's a collector, validator, or session
-        #     # we check the state of the children
-        #     for child in self.children:
-        #         if child.state == NodeState.FAIL:
-        #             return NodeState.FAIL
-        #     return NodeState.SUCCEED
-        # else:
-        #     # if this node has no children, it's an instance node
-        #     # we check the state of the instance node
-        #     return self._state
-
-
+        for result_node in self.children:
+            if result_node.state == NodeState.FAIL:
+                return NodeState.FAIL
+        return NodeState.SUCCEED
 
     def _validate_data(self, data):
         """validate the data in the DataNode"""
