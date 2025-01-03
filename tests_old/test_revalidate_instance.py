@@ -1,7 +1,7 @@
 from pac.logic import *
 
 
-# use case:
+# use case for revalidating (running the validator twice):
 # artist runs a validation pipeline on their 3d scene
 # pac informs the artist of an issue with a mesh
 # the artist fixes the mesh, and wants to re-validate the mesh without revalidating the whole scene.
@@ -11,39 +11,39 @@ from pac.logic import *
 # then revalidate a node
 
 
-# collect string
 class CollectString(Collector):
-    def _run(self):
-        return ["Hello World"]
+    def logic(self):
+        return ["Helo Werld"]
 
 
-# validate string
-class ValidateString(Validator):
-    def validate_instance(self, instance):
-        assert instance == "changed"
+class ValidateSpelling(Validator):
+    def logic(self, data):
+        assert data == "Hello World"
 
 
 def test_revalidate_instance():
+    # register 2 collectors and 1 validator
     session = Session()
-    session.registered_plugins.append(CollectString)
-    session.registered_plugins.append(CollectString)
-    session.registered_plugins.append(ValidateString)
+    session.nodes.append(CollectString)
+    session.nodes.append(CollectString)
+    session.nodes.append(ValidateSpelling)
+
     session.run()
-
-    # collector1 -> collects instance 1 'Hello World'
-    # collector2 -> collects instance 2 'Hello World'
+    # collector1 -> collects instance 1 'Helo Werld'
+    # collector2 -> collects instance 2 'Helo Werld'
     # validator -> validates instance 1 & 2, both fail
-    # we now 'fix' the instance 1, and revalidate the instance 1
-    collector_1 = session.plugin_instances[0]
-    instance_wrap_1 = collector_1.instance_wrappers[0]
-    instance_wrap_1.instance = "changed"
 
-    collector_2 = session.plugin_instances[1]
-    instance_wrap_2 = collector_2.instance_wrappers[0]
+    # we now 'fix' the instance 1, and revalidate the instance 1
+    collector_1 = session.node_instances[0]
+    instance_wrap_1 = collector_1.data_nodes[0]
+    instance_wrap_1.data = "Hello World"
+
+    collector_2 = session.node_instances[1]
+    instance_wrap_2 = collector_2.data_nodes[0]
 
     # TODO move this to node function
     # get connections: nodes that ran on this instance (aka validators)
-    # BUG we loop through connections, but validate_instance_wrapper adds a connection during loop
+    # BUG we loop through connections, but validate_instance_node adds a connection during loop
     connected_nodes = instance_wrap_1.connections[:]
     for connected_node in connected_nodes:
 
@@ -54,8 +54,15 @@ def test_revalidate_instance():
                 connected_node.results.remove(result)
                 break
 
-        connected_node.validate_instance_wrapper(instance_wrap_1)
+        connected_node.validate_data_node(instance_wrap_1)
         # connected_node.results == [[InstanceWrapper(Hello World), 'failed'], [InstanceWrapper(changed), 'success']]
 
-    assert instance_wrap_1.state == NodeState.SUCCEED
-    assert instance_wrap_2.state == NodeState.FAIL
+    assert instance_wrap_1._state == NodeState.SUCCEED
+    assert instance_wrap_2._state == NodeState.FAIL
+
+    return session
+
+if __name__ == '__main__':
+    session = test_revalidate_instance()
+    session.pp_tree()
+

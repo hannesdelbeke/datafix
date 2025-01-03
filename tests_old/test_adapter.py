@@ -7,7 +7,7 @@ class StringToIntAdapter(Adapter):
     type_input = str
     type_output = int
 
-    def _run(self, instance: str):
+    def logic(self, data: str):
         magic_dict = {
             'zero': 0,
             'one': 1,
@@ -16,7 +16,7 @@ class StringToIntAdapter(Adapter):
             'four': 4,
             'five': 5,
         }
-        return magic_dict.get(instance, instance)  # return instance if we cant convert
+        return magic_dict.get(data, data)  # return instance if we cant convert
 
 
 class IntToStringAdapter(Adapter):
@@ -25,24 +25,24 @@ class IntToStringAdapter(Adapter):
     type_input = int
     type_output = str
 
-    def _run(self, instance):
-        return str(instance)
+    def logic(self, data):
+        return str(data)
 
 
 # an action that takes a string, and uppercases it
 class ActionUppercase(Action):
-    def _run(self):
+    def logic(self):
         return self.input.upper()
 
 
 class CollectNumbers(Collector):
-    def _run(self):
+    def logic(self):
         # return [1, 2, 3]
         return [1]
 
 
 class CollectStringNumbers(Collector):
-    def _run(self):
+    def logic(self):
         # return ["one", "two", "three"]
         return ["one"]
 
@@ -50,8 +50,8 @@ class CollectStringNumbers(Collector):
 class ValidateNumbers(Validator):
     required_type = int
 
-    def validate_instance(self, instance):
-        assert type(instance) == int
+    def logic(self, data):
+        assert type(data) == int
 
 
 def test_adapter():
@@ -59,11 +59,13 @@ def test_adapter():
     session.register_adapter(StringToIntAdapter())
     session.register_adapter(IntToStringAdapter())
 
-    session.registered_plugins.append(CollectNumbers)
-    session.registered_plugins.append(CollectStringNumbers)
-    session.registered_plugins.append(ValidateNumbers)
+    session.nodes.append(CollectNumbers)
+    session.nodes.append(CollectStringNumbers)
+    session.nodes.append(ValidateNumbers)
     session.run()
 
     # get both instances
-    assert session.plugin_instances[0].instance_wrappers[0].state == NodeState.SUCCEED
-    assert session.plugin_instances[1].instance_wrappers[0].state == NodeState.SUCCEED
+    int_numbers = session.node_instances[0]
+    string_numbers = session.node_instances[1]
+    assert int_numbers.data_nodes[0]._state == NodeState.SUCCEED
+    assert string_numbers.data_nodes[0]._state == NodeState.SUCCEED

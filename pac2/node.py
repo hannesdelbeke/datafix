@@ -255,9 +255,10 @@ class Node:
 
     def connect(self, node_in: "Node", attr_out: str = None, attr_in: str = None):
         """
-        node_in is the node with the IN port
-        (self) node_out is the node with the OUT port
-        A -> B: node A is the out node since its output is connected to node B input
+        attr_out: the attribute name, e.g. for self.wheel_count it would be 'wheel_count'
+        attr_in: the attribute i want this node to control.
+
+        node_out (=self) (attr_out) -> (attr_in) node_in
         """
         node_out = self
         # method chat gpt, based on connect_in, but reversed
@@ -765,16 +766,16 @@ class ValidatorNode(ProcessNode):
         # self.add_input_nodes(input_nodes or [])  # todo option to link input node to any attribute of this node
 
     def __call__(self):  # todo
-        if self.validation_node.state == NodeState.DISABLED:
+        if self.validation_node._state == NodeState.DISABLED:
             return
 
         for node in self.iter_input_nodes():
-            if self.validation_node.state == NodeState.FAIL:
+            if self.validation_node._state == NodeState.FAIL:
                 self.state = NodeState.FAIL
                 return  # todo stop or continue on fail
 
             self.validation_node.__call__(node)
-            if node.state != NodeState.SUCCEED:
+            if node._state != NodeState.SUCCEED:
                 self.state = NodeState.FAIL
                 return
 

@@ -2,12 +2,12 @@ from pac.logic import *
 
 
 class ActionPrintHello(Action):
-    def _run(self):
+    def logic(self):
         return 'Hello'
 
 
 class ActionFail(Action):
-    def _run(self):
+    def logic(self):
         raise Exception('Fail')
 
 
@@ -16,28 +16,28 @@ class CollectHelloWorld(Collector):
         super().__init__()
         self.actions = [ActionPrintHello(parent=self)]
 
-    def _run(self):
+    def logic(self):
         return ["Hello World"]
 
 
 class CollectHelloWorldList(Collector):
-    def _run(self):
+    def logic(self):
         return ["Hello", "World"]
 
 
 class ValidateHelloWorld(Validator):
-    def validate_instance(self, instance):
-        assert instance == "Hello World"
+    def logic(self, data):
+        assert data == "Hello World"
 
 
 def test_simple_action():
     session = Session()
-    session.registered_plugins.append(CollectHelloWorld)
-    session.registered_plugins.append(CollectHelloWorldList)
-    session.registered_plugins.append(ValidateHelloWorld)
+    session.nodes.append(CollectHelloWorld)
+    session.nodes.append(CollectHelloWorldList)
+    session.nodes.append(ValidateHelloWorld)
     session.run()
 
-    collector_instance = session.plugin_instances[0]
+    collector_instance = session.node_instances[0]
     assert 'Hello' == collector_instance.actions[0].run()
 
 
@@ -52,13 +52,13 @@ def test_action_results():
         action.run()
 
     action_1, action_2 = node.actions
-    assert action_1.state == NodeState.SUCCEED
-    assert action_2.state == NodeState.FAIL
+    assert action_1._state == NodeState.SUCCEED
+    assert action_2._state == NodeState.FAIL
 
     for action in node.actions:
         action.run()
-    assert action_1.state == NodeState.SUCCEED
-    assert action_2.state == NodeState.FAIL
+    assert action_1._state == NodeState.SUCCEED
+    assert action_2._state == NodeState.FAIL
     # TODO better handle state and result. unify state and result.?
 
     # if we have a mixed result / success.

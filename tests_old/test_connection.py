@@ -12,24 +12,33 @@ from pac.logic import *
 # connection instance B -> validator A, result FAIL
 
 
-class CollecA(Collector):
+class CollectA(Collector):
     def run(self):
         return ["A"]
 
 
-class CollecB(Collector):
+class CollectB(Collector):
     def run(self):
         return ["B"]
 
 
 class ValidatorAB(Validator):
-    def validate_instance(self, instance):
-        assert instance == "A"
+
+    # normally we don't override validate_instance, but validate_instance_node instead
+    # but to isolate wrapper logic for testing we override validate_instance directly
+    def logic(self, data):
+        assert data == "A"
 
 
 def test_simple_session():
     session = Session()
-    session.registered_plugins.append(CollecA)
-    session.registered_plugins.append(CollecB)
-    session.registered_plugins.append(ValidatorAB)
+    session.nodes.append(CollectA)
+    session.nodes.append(CollectB)
+    session.nodes.append(ValidatorAB)
     session.run()
+    return session
+
+
+if __name__ == '__main__':
+    session = test_simple_session()
+    session.pp_tree()

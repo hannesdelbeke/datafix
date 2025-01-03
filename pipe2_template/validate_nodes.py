@@ -8,13 +8,13 @@ print(validate_nodes)
 
 # collect instances
 strings = ["hello", "world", "hella", "hello"]
-instance_nodes = [Node(s) for s in strings]
-print(instance_nodes)
+data_nodes = [Node(s) for s in strings]
+print(data_nodes)
 
 # node = DataNode(strings)  # todo good sample for adapter pattern
 
 val_node = ValidatorNode(
-    input_nodes=instance_nodes, validation_node=validate_nodes[0]
+    input_nodes=data_nodes, validation_node=validate_nodes[0]
 )  # val node 2 - validation hookup
 val_node.eval()
 

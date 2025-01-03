@@ -2,28 +2,30 @@ from pac.logic import *
 
 
 class CollectHelloWorld(Collector):
-    def _run(self):
+    def logic(self):
         return ["Hello World"]
 
 
 class ValidateSuccess(Validator):
-    def validate_instance(self, instance):
+    def logic(self, data):
         pass
 
 
 class ValidateFail(Validator):
-    def validate_instance(self, instance):
+    def logic(self, data):
         raise Exception('Fail')
 
 
 def test_validation_order():
     session = Session()
-    session.registered_plugins.append(CollectHelloWorld)
-    session.registered_plugins.append(ValidateFail)
-    session.registered_plugins.append(ValidateSuccess)
+    session.nodes.append(CollectHelloWorld)
+    session.nodes.append(ValidateFail)
+    session.nodes.append(ValidateSuccess)
     session.run()
 
     # if we first succeed, then fail validation, then instance wrap state should fail
-    assert session.plugin_instances[0].instance_wrappers[0].state == NodeState.FAIL
+    assert session.node_instances[0].data_nodes[0]._state == NodeState.FAIL
 
     session.pp_tree()
+
+test_validation_order()

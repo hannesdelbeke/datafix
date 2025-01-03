@@ -9,12 +9,12 @@ import pprint
 
 # ======== PAC ================================================================
 class CollectHelloWorld(Collector):
-    def _run(self):
+    def logic(self):
         return ["Hello World"]
 
 
 class CollectHelloWorld2(Collector):
-    def _run(self):
+    def logic(self):
         return ["Hello World2"]
 
 
@@ -22,8 +22,8 @@ class CollectHelloWorld2(Collector):
 
 # setup and run session
 session = Session()
-session.registered_plugins.append(CollectHelloWorld)
-session.registered_plugins.append(CollectHelloWorld2)
+session.nodes.append(CollectHelloWorld)
+session.nodes.append(CollectHelloWorld2)
 session.run()
 
 # print results

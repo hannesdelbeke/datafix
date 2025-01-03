@@ -33,6 +33,7 @@ class TestNode(TestCase):
     #     assert a2.parent.id == b.id
 
     def test_output_links(self):
+        # create 2 nodes
         a = Node(name="a")
         b = Node(name="b")
         a.connect(b)  # todo replace

@@ -135,7 +135,7 @@ def main():
     QtCore.QCoreApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
 
     new_app = False
-    app = QtWidgets.QApplication.instance()
+    app = QtWidgets.QApplication.data()
     if not app:
         app = QtWidgets.QApplication(sys.argv + ['-platform', 'windows:darkmode=2'])
         new_app = True
@@ -328,7 +328,7 @@ def main():
 
         for n in Node._nodes.values():
             n.dumb_disconnect_all()
-            n.state = NodeState.INIT
+            n._state = NodeState.INIT
 
         # get connections from view, and transfer to model
         data = graph.serialize_session()

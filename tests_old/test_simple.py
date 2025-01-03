@@ -2,25 +2,30 @@ from pac.logic import *
 
 
 class CollectHelloWorld(Collector):
-    def _run(self):
+    def logic(self):
         return ["Hello World"]
 
 
 class CollectHelloWorldList(Collector):
-    def _run(self):
+    def logic(self):
         return ["Hello", "World"]
 
 
 class ValidateHelloWorld(Validator):
-    def validate_instance(self, instance):
-        assert instance == "Hello World"
+    def logic(self, data):
+        assert data == "Hello World"
 
 
-def test_simple_session2():
+def test_simple_session2() -> Session:
     session = Session()
-    session.registered_plugins.append(CollectHelloWorld)
-    session.registered_plugins.append(CollectHelloWorldList)
-    session.registered_plugins.append(ValidateHelloWorld)
+    session.nodes.append(CollectHelloWorld)
+    session.nodes.append(CollectHelloWorldList)
+    session.nodes.append(ValidateHelloWorld)
     session.run()
+    session.pp_tree()
+    return session
 
-    # wrap_a = session.plugin_instances[0].instance_wrappers[0]
+    # wrap_a = session.node_instances[0].data_nodes[0]
+
+s = test_simple_session2()
+print(s.state)
