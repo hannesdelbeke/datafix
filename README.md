@@ -1,3 +1,5 @@
+# Still Work in Progress! early version
+
 Use Datafix to create a validation pipeline to ensure correct data, and help the user find & clean up bad data.  
 
 Great for asset validation in a game-dev pipeline.
