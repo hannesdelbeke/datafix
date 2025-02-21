@@ -1,3 +1,6 @@
+Create a validation pipeline to clean up bad data.  
+e.g. asset validation in a game-dev pipeline.
+
 a more modular version of pyblish
 - collect datanodes (e.g. meshes, materials, textures)
 - validate your DataNodes, saving the validation outcome (SUCCESS, WARN, FAIL) in resultNodes
