@@ -1,9 +1,9 @@
-from pac.logic import *
+from datafix.logic import *
 
 
 # use case for revalidating (running the validator twice):
 # artist runs a validation pipeline on their 3d scene
-# pac informs the artist of an issue with a mesh
+# datafix informs the artist of an issue with a mesh
 # the artist fixes the mesh, and wants to re-validate the mesh without revalidating the whole scene.
 # (since this could take a long time)
 

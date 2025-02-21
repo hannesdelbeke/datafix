@@ -1,13 +1,13 @@
 import importlib
 import pkgutil
-import pac.logic
+import datafix.logic
 import pprint
 
 
 def discover_modules():
     """
-    Discover all pac plugin modules.
-    To make your module discoverable by pac, it must be in a folder named pac_plugins,
+    Discover all datafix plugin modules.
+    To make your module discoverable by datafix, it must be in a folder named pac_plugins,
     and included in your python path.
     """
     discovered_modules = {}
@@ -38,7 +38,7 @@ def discover_plugins():
             # check for Node class
             attr = getattr(module, attr_name)
             try:
-                if not issubclass(attr, pac.logic.Node):
+                if not issubclass(attr, datafix.logic.Node):
                     continue
             except TypeError:
                 continue
@@ -62,6 +62,6 @@ def discover_plugins():
     return discovered_plugins
 
 
-# discover all pac plugins and print them
+# discover all datafix plugins and print them
 if __name__ == '__main__':
     pprint.pprint(discover_plugins())

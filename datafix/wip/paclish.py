@@ -1,7 +1,7 @@
-# TODO pyblish adapter for pac
-# at, we just compare pac and pyblish
+# TODO pyblish adapter for datafix
+# at, we just compare datafix and pyblish
 
-from pac.logic import *
+from datafix.logic import *
 import pyblish.api
 import pyblish.util
 import pprint

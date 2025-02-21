@@ -1,4 +1,4 @@
-from pac.logic import *
+from datafix.logic import *
 
 
 # test that we can collect a string
