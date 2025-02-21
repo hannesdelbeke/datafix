@@ -37,11 +37,15 @@ class ValidateHelloWorld(Validator):
     warning = True
 
     def logic(self, data):
-        assert data == "Hello World"
+        assert data == "Hello World", "Data is not 'Hello World'"
 
+
+class ValidateContainsHello(Validator):
+    def logic(self, data):
+        assert "Hello" in data, "Data does not contain 'Hello'"
 
 """
-3. 
+3. Define the pipeline
 
 Now that you defined the building blocks of your pipeline, 
 it's time to hook it all up.
@@ -51,24 +55,29 @@ Then we register the validators, which will run on our collected datanodes.
 When you have your first pipeline defined, you can run it with 
 """
 
-def test_simple_session2() -> Session:
-    active_session.add(CollectHelloWorld)
-    active_session.add(CollectHelloWorldList)
-    active_session.add(ValidateHelloWorld)
-    # active_session.run()
+
+active_session.add(CollectHelloWorld)
+active_session.add(CollectHelloWorldList)
+active_session.add(ValidateHelloWorld)
+active_session.add(ValidateContainsHello)
+
+
+def test_simple_session2():
+    active_session.run()
+
 
 
 if __name__ == '__main__':
-    test_simple_session2()
+    test_ui = True
+    if not test_ui:
+        # test running headless
+        test_simple_session2()
 
-    # this prints the state of the session.
-    # success means the session ran successfully,
-    # it doesn't mean all data nodes passed validation!
+        # print a report with colored output on succeed or fail
+        # for each collector and datanode
+        print(active_session.report())
+    else:
+        # test the UI
+        import ui_demo.validator
 
-    # print a report with colored output on succeed or fail
-    # for each collector and datanode
-    print(active_session.report())
-
-    import ui_demo.validator
-
-    ui_demo.validator.show()
+        ui_demo.validator.show()

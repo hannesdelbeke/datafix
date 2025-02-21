@@ -56,12 +56,16 @@ class Ui_Form(QtWidgets.QDialog):
 
 
 class Ui_Form(view.Ui_Form):
+    run_on_startup = True
 
     def __init__(self, parent=None, *args, **kwargs):
         super(Ui_Form, self).__init__(parent=parent, *args, **kwargs)
 
         # connect plugin_selection_changed
         self.list_plugins.currentItemChanged.connect(self.plugin_selection_changed)
+
+        if self.run_on_startup:
+            self.clicked_check()
 
     def populate_ui(self):
         # run collectors, and add to list

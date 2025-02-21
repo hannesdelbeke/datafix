@@ -161,7 +161,7 @@ class Node:
             self._state = NodeState.SUCCEED
         except Exception as e:
             self._state = NodeState.FAIL
-            logging.error(e)
+            self.log_error(f"'{self.__class__.__name__}' failed running:'{e}'" )
             if not self.continue_on_fail:
                 raise e
 
@@ -186,6 +186,12 @@ class Node:
 
     def __repr__(self):
         return f'{self.__class__.__name__}'
+
+    def log_error(self, text):
+        if self.warning:
+            logging.warning(text)
+        else:
+            logging.error(text)
 
 
 class Action(Node):
@@ -229,7 +235,7 @@ class Collector(Node):  # session plugin (context), session is a node
             self.state = NodeState.SUCCEED
         except Exception as e:
             self.state = NodeState.FAIL
-            logging.error(e)
+            self.log_error(f"'{self.__class__.__name__}' failed running:'{e}'" )
             if not self.continue_on_fail:
                 raise e
 
@@ -300,7 +306,7 @@ class Validator(Node):
             self._validate_data_node(data_node=data_node)
             state = NodeState.SUCCEED
         except Exception as e:
-            logging.error(e)
+            self.log_error(f"'{data_node}' failed validation `{self.__class__.__name__}`:'{e}'" )
             state = NodeState.FAIL
             if not self.continue_on_fail:
                 raise e

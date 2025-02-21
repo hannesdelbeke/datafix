@@ -41,6 +41,10 @@ class Ui_Form(QtWidgets.QDialog):
         self.button_check.clicked.connect(self.clicked_check)
         # self.button_fix.clicked.connect(self.clicked_fix)
 
+
+        # disable fix
+        self.button_fix.setEnabled(False)
+
     # todo use action.on to filter when to show. ex. "failedOrWarning"
 
     def populate_ui(self):
