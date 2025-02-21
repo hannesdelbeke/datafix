@@ -13,6 +13,7 @@ features:
 - modular to enable reusable nodes for multiple pipelines. or reuse actions between nodes.
 - support headless mode, completely de-coupled from the UI
 - open source, easy to extend.
+- dcc-independent. can run in any app, or standalone.
 
 
 |Console |UI |
