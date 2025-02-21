@@ -4,11 +4,11 @@ requires = ["setuptools", "setuptools-scm"]
 
 
 [tool.setuptools]
-packages = ["pac2", "pac_sample", "examples"]
+packages = ["datafix"]
 
 
 [project]
-name = "pac"
+name = "datafix"
 authors = [
     {name = "Hannes"},
 ]
@@ -33,4 +33,4 @@ version = "0.0.1"
 #my-script = "my_package.module:function"
 
 [project.urls]
-Homepage = "https://github.com/hannesdelbeke"
+Homepage = "https://github.com/hannesdelbeke/datafix"
