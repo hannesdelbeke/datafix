@@ -33,6 +33,7 @@ from typing import List, Type
 from enum import Enum
 
 
+
 def color_text(text, state):
     # color the text output
     if state == NodeState.SUCCEED:
@@ -330,6 +331,8 @@ class Validator(Node):
 class Session(Node):
     """some kind of canvas or context, that contains plugins etc"""
     def __init__(self):
+        global active_session
+        active_session = self
         self.nodes: List[Type[Node]] = []
         self.adapters = []
         super().__init__()
@@ -452,9 +455,15 @@ class ResultNode(Node):
     # POLISH: maybe combine in future?
 
     def __init__(self, data_node, parent):
-        self.data_node = data_node
+        self.data_node: DataNode = data_node
         super().__init__(parent=parent)
 
     def __str__(self):
         return f'ResultNode({self.data_node.data})'
 
+    @property
+    def data(self):
+        return self.data_node.data
+
+
+active_session: "Session" = Session()
