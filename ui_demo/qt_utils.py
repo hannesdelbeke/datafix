@@ -40,8 +40,6 @@ def color_item(item: QtWidgets.QListWidgetItem, state=States.INIT):
         item_label = square + item.text()
     item.setText(item_label)
 
-    print("color", color)
-    print("square", square)
     # set color
     item.setForeground(QtGui.QColor(color))
 

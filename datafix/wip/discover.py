@@ -1,3 +1,7 @@
+"""
+the discover module is not used atm
+"""
+
 import importlib
 import pkgutil
 import datafix.logic

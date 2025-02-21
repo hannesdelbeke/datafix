@@ -76,7 +76,6 @@ class Ui_Form(view.Ui_Form):
 
     def clicked_check(self):
 
-        print("check")
         # run validation
         datafix.active_session.run()
 
@@ -91,7 +90,6 @@ class Ui_Form(view.Ui_Form):
         ...
 
     def plugin_selection_changed(self):
-        print("plugin_selection_changed")
         if len(datafix.active_session.node_instances) == 0:
             # skip if not run yet
             return
@@ -118,7 +116,6 @@ class Ui_Form(view.Ui_Form):
 
             qt_utils.color_item(item, node_state)
             self.list_results.addItem(item)
-            print(node.state, "state")
 
 
 
@@ -131,10 +128,6 @@ class Ui_Form(view.Ui_Form):
                 node_state = datafix.NodeState.INIT
             else:
                 node = datafix.active_session.node_instances[index]
-                print("item", item)
-                print("node", node)
-                # plugin_class = item.data(QtCore.Qt.UserRole)
-                print(node.state)
                 node_state = node.state
             qt_utils.color_item(item, node_state)
 
