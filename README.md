@@ -1,7 +1,8 @@
 a more modular version of pyblish
 - collect datanodes (e.g. meshes, materials, textures)
-- validate your DataNodes, creating resultNodes
-- a nice UI to see what's going on, and all nodes are linked so can easily query each other for advanced pipelines.
+- validate your DataNodes, saving the validation outcome (SUCCESS, WARN, FAIL) in resultNodes
+- a nice UI to see what's going on
+- all nodes are linked to easily query each other for advanced pipelines.
 
 can be run with UI or from console/script
 
