@@ -1,7 +1,7 @@
-Create a validation pipeline to clean up bad data.  
-e.g. asset validation in a game-dev pipeline.
+Use Datafix to create a validation pipeline to ensure correct data, and help the user find & clean up bad data.  
 
-a more modular version of pyblish
+Great for asset validation in a game-dev pipeline.
+
 - collect datanodes (e.g. meshes, materials, textures)
 - validate your DataNodes, saving the validation outcome (SUCCESS, WARN, FAIL) in resultNodes
 - a nice UI to see what's going on
