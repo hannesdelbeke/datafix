@@ -1,15 +1,19 @@
 # Still Work in Progress! early version
 
 Use Datafix to create a validation pipeline to ensure correct data, and help the user find & clean up bad data.  
-
 Great for asset validation in a game-dev pipeline.
 
-- collect datanodes (e.g. meshes, materials, textures)
-- validate your DataNodes, saving the validation outcome (SUCCESS, WARN, FAIL) in resultNodes
-- a nice UI to see what's going on
-- all nodes are linked to easily query each other for advanced pipelines.
+worflow:
+1. collect datanodes (e.g. meshes, materials, textures)
+2. validate your DataNodes, saving the validation outcome (SUCCESS, WARN, FAIL) in resultNodes
+3. create a report, or use UI to see the outcome.
 
-can be run with UI or from console/script
+features:
+- all nodes are linked to easily query each other for advanced pipelines.
+- modular to enable reusable nodes for multiple pipelines. or reuse actions between nodes.
+- support headless mode, completely de-coupled from the UI
+- open source, easy to extend.
+
 
 |Console |UI |
 |--|--|
