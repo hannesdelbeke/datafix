@@ -34,6 +34,8 @@ These can then be used by your validation logic.
 
 
 class ValidateHelloWorld(Validator):
+    warning = True
+
     def logic(self, data):
         assert data == "Hello World"
 
@@ -53,7 +55,7 @@ def test_simple_session2() -> Session:
     active_session.add(CollectHelloWorld)
     active_session.add(CollectHelloWorldList)
     active_session.add(ValidateHelloWorld)
-    #active_session.run()
+    # active_session.run()
 
 
 if __name__ == '__main__':
@@ -62,7 +64,6 @@ if __name__ == '__main__':
     # this prints the state of the session.
     # success means the session ran successfully,
     # it doesn't mean all data nodes passed validation!
-    print(active_session.state)
 
     # print a report with colored output on succeed or fail
     # for each collector and datanode

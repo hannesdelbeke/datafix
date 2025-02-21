@@ -10,6 +10,7 @@ from ui_demo import view, qt_utils
 qt_utils.States.INIT = datafix.NodeState.INIT
 qt_utils.States.SUCCESS = datafix.NodeState.SUCCEED
 qt_utils.States.FAIL = datafix.NodeState.FAIL
+qt_utils.States.WARNING = datafix.NodeState.WARNING
 
 
 
@@ -110,7 +111,12 @@ class Ui_Form(view.Ui_Form):
             name = str(node.data)
             item = QtWidgets.QListWidgetItem(name)
             # item.setData(QtCore.Qt.UserRole, validator)
-            qt_utils.color_item(item, node.state)
+
+            node_state = node.state
+            # if node.continue_on_fail:
+            #     node_state = qt_utils.States.WARNING
+
+            qt_utils.color_item(item, node_state)
             self.list_results.addItem(item)
             print(node.state, "state")
 

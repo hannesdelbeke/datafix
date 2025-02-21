@@ -50,6 +50,7 @@ class NodeState(Enum):
     SUCCEED = "succeed"  # run and success, match AWS
     FAIL = "fail"  # run and exception, match AWS
     RUNNING = "running"  # run and running / in progress
+    WARNING = "warning"  # warning
     # PAUSED = "paused"
     # STOPPED = "stopped"
     # SKIPPED = "skipped"
@@ -83,6 +84,9 @@ class Adapter:
 
 
 class Node:
+    continue_on_fail = True  # if self or any children fail, continue running
+    warning = False  # set state to WARNING if this node FAILS
+
     def __init__(self, parent=None, name=None):
         # self.action_class = None
         self.actions = []
@@ -94,13 +98,12 @@ class Node:
         # actions run on ...
 
         self.parent = parent  # node that created this node
-        self.children = []  # nodes created by this node
+        self.children: "List[Node]" = []  # nodes created by this node
         self.connections = []  # related nodes
         # TODO instead of storing result in 1 node, and then querying this node from the other node for the result.
         #  we can store the result in the link/connection between nodes
 
         self._state = NodeState.INIT
-        self.continue_on_fail = True
         # self.name = name
 
     @property
@@ -109,6 +112,8 @@ class Node:
         # a collector fails if it fails to collect, it doesn't care about it's children
         # a validator fails if any of the datanodes it runs on fails
         # an instance node fails if any validations on it fail
+        if self._state == NodeState.FAIL and self.warning:
+            return NodeState.WARNING
         return self._state
         #
         # if self.children:
@@ -149,7 +154,7 @@ class Node:
         # to ensure you first run collector and then validator, register in order.
         logging.info(f'running {self.__class__.__name__}')
 
-        result = None
+        # result = None
         try:
             self._state = NodeState.RUNNING
             result = self._run(*args, **kwargs)
@@ -162,10 +167,8 @@ class Node:
 
     def report(self) -> str:
         """"create a report of this node and it's children"""
-        # print self
         txt = f'{self.pp_state}\n'
 
-        # print children
         import textwrap
         for child in self.children:
             txt_child = child.report()
@@ -183,10 +186,6 @@ class Node:
 
     def __repr__(self):
         return f'{self.__class__.__name__}'
-
-
-
-
 
 
 class Action(Node):
@@ -255,7 +254,6 @@ class Validator(Node):
     # results are saved in self.children
     """
     required_type = None
-    continue_on_fail = False
 
     def __init__(self, parent):
         super().__init__(parent=parent)
@@ -265,10 +263,16 @@ class Validator(Node):
     def state(self):
         # a validator fails if any of the DataNodes it runs on fails
         # or if the validator itself fails
-        for result_node in self.children:
-            if result_node.state == NodeState.FAIL:
-                return NodeState.FAIL
-        return NodeState.SUCCEED
+        if self._state != NodeState.SUCCEED:
+            return self._state
+
+        result_states = [node.state for node in self.children]
+        if NodeState.FAIL in result_states:
+            return NodeState.FAIL
+        elif NodeState.WARNING in result_states:
+            return NodeState.WARNING
+        else:
+            return NodeState.SUCCEED
 
     def _validate_data(self, data):
         """validate the data in the DataNode"""
@@ -301,6 +305,10 @@ class Validator(Node):
             if not self.continue_on_fail:
                 raise e
 
+        # check if we allow warnings
+        if self.warning and state == NodeState.FAIL:
+            state = NodeState.WARNING
+
         # save results_nodes in self.children
         result_node = ResultNode(data_node, parent=self)
         result_node.state = state
@@ -313,7 +321,6 @@ class Validator(Node):
         # 3. run validate on the mesh instances,
         # 4. create a backward link (to validate instance) in mesh instances
         for data_node in self.iter_data_nodes():
-            print("validating", data_node)
             self.validate_data_node(data_node)
 
     def iter_data_nodes(self):
@@ -427,16 +434,17 @@ class DataNode(Node):
 
     @property
     def state(self):
-        # validator(s) ran on this DataNode, creating resultNode(s) with the validation result saved in the state
-        # this node fails if any of them failed
+        # validator(s) ran on this DataNode,
+        # creating resultNode(s) with the validation result saved in the state
+        # this node fails if any result nodes failed
 
         result_nodes = [node for node in self.connections if isinstance(node, ResultNode)]
         result_nodes_states = [node.state for node in result_nodes]
 
         if NodeState.FAIL in result_nodes_states:
             return NodeState.FAIL
-        # if NodeState.WARNING in result_nodes_states:
-        #     return NodeState.WARNING
+        elif NodeState.WARNING in result_nodes_states:
+            return NodeState.WARNING
         else:
             return NodeState.SUCCEED
 
