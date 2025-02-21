@@ -13,48 +13,6 @@ qt_utils.States.FAIL = datafix.NodeState.FAIL
 qt_utils.States.WARNING = datafix.NodeState.WARNING
 
 
-
-class Ui_Form(QtWidgets.QDialog):
-    def __init__(self, parent=None):
-        super(Ui_Form, self).__init__(parent)
-        self.create_ui()
-        self.populate_ui()
-
-    def create_ui(self):
-        # self.set_dark_theme()
-
-        # self.dropdown_families = QtWidgets.QComboBox()
-        # self.dropdown_validators = QtWidgets.QComboBox()
-        self.list_plugins = QtWidgets.QListWidget()
-        self.list_results = QtWidgets.QListWidget()
-        self.button_check = QtWidgets.QPushButton('Check All')
-        self.button_fix = QtWidgets.QPushButton('Fix All')
-
-        # get list of collector plugins we just ran
-        # self.collectors = list(p for p in self.plugins if pyblish.lib.inrange(
-        #     number=p.order,
-        #     base=pyblish.api.CollectorOrder))
-
-        vlayout_instances = QtWidgets.QVBoxLayout()
-        # vlayout_instances.addWidget(self.dropdown_families)
-        vlayout_instances.addWidget(self.list_plugins)
-        vlayout_instances.addWidget(self.button_check)
-
-        vlayout_validators = QtWidgets.QVBoxLayout()
-        # vlayout_validators.addWidget(self.dropdown_validators)
-        vlayout_validators.addWidget(self.list_results)
-        vlayout_validators.addWidget(self.button_fix)
-
-        hlayout = QtWidgets.QHBoxLayout()
-        hlayout.addLayout(vlayout_instances)
-        hlayout.addLayout(vlayout_validators)
-        self.setLayout(hlayout)
-
-        # connect
-        self.button_check.clicked.connect(self.clicked_check)
-        # self.button_fix.clicked.connect(self.clicked_fix)
-
-
 class Ui_Form(view.Ui_Form):
     run_on_startup = True
 
