@@ -4,6 +4,8 @@ the discover module is not used atm
 
 import importlib
 import pkgutil
+
+import datafix.node
 import datafix.logic
 import pprint
 
@@ -42,7 +44,7 @@ def discover_plugins():
             # check for Node class
             attr = getattr(module, attr_name)
             try:
-                if not issubclass(attr, datafix.logic.Node):
+                if not issubclass(attr, datafix.Node.Node):
                     continue
             except TypeError:
                 continue

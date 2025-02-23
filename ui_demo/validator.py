@@ -1,16 +1,16 @@
 from PySide6 import QtCore, QtGui, QtWidgets  # pylint: disable=no-name-in-module
-import site
+
+import datafix.node
 import datafix.logic as datafix
-import logging
 
 from ui_demo import view, qt_utils
 
 
 # hookup states
-qt_utils.States.INIT = datafix.NodeState.INIT
-qt_utils.States.SUCCESS = datafix.NodeState.SUCCEED
-qt_utils.States.FAIL = datafix.NodeState.FAIL
-qt_utils.States.WARNING = datafix.NodeState.WARNING
+qt_utils.States.INIT = datafix.Node.NodeState.INIT
+qt_utils.States.SUCCESS = datafix.Node.NodeState.SUCCEED
+qt_utils.States.FAIL = datafix.Node.NodeState.FAIL
+qt_utils.States.WARNING = datafix.Node.NodeState.WARNING
 
 
 class Ui_Form(view.Ui_Form):
@@ -87,7 +87,7 @@ class Ui_Form(view.Ui_Form):
 
             if len(datafix.active_session.node_instances) == 0:
                # small hack to make it work when nodes arent instanced yet
-                node_state = datafix.NodeState.INIT
+                node_state = datafix.Node.NodeState.INIT
             else:
                 node = datafix.active_session.node_instances[index]
                 node_state = node.state

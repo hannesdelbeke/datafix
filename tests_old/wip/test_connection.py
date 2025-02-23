@@ -1,4 +1,6 @@
-from datafix.logic import *
+from datafix.session import Session
+from datafix.validator import Validator
+
 
 # session
 #   collect_node

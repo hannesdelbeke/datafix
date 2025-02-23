@@ -1,4 +1,4 @@
-from datafix.logic import *
+from datafix.session import Session
 
 
 # test that we can collect a string

@@ -1,5 +1,5 @@
 from datafix.logic import *
-
+from datafix.validator import Validator
 
 """
 1. Define your Collectors.
@@ -68,7 +68,7 @@ def test_simple_session2():
 
 
 if __name__ == '__main__':
-    test_ui = True
+    test_ui = 0
     if not test_ui:
         # test running headless
         test_simple_session2()

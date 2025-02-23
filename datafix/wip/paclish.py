@@ -1,10 +1,9 @@
 # TODO pyblish adapter for datafix
 # at, we just compare datafix and pyblish
-
-from datafix.logic import *
-import pyblish.api
+import datafix.collector
 import pyblish.util
-import pprint
+
+from datafix.session import Session
 
 
 # ======== PAC ================================================================
@@ -28,13 +27,13 @@ session.run()
 
 
 # ======== PYBLISH ================================================================
-class CollectHelloWorldPyblish(pyblish.api.Collector):
+class CollectHelloWorldPyblish(datafix.collector.Collector):
     def process(self, context):
         asset = context.create_asset('HelloWorld', family="string")
         asset[:] = ["Hello World"]
 
 
-class CollectHelloWorldPyblish2(pyblish.api.Collector):
+class CollectHelloWorldPyblish2(datafix.collector.Collector):
     def process(self, context):
         asset = context.create_asset('HelloWorld2', family="string")
         asset[:] = ["Hello World2"]
