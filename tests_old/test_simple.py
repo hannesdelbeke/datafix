@@ -78,6 +78,6 @@ if __name__ == '__main__':
         print(active_session.report())
     else:
         # test the UI
-        import ui_demo.validator
+        import datafix_ui.validator
 
-        ui_demo.validator.show()
+        datafix_ui.validator.show()
