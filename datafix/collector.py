@@ -45,11 +45,15 @@ class Collector(Node):  # session plugin (context), session is a node
 
     @property
     def data_type(self):
-        """return the type of data this collector collects"""
+        """
+        returns the type of data this collector collects
+        default it's the type of the first data node, so type is inferred from the data.
+        feel free to override this to make it explicit
+        """
         if self.data_nodes:
             return type(self.data_nodes[0].data)
         return None
 
     def logic(self):  # create instances node(s)
-        """override this with your implementation, returning a list of data"""
-        raise NotImplementedError
+        """returns a list of data, each list item is then automatically stored in a DataNode"""
+        raise NotImplementedError  # override this with your implementation

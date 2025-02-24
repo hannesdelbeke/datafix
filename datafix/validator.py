@@ -48,7 +48,7 @@ class Validator(Node):
     def validate_data_node(self, data_node):
         # public method, don't override this
 
-        # todo we alrdy save this in results.
+        # todo we already save this in results.
         # why do we need connections too?
         self.connections.append(data_node)
 
