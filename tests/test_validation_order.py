@@ -1,5 +1,4 @@
-from datafix.session import Session
-from datafix.validator import Validator
+from datafix.core import Session, NodeState, Collector, Validator
 
 
 class CollectHelloWorld(Collector):

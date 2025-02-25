@@ -1,5 +1,4 @@
-from datafix.logic import *
-from datafix.validator import Validator
+from datafix.core import Collector, Validator, active_session
 
 """
 1. Define your Collectors.

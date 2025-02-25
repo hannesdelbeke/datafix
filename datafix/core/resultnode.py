@@ -1,4 +1,4 @@
-from datafix.node import Node
+from datafix.core.node import Node
 
 
 class ResultNode(Node):

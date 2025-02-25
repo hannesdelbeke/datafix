@@ -5,8 +5,8 @@ the discover module is not used atm
 import importlib
 import pkgutil
 
-import datafix.node
-import datafix.logic
+import datafix
+import datafix.core.logic
 import pprint
 
 

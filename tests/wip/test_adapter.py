@@ -1,6 +1,6 @@
-from datafix.logic import *
-from datafix.session import Session
-from datafix.validator import Validator
+from datafix import *
+from datafix import Session
+from datafix import Validator
 
 
 class StringToIntAdapter(Adapter):

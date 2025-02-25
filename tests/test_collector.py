@@ -1,6 +1,4 @@
-from datafix.session import Session
-from datafix.collector import Collector
-from datafix.node import NodeState
+from datafix import Session, Collector, NodeState
 
 
 # test that we can collect a string

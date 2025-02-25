@@ -1,16 +1,15 @@
-from PySide6 import QtCore, QtGui, QtWidgets  # pylint: disable=no-name-in-module
+from PySide6 import QtCore, QtWidgets  # pylint: disable=no-name-in-module
 
-import datafix.node
-import datafix.logic as datafix
+import datafix.core
 
-from ui_demo import view, qt_utils
+from datafix.ui import view, qt_utils
 
 
 # hookup states
-qt_utils.States.INIT = datafix.Node.NodeState.INIT
-qt_utils.States.SUCCESS = datafix.Node.NodeState.SUCCEED
-qt_utils.States.FAIL = datafix.Node.NodeState.FAIL
-qt_utils.States.WARNING = datafix.Node.NodeState.WARNING
+qt_utils.States.INIT = datafix.core.NodeState.INIT
+qt_utils.States.SUCCESS = datafix.core.NodeState.SUCCEED
+qt_utils.States.FAIL = datafix.core.NodeState.FAIL
+qt_utils.States.WARNING = datafix.core.NodeState.WARNING
 
 
 class Ui_Form(view.Ui_Form):
@@ -27,7 +26,7 @@ class Ui_Form(view.Ui_Form):
 
     def populate_ui(self):
         # run collectors, and add to list
-        for plugin_class in datafix.active_session.nodes:
+        for plugin_class in datafix.core.active_session.nodes:
             name = plugin_class.__name__
             item = QtWidgets.QListWidgetItem(name)
             item.setData(QtCore.Qt.UserRole, plugin_class)
@@ -39,7 +38,7 @@ class Ui_Form(view.Ui_Form):
     def clicked_check(self):
 
         # run validation
-        datafix.active_session.run()
+        datafix.core.active_session.run()
 
         # color the list of results
         self.color_plugin_items()
@@ -52,7 +51,7 @@ class Ui_Form(view.Ui_Form):
         ...
 
     def plugin_selection_changed(self):
-        if len(datafix.active_session.node_instances) == 0:
+        if len(datafix.core.active_session.node_instances) == 0:
             # skip if not run yet
             return
 
@@ -61,7 +60,7 @@ class Ui_Form(view.Ui_Form):
         plugin_class = selected_item.data(QtCore.Qt.UserRole)
         current_index = self.list_plugins.currentRow()
 
-        node = datafix.active_session.node_instances[current_index]
+        node = datafix.core.active_session.node_instances[current_index]
 
         # clear the list of results
         self.list_results.clear()
@@ -82,14 +81,14 @@ class Ui_Form(view.Ui_Form):
 
 
     def color_plugin_items(self):
-        for index, node in enumerate(datafix.active_session.nodes):
+        for index, node in enumerate(datafix.core.active_session.nodes):
             item = self.list_plugins.item(index)
 
-            if len(datafix.active_session.node_instances) == 0:
+            if len(datafix.core.active_session.node_instances) == 0:
                # small hack to make it work when nodes arent instanced yet
-                node_state = datafix.Node.NodeState.INIT
+                node_state = datafix.core.NodeState.INIT
             else:
-                node = datafix.active_session.node_instances[index]
+                node = datafix.core.active_session.node_instances[index]
                 node_state = node.state
             qt_utils.color_item(item, node_state)
 

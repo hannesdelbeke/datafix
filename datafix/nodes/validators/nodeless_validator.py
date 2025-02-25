@@ -1,4 +1,4 @@
-from datafix.validator import Validator
+from datafix import Validator
 from pathlib import Path
 
 

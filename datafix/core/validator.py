@@ -1,5 +1,5 @@
-from datafix.resultnode import ResultNode
-from datafix.node import Node, NodeState
+from datafix.core.resultnode import ResultNode
+from datafix.core.node import Node, NodeState
 
 
 class Validator(Node):

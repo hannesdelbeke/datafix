@@ -1,5 +1,5 @@
-from datafix.session import Session
-from datafix.validator import Validator
+from datafix import Session
+from datafix import Validator
 
 
 # session

@@ -1,5 +1,5 @@
-from datafix.node import Node, NodeState
-from datafix.datanode import DataNode
+from datafix.core.node import Node, NodeState
+from datafix.core.datanode import DataNode
 
 
 class Collector(Node):  # session plugin (context), session is a node
@@ -11,9 +11,6 @@ class Collector(Node):  # session plugin (context), session is a node
 
     override logic() to implement your collector
     """
-    # def __init__(self, parent):
-    #     super().__init__(parent=parent)
-    #     self.continue_on_fail = False
 
     @property
     def data_nodes(self):
@@ -24,17 +21,13 @@ class Collector(Node):  # session plugin (context), session is a node
         # if we run the session, it runs all registered nodes under it.
         # e.g. collector first, then validate on the collected data
         # to ensure you first run collector and then validator, register in order.
-
-        result = None
         try:
             self.state = NodeState.RUNNING
             result = self.logic(*args, **kwargs)
 
-            # ------------------------
             for instance in result:
                 node = DataNode(instance, parent=self)
                 self.data_nodes.append(node)
-            # ------------------------
 
             self.state = NodeState.SUCCEED
         except Exception as e:

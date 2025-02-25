@@ -1,19 +1,12 @@
 import logging
 from typing import List, Type
-
-from datafix.collector import Collector
-from datafix.node import Node, NodeState
-
-
-active_session = None
+from datafix.core.collector import Collector
+from datafix.core.node import Node, NodeState
 
 
 class Session(Node):
     """some kind of canvas or context, that contains plugins etc"""
     def __init__(self):
-        global active_session
-
-        active_session = self
         self.nodes: List[Type[Node]] = []
         self.adapters = []
         super().__init__()

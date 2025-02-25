@@ -1,4 +1,4 @@
-from datafix.collector import Collector
+from datafix.core.collector import Collector
 
 
 class CurrentTime(Collector):
