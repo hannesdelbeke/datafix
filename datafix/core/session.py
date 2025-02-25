@@ -45,9 +45,18 @@ class Session(Node):
 
     def run(self):
         self.state = NodeState.RUNNING
-        for plugin_class in self.nodes:
-            plugin_instance = plugin_class(parent=self)
+        for node in self.nodes:
+            # check if class or instance
+            # this way we support lazy pipeline creation
+            # but also allow for direct instance registration,
+            # e.g. when you need duplicate nodes with different settings
+            if isinstance(node, Node):
+                plugin_instance = node
+            else:
+                plugin_instance = node(parent=self)
+
             self.node_instances.append(plugin_instance)
+
             plugin_instance.run()
         # todo set success and fail on session
 
