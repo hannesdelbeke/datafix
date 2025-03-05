@@ -26,10 +26,10 @@ class Ui_Form(view.Ui_Form):
 
     def populate_ui(self):
         # run collectors, and add to list
-        for plugin_class in datafix.core.active_session.nodes:
-            name = plugin_class.__name__
+        for node in datafix.core.active_session.children:
+            name = node.name
             item = QtWidgets.QListWidgetItem(name)
-            item.setData(QtCore.Qt.UserRole, plugin_class)
+            item.setData(QtCore.Qt.UserRole, node)
             self.list_plugins.addItem(name)
 
         self.color_plugin_items()
@@ -78,10 +78,8 @@ class Ui_Form(view.Ui_Form):
             qt_utils.color_item(item, node_state)
             self.list_results.addItem(item)
 
-
-
     def color_plugin_items(self):
-        for index, node in enumerate(datafix.core.active_session.nodes):
+        for index, node in enumerate(datafix.core.active_session.children):
             item = self.list_plugins.item(index)
 
             if len(datafix.core.active_session.children) == 0:

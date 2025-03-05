@@ -52,7 +52,7 @@ class Node:
         #  we can store the result in the link/connection between nodes
 
         self._state = NodeState.INIT
-        # self.name = name
+        self.name = name or self.__class__.__name__
 
     @property
     def state(self):
