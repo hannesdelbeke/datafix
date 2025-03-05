@@ -1,6 +1,5 @@
 from datafix import *
-from datafix import Session
-from datafix import Validator
+from datafix.core import Session, Validator, Adapter, Collector, Action, NodeState
 
 
 class StringToIntAdapter(Adapter):
@@ -9,7 +8,7 @@ class StringToIntAdapter(Adapter):
     type_input = str
     type_output = int
 
-    def logic(self, data: str):
+    def adapt(self, data: str):
         magic_dict = {
             'zero': 0,
             'one': 1,
@@ -27,7 +26,7 @@ class IntToStringAdapter(Adapter):
     type_input = int
     type_output = str
 
-    def logic(self, data):
+    def adapt(self, data):
         return str(data)
 
 
@@ -38,13 +37,13 @@ class ActionUppercase(Action):
 
 
 class CollectNumbers(Collector):
-    def logic(self):
+    def collect(self):
         # return [1, 2, 3]
         return [1]
 
 
 class CollectStringNumbers(Collector):
-    def logic(self):
+    def collect(self):
         # return ["one", "two", "three"]
         return ["one"]
 
@@ -52,7 +51,7 @@ class CollectStringNumbers(Collector):
 class ValidateNumbers(Validator):
     required_type = int
 
-    def logic(self, data):
+    def validate(self, data):
         assert type(data) == int
 
 

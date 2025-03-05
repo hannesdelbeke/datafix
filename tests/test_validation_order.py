@@ -2,17 +2,17 @@ from datafix.core import Session, NodeState, Collector, Validator
 
 
 class CollectHelloWorld(Collector):
-    def logic(self):
+    def collect(self):
         return ["Hello World"]
 
 
 class ValidateSuccess(Validator):
-    def logic(self, data):
+    def validate(self, data):
         pass
 
 
 class ValidateFail(Validator):
-    def logic(self, data):
+    def validate(self, data):
         raise Exception('Fail')
 
 

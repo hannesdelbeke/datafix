@@ -1,6 +1,7 @@
 import logging
 from enum import Enum
 from typing import List
+from contextlib import contextmanager
 
 
 def color_text(text, state):
@@ -102,10 +103,6 @@ class Node:
         else:
             return self
 
-    def _run(self, *args, **kwargs):
-        """inbetween function to handle state"""
-        return self.logic()
-
     def logic(self):
         """inherit and overwrite this"""
         raise NotImplementedError
@@ -114,18 +111,10 @@ class Node:
         # if we run the session, it runs all registered nodes under it.
         # e.g. collector first, then validate on the collected data
         # to ensure you first run collector and then validator, register in order.
-        logging.info(f'running {self.__class__.__name__}')
 
-        # result = None
-        try:
-            self._state = NodeState.RUNNING
-            result = self._run(*args, **kwargs)
-            self._state = NodeState.SUCCEED
-        except Exception as e:
-            self._state = NodeState.FAIL
-            self.log_error(f"'{self.__class__.__name__}' failed running:'{e}'" )
-            if not self.continue_on_fail:
-                raise e
+        # logging.info(f'running {self.__class__.__name__}')
+        with node_state_setter(self):
+            result = self.logic(*args, **kwargs)
 
     def report(self) -> str:
         """"create a report of this node and it's children"""
@@ -154,3 +143,36 @@ class Node:
             logging.warning(text)
         else:
             logging.error(text)
+
+
+class StateSetter:
+    def __enter__(self, node):
+        # Setup logic (executed before the "with" block)
+        node._state = NodeState.RUNNING
+        return self  # Optionally return something to use in the block
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        # Teardown logic (executed after the "with" block)
+        print("Exiting the context")
+        if exc_type:
+            print(f"An exception occurred: {exc_value}")
+        return True  # Suppress exceptions if necessary (optional)
+
+
+@contextmanager
+def node_state_setter(node: Node):
+    """a context manager to set the state of a node, and handle exceptions"""
+    try:
+        # Set the node state to RUNNING at the start
+        node._state = NodeState.RUNNING
+
+        yield  # Logic inside the 'with' block executes here
+
+        # Set the node state to SUCCEED if no exception occurs
+        node._state = NodeState.SUCCEED
+    except Exception as e:
+        # On exception, set the node state to FAIL and log the error
+        node._state = NodeState.FAIL
+        node.log_error(f"'{node.__class__.__name__}' failed running: '{e}'")
+        if not node.continue_on_fail:
+            raise e  # Rethrow the exception if continue_on_fail is False

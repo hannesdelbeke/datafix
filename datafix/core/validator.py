@@ -13,22 +13,22 @@ class Validator(Node):
     """
     required_type = None
 
-    def _validate_data(self, data):
+    def _adapt_and_validate_data(self, data):
         """validate the data in the DataNode"""
         adapted_data = self.session.adapt(data, self.required_type)
         # todo validator shouldn't care about adapter, node or session mngr should handle this
-        return self.logic(adapted_data)
+        return self.validate(adapted_data)
 
-    def logic(self, data):
+    def validate(self, data):
         """the logic to validate the data, override this"""
         raise NotImplementedError()
 
     def validate_data_node(self, data_node):
         # public method, don't override this
-        # atm not used by anything else but will be used by UI to right click revalidate
+        # atm not used by anything else but will be used by UI to right-click revalidate
         """run the validation logic on a DataNode, and save the result in a ResultNode"""
         try:
-            result = self._validate_data(data=data_node.data)
+            result = self._adapt_and_validate_data(data=data_node.data)
             # # todo how to support return value and fail/raise error at same time
             state = NodeState.SUCCEED
         except Exception as e:
@@ -36,10 +36,10 @@ class Validator(Node):
             state = NodeState.FAIL
             if not self.continue_on_fail:
                 raise e
-
         return ResultNode(data_node, parent=self, state=state, warning=self.warning)
 
-    def _run(self):  # create instances node(s)
+    def run(self):
+     # create instances node(s)
         # 1. get the collectors from the session
         # 2. get the DataNodes from the collectors
         # 3. run validate on the mesh instances,

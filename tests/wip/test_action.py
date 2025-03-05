@@ -1,10 +1,9 @@
 from datafix import *
-from datafix import Session
-from datafix import Validator
+from datafix.core import Session, Validator, Action, Collector, Node, NodeState
 
 
 class ActionPrintHello(Action):
-    def logic(self):
+    def collect(self):
         return 'Hello'
 
 
@@ -18,17 +17,17 @@ class CollectHelloWorld(Collector):
         super().__init__()
         self.actions = [ActionPrintHello(parent=self)]
 
-    def logic(self):
+    def collect(self):
         return ["Hello World"]
 
 
 class CollectHelloWorldList(Collector):
-    def logic(self):
+    def collect(self):
         return ["Hello", "World"]
 
 
 class ValidateHelloWorld(Validator):
-    def logic(self, data):
+    def validate(self, data):
         assert data == "Hello World"
 
 

@@ -1,4 +1,4 @@
-from datafix.core import Session, Validator
+from datafix.core import Session, Validator, Collector, NodeState
 
 
 # use case for revalidating (running the validator twice):
@@ -12,12 +12,12 @@ from datafix.core import Session, Validator
 
 
 class CollectString(Collector):
-    def logic(self):
+    def collect(self):
         return ["Helo Werld"]
 
 
 class ValidateSpelling(Validator):
-    def logic(self, data):
+    def validate(self, data):
         assert data == "Hello World"
 
 

@@ -1,5 +1,4 @@
-from datafix import Session
-from datafix import Validator
+from datafix.core import Session, Validator, Collector
 
 
 # session
@@ -28,7 +27,7 @@ class ValidatorAB(Validator):
 
     # normally we don't override validate_instance, but validate_instance_node instead
     # but to isolate wrapper logic for testing we override validate_instance directly
-    def logic(self, data):
+    def validate(self, data):
         assert data == "A"
 
 

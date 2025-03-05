@@ -12,10 +12,14 @@ class Session(Node):
         super().__init__()
         global active_session
         active_session = self
-        self.nodes: List[Type[Node]] = []  # registered nodes, usually classes but can be instances.
         self.adapters = []
 
+    def add(self, node: Type[Node]):
+        # convenience method to add a node to the session, unsure if i ll keep it
+        node(parent=self)
+
     def iter_collectors(self, required_type=None) -> Collector:
+        """return all collectors that collect the required type"""
         for node in self.children:
             if not isinstance(node, Collector):
                 continue
@@ -26,7 +30,6 @@ class Session(Node):
             #  e.g. List[Type[Mesh]]
 
             if required_type:
-                print(collector, collector.data_type, required_type)
                 # if a type is required, only return collectors of matching type
                 if collector.data_type and issubclass(collector.data_type, required_type):
                     yield collector
@@ -40,7 +43,7 @@ class Session(Node):
         self.state = NodeState.RUNNING
         for node in self.children:
             node.run()
-        datafix.core.utils.state_from_children(self)
+        datafix.core.utils.set_state_from_children(self)
 
     def adapt(self, instance, required_type):
         if not required_type:

@@ -1,4 +1,4 @@
-from datafix.core.node import Node, NodeState
+from datafix.core.node import Node, NodeState, node_state_setter
 from datafix.core.datanode import DataNode
 
 
@@ -21,19 +21,10 @@ class Collector(Node):  # session plugin (context), session is a node
         # if we run the session, it runs all registered nodes under it.
         # e.g. collector first, then validate on the collected data
         # to ensure you first run collector and then validator, register in order.
-        try:
-            self.state = NodeState.RUNNING
-            result = self.logic(*args, **kwargs)
-
+        with node_state_setter(self):
+            result = self.collect(*args, **kwargs)
             for instance in result:
                 DataNode(instance, parent=self)
-
-            self.state = NodeState.SUCCEED
-        except Exception as e:
-            self.state = NodeState.FAIL
-            self.log_error(f"'{self.__class__.__name__}' failed running:'{e}'" )
-            if not self.continue_on_fail:
-                raise e
 
     @property
     def data_type(self):
@@ -46,6 +37,6 @@ class Collector(Node):  # session plugin (context), session is a node
             return type(self.data_nodes[0].data)
         return None
 
-    def logic(self):  # create instances node(s)
+    def collect(self):  # create instances node(s)
         """returns a list of data, each list item is then automatically stored in a DataNode"""
         raise NotImplementedError  # override this with your implementation

@@ -1,4 +1,4 @@
-from datafix.core import Node, NodeState
+from datafix.core.node import Node, NodeState
 
 
 
@@ -24,3 +24,4 @@ def set_state_from_children(node:Node):
         # some children are still running, or didn't run, or other ...
         # this shouldn't happen unless maybe if nodes are still running
         raise NotImplementedError
+

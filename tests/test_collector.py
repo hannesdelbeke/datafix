@@ -3,7 +3,7 @@ from datafix.core import Session, Collector, NodeState
 
 # test that we can collect a string
 class CollectHelloWorld(Collector):
-    def logic(self):
+    def collect(self):
         return ["Hello World"]
 
 
@@ -14,12 +14,11 @@ def test_single_collect() -> Session:
     session.run()
     assert session.state == NodeState.SUCCEED
     assert session.children[0].data_nodes[0].data == "Hello World"
-    return session
 
 
 # test we can collect 2 strings
 class CollectHelloWorldList(Collector):
-    def logic(self):
+    def collect(self):
         return ["Hello", "World"]
 
 
@@ -34,12 +33,10 @@ def test_double_collect() -> Session:
     assert session.children[0].data_nodes[0].data == "Hello"
     assert session.children[0].data_nodes[1].data == "World"
 
-    return session
-
 
 # test that we can fail to collect due to exception, and continue to next node
 class CollectFail(Collector):
-    def logic(self):
+    def collect(self):
         raise Exception('Force raise exception')
 
 
@@ -54,8 +51,6 @@ def test_fail_collect() -> Session:
     assert session.children[1].state == NodeState.SUCCEED
     assert session.children[0].data_nodes == []  # failed to collect dataNode
     assert session.children[1].data_nodes[0].data == "Hello World"
-
-    return session
 
 
 # def test_fail_warning_collect() -> Session:

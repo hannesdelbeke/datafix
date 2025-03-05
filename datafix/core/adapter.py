@@ -44,12 +44,12 @@ class Adapter:
     type_input = None
     type_output = None
 
-    def logic(self, data):
+    def adapt(self, data):
         """the logic that adapts the data to another type, override this"""
         raise NotImplementedError()
 
     def run(self, data):
-        return self.logic(data)
+        return self.adapt(data)
 
     # input: instance(wrapper?)
     # output: int

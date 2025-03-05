@@ -5,4 +5,4 @@ from datafix.core.validator import Validator
 from datafix.core.resultnode import ResultNode
 from datafix.core.datanode import DataNode
 from datafix.core.action import Action
-# from datafix.logic import Adapter
+from datafix.core.adapter import Adapter

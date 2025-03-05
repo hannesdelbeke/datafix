@@ -6,7 +6,7 @@ class PathIsFile(Validator):
     """check if path is a file"""
     required_type = Path
 
-    def logic(self, data):
+    def validate(self, data):
         # expects pathlib.Path for data
         path = data
         if not path.is_file():

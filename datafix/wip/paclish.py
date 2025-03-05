@@ -3,17 +3,17 @@
 import datafix
 import pyblish.util
 
-from datafix import Session
+from datafix.core import Session, Collector
 
 
 # ======== PAC ================================================================
 class CollectHelloWorld(Collector):
-    def logic(self):
+    def collect(self):
         return ["Hello World"]
 
 
 class CollectHelloWorld2(Collector):
-    def logic(self):
+    def collect(self):
         return ["Hello World2"]
 
 

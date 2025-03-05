@@ -13,12 +13,12 @@ the 2nd collector creates 2 datanodes, one with the value "hello" and one with "
 
 
 class CollectHelloWorld(Collector):
-    def logic(self):
+    def collect(self):
         return ["Hello World"]
 
 
 class CollectHelloWorldList(Collector):
-    def logic(self):
+    def collect(self):
         return ["Hello", "World"]
 
 
@@ -35,12 +35,12 @@ These can then be used by your validation logic.
 class ValidateHelloWorld(Validator):
     warning = True
 
-    def logic(self, data):
+    def validate(self, data):
         assert data == "Hello World", "Data is not 'Hello World'"
 
 
 class ValidateContainsHello(Validator):
-    def logic(self, data):
+    def validate(self, data):
         assert "Hello" in data, "Data does not contain 'Hello'"
 
 """

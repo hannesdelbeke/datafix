@@ -6,7 +6,6 @@ import importlib
 import pkgutil
 
 import datafix
-import datafix.core.logic
 import pprint
 
 
