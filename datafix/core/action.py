@@ -2,6 +2,9 @@ from datafix.core.node import Node
 
 
 class Action(Node):
+    def run(self):
+        raise NotImplementedError
+
     # actions usually run on collecto nodes, or instances, or result nodes.
 
     # run on validator. e.g. select all wrong instances (material, mesh, ...)

@@ -31,50 +31,27 @@ class NodeState(Enum):
 
 
 class Node:
+    """
+    warning: if True, warn instead of fail. A warning implies accepted failure.
+    continue_on_fail: if True, continue running even if this node fails
+    """
     continue_on_fail = True  # if self or any children fail, continue running
     warning = False  # set state to WARNING if this node FAILS
 
-    def __init__(self, parent=None, name=None):
-        # self.action_class = None
+    def __init__(self, parent:"Node|None"=None, name=None):
         self.actions = []
-
-        # when you run a node, it runs all child nodes.
-        # collectors create new DataNodes and make them children
-        # validators run, with DataNodes as input
-        #     results saved
-        # actions run on ...
-
         self.parent = parent  # node that created this node
         if parent:
             parent.children.append(self)
         self.children: "List[Node]" = []  # nodes created by this node
-        # TODO instead of storing result in 1 node, and then querying this node from the other node for the result.
-        #  we can store the result in the link/connection between nodes
-
         self._state = NodeState.INIT
         self.name = name or self.__class__.__name__
 
     @property
     def state(self):
-        # a session fails if any nodes in it fail
-        # a collector fails if it fails to collect, it doesn't care about it's children
-        # a validator fails if any of the datanodes it runs on fails
-        # an instance node fails if any validations on it fail
         if self._state == NodeState.FAIL and self.warning:
             return NodeState.WARNING
         return self._state
-        #
-        # if self.children:
-        #     # if this node has children, it's a collector, validator, or session
-        #     # we check the state of the children
-        #     for child in self.children:
-        #         if child.state == NodeState.FAIL:
-        #             return NodeState.FAIL
-        #     return NodeState.SUCCEED
-        # else:
-        #     # if this node has no children, it's an instance node
-        #     # we check the state of the instance node
-        #     return self._state
 
     @state.setter
     def state(self, state):
@@ -88,18 +65,8 @@ class Node:
         else:
             return self
 
-    def logic(self):
-        """inherit and overwrite this"""
-        raise NotImplementedError
-
     def run(self, *args, **kwargs):
-        # if we run the session, it runs all registered nodes under it.
-        # e.g. collector first, then validate on the collected data
-        # to ensure you first run collector and then validator, register in order.
-
-        # logging.info(f'running {self.__class__.__name__}')
-        with node_state_setter(self):
-            result = self.logic(*args, **kwargs)
+        raise NotImplementedError
 
     def report(self) -> str:
         """"create a report of this node and it's children"""
@@ -150,12 +117,9 @@ def node_state_setter(node: Node):
     try:
         # Set the node state to RUNNING at the start
         node._state = NodeState.RUNNING
-
         yield  # Logic inside the 'with' block executes here
-
-        # check state is not fail or warning, in case something set it to fail
+        # check state is not fail or warning, in case something set it to fail while it ran
         if node.state == NodeState.RUNNING:
-            # Set the node state to SUCCEED if no exception occurs
             node._state = NodeState.SUCCEED
     except Exception as e:
         # On exception, set the node state to FAIL and log the error
