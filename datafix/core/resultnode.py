@@ -1,4 +1,5 @@
 from datafix.core.node import Node
+from datafix.core.datanode import DataNode
 
 
 class ResultNode(Node):
@@ -9,11 +10,10 @@ class ResultNode(Node):
 
     def __init__(self, data_node, parent, state, warning):
         super().__init__(parent=parent)
-        self.data_node: "datafix.datanode.DataNode" = data_node
-        data_node.connect(self)  # creates bi-directional link
+        self.data_node: DataNode = data_node
+        data_node.result_nodes.append(self)  # creates bi-directional link
         self.state = state
         self.warning = warning
-
 
     def __str__(self):
         return f'ResultNode({self.data_node.data})'

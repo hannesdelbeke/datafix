@@ -48,26 +48,11 @@ class Node:
         if parent:
             parent.children.append(self)
         self.children: "List[Node]" = []  # nodes created by this node
-        self._connections = []  # related nodes # todo auto return children
         # TODO instead of storing result in 1 node, and then querying this node from the other node for the result.
         #  we can store the result in the link/connection between nodes
 
         self._state = NodeState.INIT
         # self.name = name
-
-    @property
-    def connections(self):
-        # return connections and children and parent
-        return self.children + self._connections + [self.parent]
-
-    def connect(self, node):
-        """creates bi-directional link between nodes"""
-        self._connections.append(node)
-        node._connections.append(self)
-
-    # @connections.setter
-    # def connections(self, connections):
-    #     self._connections = connections
 
     @property
     def state(self):
@@ -168,8 +153,10 @@ def node_state_setter(node: Node):
 
         yield  # Logic inside the 'with' block executes here
 
-        # Set the node state to SUCCEED if no exception occurs
-        node._state = NodeState.SUCCEED
+        # check state is not fail or warning, in case something set it to fail
+        if node.state == NodeState.RUNNING:
+            # Set the node state to SUCCEED if no exception occurs
+            node._state = NodeState.SUCCEED
     except Exception as e:
         # On exception, set the node state to FAIL and log the error
         node._state = NodeState.FAIL

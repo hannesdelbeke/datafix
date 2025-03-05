@@ -2,7 +2,7 @@ import logging
 from typing import List, Type
 
 from datafix.core.collector import Collector
-from datafix.core.node import Node, NodeState
+from datafix.core.node import Node, NodeState, node_state_setter
 import datafix.core.utils
 
 
@@ -42,7 +42,8 @@ class Session(Node):
     def run(self):
         self.state = NodeState.RUNNING
         for node in self.children:
-            node.run()
+            with node_state_setter(node):
+                node.run()
         datafix.core.utils.set_state_from_children(self)
 
     def adapt(self, instance, required_type):

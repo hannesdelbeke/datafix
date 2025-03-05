@@ -1,4 +1,3 @@
-from datafix.core.resultnode import ResultNode
 from datafix.core.node import Node, NodeState
 
 
@@ -8,6 +7,7 @@ class DataNode(Node):
     """
     def __init__(self, data, parent):
         self.data = data  # custom data saved in the node
+        self.result_nodes = []  # result nodes created by the validator(s) that ran on this node
         super().__init__(parent=parent)
 
     @property
@@ -16,7 +16,7 @@ class DataNode(Node):
         # creating resultNode(s) with the validation result saved in the state
         # this node fails if any result nodes failed
 
-        result_nodes = [node for node in self.connections if isinstance(node, ResultNode)]
+        result_nodes = [node for node in self.result_nodes]
         result_nodes_states = [node.state for node in result_nodes]
 
         if NodeState.FAIL in result_nodes_states:

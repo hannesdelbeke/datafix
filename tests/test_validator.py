@@ -34,9 +34,6 @@ def test_all_instances_equal():
     # test success
     session = Session()
     CollectorString(parent=session)
-    # ValidatorSameStrings(parent=session)
-    # session.add(CollectorString)
-    # session.add(ValidatorSameStrings)
     session.run()
     collector = session.children[0]
     print(session.report())
@@ -48,8 +45,6 @@ def test_all_instances_equal():
     session = Session()
     CollectorString(parent=session)
     ValidatorSameStrings(parent=session)
-    # session.add(CollectStringABC)
-    # session.add(ValidatorSameStrings)
     session.run()
 
     assert session.children[0].data_nodes[0].state == NodeState.FAIL

@@ -21,6 +21,9 @@ class Collector(Node):  # session plugin (context), session is a node
         # if we run the session, it runs all registered nodes under it.
         # e.g. collector first, then validate on the collected data
         # to ensure you first run collector and then validator, register in order.
+
+        # self.children.clear()
+
         with node_state_setter(self):
             result = self.collect(*args, **kwargs)
             for instance in result:

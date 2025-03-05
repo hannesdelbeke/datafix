@@ -46,6 +46,7 @@ def test_fail_collect() -> Session:
     session.add(CollectFail)
     session.add(CollectHelloWorld)
     session.run()
+    print(session.report())
     assert session.state == NodeState.FAIL
     assert session.children[0].state == NodeState.FAIL
     assert session.children[1].state == NodeState.SUCCEED
