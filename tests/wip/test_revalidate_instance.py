@@ -1,5 +1,4 @@
-from datafix import Session
-from datafix import Validator
+from datafix.core import Session, Validator
 
 
 # use case for revalidating (running the validator twice):
@@ -25,9 +24,9 @@ class ValidateSpelling(Validator):
 def test_revalidate_instance():
     # register 2 collectors and 1 validator
     session = Session()
-    session.nodes.append(CollectString)
-    session.nodes.append(CollectString)
-    session.nodes.append(ValidateSpelling)
+    session.add(CollectString)
+    session.add(CollectString)
+    session.add(ValidateSpelling)
 
     session.run()
     # collector1 -> collects instance 1 'Helo Werld'
@@ -35,15 +34,15 @@ def test_revalidate_instance():
     # validator -> validates instance 1 & 2, both fail
 
     # we now 'fix' the instance 1, and revalidate the instance 1
-    collector_1 = session.node_instances[0]
+    collector_1 = session.children[0]
     instance_wrap_1 = collector_1.data_nodes[0]
     instance_wrap_1.data = "Hello World"
 
-    collector_2 = session.node_instances[1]
+    collector_2 = session.children[1]
     instance_wrap_2 = collector_2.data_nodes[0]
 
     # TODO move this to node function
-    # get connections: nodes that ran on this instance (aka validators)
+    # get connections: nodes that ran on this instance (aka validators (TODO but also result nodes)
     # BUG we loop through connections, but validate_instance_node adds a connection during loop
     connected_nodes = instance_wrap_1.connections[:]
     for connected_node in connected_nodes:

@@ -55,13 +55,8 @@ class Adapter:
     # output: int
 
 
-
 # class AdapterBrain(object):
 #     def __init__(self):
 
 
-class Action(Node):
-    pass
 
-
-active_session = Session()

@@ -51,7 +51,7 @@ class Ui_Form(view.Ui_Form):
         ...
 
     def plugin_selection_changed(self):
-        if len(datafix.core.active_session.node_instances) == 0:
+        if len(datafix.core.active_session.children) == 0:
             # skip if not run yet
             return
 
@@ -60,7 +60,7 @@ class Ui_Form(view.Ui_Form):
         plugin_class = selected_item.data(QtCore.Qt.UserRole)
         current_index = self.list_plugins.currentRow()
 
-        node = datafix.core.active_session.node_instances[current_index]
+        node = datafix.core.active_session.children[current_index]
 
         # clear the list of results
         self.list_results.clear()
@@ -84,11 +84,11 @@ class Ui_Form(view.Ui_Form):
         for index, node in enumerate(datafix.core.active_session.nodes):
             item = self.list_plugins.item(index)
 
-            if len(datafix.core.active_session.node_instances) == 0:
+            if len(datafix.core.active_session.children) == 0:
                # small hack to make it work when nodes arent instanced yet
                 node_state = datafix.core.NodeState.INIT
             else:
-                node = datafix.core.active_session.node_instances[index]
+                node = datafix.core.active_session.children[index]
                 node_state = node.state
             qt_utils.color_item(item, node_state)
 

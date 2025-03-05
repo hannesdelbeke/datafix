@@ -1,4 +1,4 @@
-from datafix import Session, Validator, Collector, NodeState
+from datafix.core import Session, Validator, Collector, NodeState
 
 
 class CollectorString(Collector):
@@ -33,10 +33,12 @@ class ValidatorStringIsA(Validator):
 def test_all_instances_equal():
     # test success
     session = Session()
-    session.nodes.append(CollectorString)
-    session.nodes.append(ValidatorSameStrings)
+    CollectorString(parent=session)
+    ValidatorSameStrings(parent=session)
+    # session.add(CollectorString)
+    # session.add(ValidatorSameStrings)
     session.run()
-    collector = session.node_instances[0]
+    collector = session.children[0]
     assert collector.data_nodes[0].state == NodeState.SUCCEED
     assert collector.data_nodes[1].state == NodeState.SUCCEED
     assert collector.data_nodes[2].state == NodeState.SUCCEED
@@ -44,11 +46,13 @@ def test_all_instances_equal():
 
     # test fail
     session = Session()
-    session.nodes.append(CollectStringABC)
-    session.nodes.append(ValidatorSameStrings)
+    CollectorString(parent=session)
+    ValidatorSameStrings(parent=session)
+    # session.add(CollectStringABC)
+    # session.add(ValidatorSameStrings)
     session.run()
 
-    assert session.node_instances[0].data_nodes[0].state == NodeState.FAIL
+    assert session.children[0].data_nodes[0].state == NodeState.FAIL
     print(session.report())
 
 
@@ -60,9 +64,7 @@ def test_failed_result_node():
     session.run()
 
     # print(session.report())
-
-    # print(session.report())
-    validator = session.node_instances[1]
+    validator = session.children[1]
     result_node_a, result_node_b, result_node_c = validator.children
 
     # nodes A B C
@@ -100,7 +102,7 @@ def test_incompatible_types():
     session.add(ValidatorSameStrings)
     session.run()
 
-    validator = session.node_instances[2]
+    validator = session.children[2]
     print(session.report())
 
 

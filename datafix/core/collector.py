@@ -26,8 +26,7 @@ class Collector(Node):  # session plugin (context), session is a node
             result = self.logic(*args, **kwargs)
 
             for instance in result:
-                node = DataNode(instance, parent=self)
-                self.data_nodes.append(node)
+                DataNode(instance, parent=self)
 
             self.state = NodeState.SUCCEED
         except Exception as e:

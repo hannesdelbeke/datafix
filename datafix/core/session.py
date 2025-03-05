@@ -1,84 +1,46 @@
 import logging
 from typing import List, Type
+
 from datafix.core.collector import Collector
 from datafix.core.node import Node, NodeState
+import datafix.core.utils
 
 
 class Session(Node):
     """some kind of canvas or context, that contains plugins etc"""
     def __init__(self):
-        self.nodes: List[Type[Node]] = []
-        self.adapters = []
         super().__init__()
-
-    def add(self, node):
-        self.nodes.append(node)
+        global active_session
+        active_session = self
+        self.nodes: List[Type[Node]] = []  # registered nodes, usually classes but can be instances.
+        self.adapters = []
 
     def iter_collectors(self, required_type=None) -> Collector:
-        for node in self.node_instances:
-            if isinstance(node, Collector):
-                collector = node
+        for node in self.children:
+            if not isinstance(node, Collector):
+                continue
 
-                # todo support list of type x
-                #  e.g. List[Type[Mesh]]
+            collector: Collector = node
 
-                if required_type:
-                    print(collector, collector.data_type, required_type)
-                    # if a type is required, only return collectors of matching type
-                    if collector.data_type and issubclass(collector.data_type, required_type):
-                        yield collector
-                    else:
-                        logging.info(f"collector '{collector}' does not match datatype '{required_type}'")
-                else:
-                    # no required type, allow all collectors
+            # todo support list of type x
+            #  e.g. List[Type[Mesh]]
+
+            if required_type:
+                print(collector, collector.data_type, required_type)
+                # if a type is required, only return collectors of matching type
+                if collector.data_type and issubclass(collector.data_type, required_type):
                     yield collector
-
-    @property
-    def node_instances(self):
-        """get all instanced nodes,
-        since we register the classes, we can create instances"""
-        return self.children
-
-    # @property
-    # def collected_instances(self):
-    #     return self.children
+                else:
+                    logging.info(f"collector '{collector}' does not match datatype '{required_type}'")
+            else:
+                # no required type, allow all collectors
+                yield collector
 
     def run(self):
         self.state = NodeState.RUNNING
-        for node in self.nodes:
-            # check if class or instance
-            # this way we support lazy pipeline creation
-            # but also allow for direct instance registration,
-            # e.g. when you need duplicate nodes with different settings
-            if isinstance(node, Node):
-                plugin_instance = node
-            else:
-                plugin_instance = node(parent=self)
-
-            self.node_instances.append(plugin_instance)
-
-            plugin_instance.run()
-        # todo set success and fail on session
-
-        # if none if the children failed, succeed
-        if all([node._state == NodeState.SUCCEED for node in self.node_instances]):
-            self.state = NodeState.SUCCEED
-        else:
-            self.state = NodeState.FAIL
-
-        # create collector instance and track in session, create backward link in collect instance
-        # collector.run(session)
-        # store mesh instances in the collector instance, create backward link in mesh instances
-
-        # create validator instance and track in session, create backward link in validator instance
-        # validator.run(session)
-        # get the collect instances from session, get the mesh instances from collect instances,
-        # run validate on the mesh instances, create backward link (to validate inst) in mesh instances
-
-        # create export instance and track in session, create backward link in export instance
-        # export.run(session)
-        # get the collect instances from session, get mesh inst from collect inst.
-        # run export on the mesh instances, create backward link (to export inst) in mesh instances
+        for node in self.children:
+            node.run()
+        datafix.core.utils.state_from_children(self)
 
     def adapt(self, instance, required_type):
         if not required_type:
@@ -99,3 +61,6 @@ class Session(Node):
 
     def register_adapter(self, adapter):
         self.adapters.append(adapter)
+
+
+active_session = Session()

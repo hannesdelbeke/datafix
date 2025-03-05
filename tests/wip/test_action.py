@@ -34,12 +34,12 @@ class ValidateHelloWorld(Validator):
 
 def test_simple_action():
     session = Session()
-    session.nodes.append(CollectHelloWorld)
-    session.nodes.append(CollectHelloWorldList)
-    session.nodes.append(ValidateHelloWorld)
+    session.add(CollectHelloWorld)
+    session.add(CollectHelloWorldList)
+    session.add(ValidateHelloWorld)
     session.run()
 
-    collector_instance = session.node_instances[0]
+    collector_instance = session.children[0]
     assert 'Hello' == collector_instance.actions[0].run()
 
 

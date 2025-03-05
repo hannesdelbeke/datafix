@@ -44,13 +44,29 @@ class Node:
         # actions run on ...
 
         self.parent = parent  # node that created this node
+        if parent:
+            parent.children.append(self)
         self.children: "List[Node]" = []  # nodes created by this node
-        self.connections = []  # related nodes
+        self._connections = []  # related nodes # todo auto return children
         # TODO instead of storing result in 1 node, and then querying this node from the other node for the result.
         #  we can store the result in the link/connection between nodes
 
         self._state = NodeState.INIT
         # self.name = name
+
+    @property
+    def connections(self):
+        # return connections and children and parent
+        return self.children + self._connections + [self.parent]
+
+    def connect(self, node):
+        """creates bi-directional link between nodes"""
+        self._connections.append(node)
+        node._connections.append(self)
+
+    # @connections.setter
+    # def connections(self, connections):
+    #     self._connections = connections
 
     @property
     def state(self):

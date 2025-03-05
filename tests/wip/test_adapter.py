@@ -61,14 +61,14 @@ def test_adapter():
     session.register_adapter(StringToIntAdapter())
     session.register_adapter(IntToStringAdapter())
 
-    session.nodes.append(CollectNumbers)
-    session.nodes.append(CollectStringNumbers)
-    session.nodes.append(ValidateNumbers)
+    session.add(CollectNumbers)
+    session.add(CollectStringNumbers)
+    session.add(ValidateNumbers)
     session.run()
 
     # get both instances
-    int_numbers = session.node_instances[0]
-    string_numbers = session.node_instances[1]
+    int_numbers = session.children[0]
+    string_numbers = session.children[1]
     assert int_numbers.data_nodes[0]._state == NodeState.SUCCEED
     assert string_numbers.data_nodes[0]._state == NodeState.SUCCEED
 
