@@ -55,38 +55,13 @@ When you have your first pipeline defined, you can run it with
 """
 
 
-
-
-def test_simple_session2():
+def setup_sample_pipeline():
     active_session.add(CollectHelloWorld)
     active_session.add(CollectHelloWorldList)
     active_session.add(ValidateHelloWorld)
     active_session.add(ValidateContainsHello)
 
+
+def test_simple_session2():
+    setup_sample_pipeline()
     active_session.run()
-
-
-
-if __name__ == '__main__':
-    print("main")
-    test_ui = True
-    if not test_ui:
-        print("testing simple headless")
-        # test running headless
-        test_simple_session2()
-
-        # print a report with colored output on succeed or fail
-        # for each collector and datanode
-        print(active_session.report())
-    # else:
-
-active_session.add(CollectHelloWorld)
-active_session.add(CollectHelloWorldList)
-active_session.add(ValidateHelloWorld)
-active_session.add(ValidateContainsHello)
-
-print("testing UI")
-# test the UI
-import datafix.ui.validator
-
-w = datafix.ui.validator.show()
