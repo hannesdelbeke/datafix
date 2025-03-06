@@ -1,4 +1,4 @@
-from datafix.core import Collector, Validator, active_session
+from datafix.core import Collector, Validator, active_session, Action
 
 """
 1. Define your Collectors.
@@ -56,7 +56,14 @@ When you have your first pipeline defined, you can run it with
 
 
 def setup_sample_pipeline():
-    active_session.append(CollectHelloWorld)
+    class ActionPrintNode(Action):
+        def run(self):
+            print(self.parent.data)
+
+    node = CollectHelloWorld(parent=active_session)
+    node.actions.append(ActionPrintNode(parent=node))
+    node.child_actions.append(ActionPrintNode)
+
     active_session.append(CollectHelloWorldList)
     active_session.append(ValidateHelloWorld)
     active_session.append(ValidateContainsHello)
