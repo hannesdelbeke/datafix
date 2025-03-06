@@ -58,7 +58,7 @@ When you have your first pipeline defined, you can run it with
 def setup_sample_pipeline():
     class ActionPrintNode(Action):
         def run(self):
-            print(self.parent.data)
+            print(self.parent)
 
     node = CollectHelloWorld(parent=active_session)
     node.actions.append(ActionPrintNode(parent=node))

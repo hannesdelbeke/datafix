@@ -47,10 +47,7 @@ class Node:
         self.parent = parent  # node that created this node
         if parent:
             parent.children.append(self)
-            print("parent", parent)
-            print("parent.child_actions", parent.child_actions)
             for action in parent.child_actions:
-                print("add action", action)
                 self.actions.append(action(parent=self))
         self._state = NodeState.INIT
         if name:
