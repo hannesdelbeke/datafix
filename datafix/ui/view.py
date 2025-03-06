@@ -5,15 +5,14 @@ class Ui_Form(QtWidgets.QDialog):
     def __init__(self, parent=None):
         super(Ui_Form, self).__init__(parent)
         self.create_ui()
-        self.populate_ui()
 
     def create_ui(self):
         # self.set_dark_theme()
 
         # self.dropdown_families = QtWidgets.QComboBox()
         # self.dropdown_validators = QtWidgets.QComboBox()
-        self.list_plugins = QtWidgets.QListWidget()
-        self.list_results = QtWidgets.QListWidget()
+        self.list_session_nodes = QtWidgets.QListWidget()
+        self.list_child_nodes = QtWidgets.QListWidget()
         self.button_check = QtWidgets.QPushButton('Check All')
         self.button_fix = QtWidgets.QPushButton('Fix All')
 
@@ -24,12 +23,12 @@ class Ui_Form(QtWidgets.QDialog):
 
         vlayout_instances = QtWidgets.QVBoxLayout()
         # vlayout_instances.addWidget(self.dropdown_families)
-        vlayout_instances.addWidget(self.list_plugins)
+        vlayout_instances.addWidget(self.list_session_nodes)
         vlayout_instances.addWidget(self.button_check)
 
         vlayout_validators = QtWidgets.QVBoxLayout()
         # vlayout_validators.addWidget(self.dropdown_validators)
-        vlayout_validators.addWidget(self.list_results)
+        vlayout_validators.addWidget(self.list_child_nodes)
         vlayout_validators.addWidget(self.button_fix)
 
         hlayout = QtWidgets.QHBoxLayout()
@@ -46,9 +45,6 @@ class Ui_Form(QtWidgets.QDialog):
         self.button_fix.setEnabled(False)
 
     # todo use action.on to filter when to show. ex. "failedOrWarning"
-
-    def populate_ui(self):
-        ...
 
     def clicked_check(self):
         ...
