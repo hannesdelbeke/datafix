@@ -21,8 +21,8 @@ class CollectHelloWorld2(Collector):
 
 # setup and run session
 session = Session()
-session.add(CollectHelloWorld)
-session.add(CollectHelloWorld2)
+session.append(CollectHelloWorld)
+session.append(CollectHelloWorld2)
 session.run()
 
 

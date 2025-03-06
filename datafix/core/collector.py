@@ -11,18 +11,20 @@ class Collector(Node):  # session plugin (context), session is a node
 
     override self.collect() to implement your collector
     """
+
     @property
     def data_nodes(self):
         # convenience method to get all instance nodes, children is too abstract
         return self.children
 
     def run(self, *args, **kwargs):
-        self.children.clear()  # reset before we rerun
+        # self.children.clear()  # reset before we rerun
+        # todo this clashes with actions being child nodes too atm
 
         with node_state_setter(self):
             result = self.collect(*args, **kwargs)
-            for instance in result:
-                DataNode(instance, parent=self)
+            for data_item in result:
+                DataNode(data=data_item, parent=self, name=data_item)
 
     @property
     def data_type(self):

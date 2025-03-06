@@ -1,6 +1,5 @@
 from datafix.core.resultnode import ResultNode
 from datafix.core.node import Node, NodeState
-import datafix.core.utils
 
 
 class Validator(Node):
@@ -25,7 +24,8 @@ class Validator(Node):
 
     def validate_data_node(self, data_node):
         # public method, don't override this
-        # atm not used by anything else but will be used by UI to right-click revalidate
+        # atm not used by anything else except private datafix logic,
+        # but will be used by UI to right-click revalidate
         """run the validation logic on a DataNode, and save the result in a ResultNode"""
         try:
             result = self._adapt_and_validate_data(data=data_node.data)
@@ -36,7 +36,11 @@ class Validator(Node):
             state = NodeState.FAIL
             if not self.continue_on_fail:
                 raise e
-        return ResultNode(data_node, parent=self, state=state, warning=self.warning)
+        return ResultNode(data_node=data_node,
+                          parent=self,
+                          state=state,
+                          warning=self.warning,
+                          name=data_node.name)
 
     def run(self):
      # create instances node(s)
@@ -44,9 +48,9 @@ class Validator(Node):
         # 2. get the DataNodes from the collectors
         # 3. run validate on the mesh instances,
         # 4. create a backward link (to validate instance) in mesh instances
-        for _ in self._iter_validate_data_nodes():
+        for result_node in self._iter_validate_data_nodes():
             ...
-        datafix.core.utils.set_state_from_children(self)
+        self.set_state_from_children()
 
     def _iter_validate_data_nodes(self):
         for data_node in self._iter_data_nodes():
@@ -58,6 +62,5 @@ class Validator(Node):
         # default behaviour is to implicitly find any data node of required type
         # override this method if you explicitly want to control collector input.
         for collector in self.session.iter_collectors(required_type=self.required_type):
-            print(collector)
             for data_node in collector.data_nodes:
                 yield data_node

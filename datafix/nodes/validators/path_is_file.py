@@ -18,8 +18,8 @@ if __name__ == '__main__':
     from datafix.nodes.collectors.current_time import CurrentTime
 
     PathsInFolder.folder_path = 'C:/'
-    active_session.add(CurrentTime)
-    active_session.add(PathsInFolder)
-    active_session.add(PathIsFile)
+    active_session.append(CurrentTime)
+    active_session.append(PathsInFolder)
+    active_session.append(PathIsFile)
     active_session.run()
     print(active_session.report())

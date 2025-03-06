@@ -22,9 +22,9 @@ def test_validation_order():
     the datanode state should stay fail, and not overwritten by the 2nd succeed
     """
     session = Session()
-    session.add(CollectHelloWorld)
-    session.add(ValidateFail)
-    session.add(ValidateSuccess)
+    session.append(CollectHelloWorld)
+    session.append(ValidateFail)
+    session.append(ValidateSuccess)
     session.run()
     # print(session.report())
     assert session.children[0].data_nodes[0].state == NodeState.FAIL

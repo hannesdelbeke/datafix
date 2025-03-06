@@ -3,7 +3,6 @@ from typing import List, Type
 
 from datafix.core.collector import Collector
 from datafix.core.node import Node, NodeState, node_state_setter
-import datafix.core.utils
 
 
 class Session(Node):
@@ -14,9 +13,9 @@ class Session(Node):
         active_session = self
         self.adapters = []
 
-    def add(self, node: Type[Node]):
+    def append(self, node: Type[Node]):
         # convenience method to add a node to the session, unsure if i ll keep it
-        node(parent=self)
+        return node(parent=self)
 
     def iter_collectors(self, required_type=None) -> Collector:
         """return all collectors that collect the required type"""
@@ -44,7 +43,7 @@ class Session(Node):
         for node in self.children:
             with node_state_setter(node):
                 node.run()
-        datafix.core.utils.set_state_from_children(self)
+        self.set_state_from_children()
 
     def adapt(self, instance, required_type):
         if not required_type:
@@ -66,5 +65,7 @@ class Session(Node):
     def register_adapter(self, adapter):
         self.adapters.append(adapter)
 
+    def __str__(self):
+        return f"Session({self.name})"
 
 active_session = Session()

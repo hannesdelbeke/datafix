@@ -17,18 +17,24 @@ class Ui_Form(view.Ui_Form):
 
     def __init__(self, parent=None, *args, **kwargs):
         super(Ui_Form, self).__init__(parent=parent, *args, **kwargs)
-        self.load_session_nodes_in_ui()
+        self.session = None
+        self.load_session()
 
         self.list_session_nodes.currentItemChanged.connect(self.session_node_selection_changed)
 
         if self.run_on_startup:
             self.clicked_check()
 
+    def load_session(self, session=None):
+        # clear any existing nodes
+        self.list_session_nodes.clear()
+        self.list_child_nodes.clear()
+        self.session = session or datafix.core.active_session
+        self.load_session_nodes_in_ui()
 
     def load_session_nodes_in_ui(self):
         # run collectors, and add to list
-        for node in datafix.core.active_session.children:
-            print(node)
+        for node in self.session.children:
             name = node.name
             item = QtWidgets.QListWidgetItem(name)
             item.setData(QtCore.Qt.UserRole, node)
@@ -38,11 +44,10 @@ class Ui_Form(view.Ui_Form):
 
         self.color_items_in_list_session_nodes()
 
-
     def clicked_check(self):
 
         # run validation
-        datafix.core.active_session.run()
+        self.session.run()
 
 
         self.color_items_in_list_session_nodes()  # color the list of results
@@ -57,7 +62,7 @@ class Ui_Form(view.Ui_Form):
         ...
 
     def session_node_selection_changed(self):
-        if len(datafix.core.active_session.children) == 0:
+        if len(self.session.children) == 0:
             # skip if not run yet
             return
 
@@ -69,14 +74,14 @@ class Ui_Form(view.Ui_Form):
             print("no node selected, cancel node_selection_changed")
             return
         # current_index = self.list_session_nodes.currentRow()
-        # node = datafix.core.active_session.children[current_index]
+        # node = self.session.children[current_index]
 
         # clear the list of results
         self.list_child_nodes.clear()
 
         # add the validators to the list
         for child_node in session_node.children:
-            name = str(child_node.data)
+            name = child_node.name
             item = QtWidgets.QListWidgetItem(name)
             # item.setData(QtCore.Qt.UserRole, validator)
 
@@ -88,19 +93,19 @@ class Ui_Form(view.Ui_Form):
             self.list_child_nodes.addItem(item)
 
     def color_items_in_list_session_nodes(self):
-        for index, node in enumerate(datafix.core.active_session.children):
+        for index, node in enumerate(self.session.children):
             item = self.list_session_nodes.item(index)
 
-            if len(datafix.core.active_session.children) == 0:
+            if len(self.session.children) == 0:
                # small hack to make it work when nodes arent instanced yet
                 node_state = datafix.core.NodeState.INIT
             else:
-                node = datafix.core.active_session.children[index]
+                node = self.session.children[index]
                 node_state = node.state
             qt_utils.color_item(item, node_state)
 
 
-def show(parent=None):
+def show(parent=None, session=None):
     app = QtWidgets.QApplication.instance()
 
     new_app_created = False
@@ -109,6 +114,7 @@ def show(parent=None):
         new_app_created = True
 
     window = Ui_Form(parent=parent)
+    window.load_session(session)
     window.show()
 
     if new_app_created:

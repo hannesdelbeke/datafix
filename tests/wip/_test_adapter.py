@@ -60,9 +60,9 @@ def test_adapter():
     session.register_adapter(StringToIntAdapter())
     session.register_adapter(IntToStringAdapter())
 
-    session.add(CollectNumbers)
-    session.add(CollectStringNumbers)
-    session.add(ValidateNumbers)
+    session.append(CollectNumbers)
+    session.append(CollectStringNumbers)
+    session.append(ValidateNumbers)
     session.run()
 
     # get both instances

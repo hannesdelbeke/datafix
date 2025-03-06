@@ -5,10 +5,10 @@ class DataNode(Node):
     """
     a DataNode can only contain 1 data-instance. (an instance can be a list)
     """
-    def __init__(self, data, parent):
+    def __init__(self, data, *args, **kwargs):
         self.data = data  # custom data saved in the node
         self.result_nodes = []  # result nodes created by the validator(s) that ran on this node
-        super().__init__(parent=parent)
+        super().__init__(*args, **kwargs)
 
     @property
     def state(self):

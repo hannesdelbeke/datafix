@@ -54,8 +54,8 @@ def test_all_instances_equal():
 def test_failed_result_node():
     """test if a failed result node_result, leads to a failed validation, and a failed data node"""
     session = Session()
-    session.add(CollectStringABC)
-    session.add(ValidatorStringIsA)
+    session.append(CollectStringABC)
+    session.append(ValidatorStringIsA)
     session.run()
 
     # print(session.report())
@@ -92,9 +92,9 @@ class CollectorInts(Collector):
 # todo test validate incompatible types
 def test_incompatible_types():
     session = Session()
-    session.add(CollectorString)
-    session.add(CollectorInts)
-    session.add(ValidatorSameStrings)
+    session.append(CollectorString)
+    session.append(CollectorInts)
+    session.append(ValidatorSameStrings)
     session.run()
 
     validator = session.children[2]

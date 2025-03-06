@@ -56,10 +56,10 @@ When you have your first pipeline defined, you can run it with
 
 
 def setup_sample_pipeline():
-    active_session.add(CollectHelloWorld)
-    active_session.add(CollectHelloWorldList)
-    active_session.add(ValidateHelloWorld)
-    active_session.add(ValidateContainsHello)
+    active_session.append(CollectHelloWorld)
+    active_session.append(CollectHelloWorldList)
+    active_session.append(ValidateHelloWorld)
+    active_session.append(ValidateContainsHello)
 
 
 def test_simple_session2():

@@ -24,9 +24,9 @@ class ValidateSpelling(Validator):
 def test_revalidate_instance():
     # register 2 collectors and 1 validator
     session = Session()
-    session.add(CollectString)
-    session.add(CollectString)
-    session.add(ValidateSpelling)
+    session.append(CollectString)
+    session.append(CollectString)
+    session.append(ValidateSpelling)
 
     session.run()
     # collector1 -> collects instance 1 'Helo Werld'

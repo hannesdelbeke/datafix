@@ -33,9 +33,9 @@ class ValidatorAB(Validator):
 
 def test_simple_session():
     session = Session()
-    session.add(CollectA)
-    session.add(CollectB)
-    session.add(ValidatorAB)
+    session.append(CollectA)
+    session.append(CollectB)
+    session.append(ValidatorAB)
     session.run()
     return session
 
