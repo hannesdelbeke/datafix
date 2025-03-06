@@ -39,21 +39,23 @@ class Node:
     continue_on_fail = True  # if self or any children fail, continue running
     warning = False  # set state to WARNING if this node FAILS
     # action_classes = []
+    child_actions = []  # Action-classes to add action-instances to child nodes
 
     def __init__(self, parent:"Node|None"=None, name=None):
-        self.child_actions = []  # Action-classes to add action-instances to child nodes
         self.actions = []
         self.children: "List[Node]" = []  # nodes created by this node
         self.parent = parent  # node that created this node
+
+        if name:
+            self.name = str(name)
+        else:
+            self.name = self.__class__.__name__
+
         if parent:
             parent.children.append(self)
             for action in parent.child_actions:
                 self.actions.append(action(parent=self))
         self._state = NodeState.INIT
-        if name:
-            self.name = str(name)
-        else:
-            self.name = self.__class__.__name__
 
         # self.actions = [action(parent=self) for action in self.action_classes]
         # # auto parent doesn't work, because the parent is not yet created. so manually populate children
