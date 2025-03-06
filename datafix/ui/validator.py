@@ -78,7 +78,7 @@ class Ui_Form(view.Ui_Form):
         menu = QtWidgets.QMenu(self)
         for action in node.actions:
             menu_action = QtGui.QAction(action.name, self)
-            menu_action.triggered.connect(lambda checked, a=action: a.run())
+            menu_action.triggered.connect(lambda checked=None, a=action: a.run())
             menu.addAction(menu_action)
 
         # Show the menu at the cursor position
