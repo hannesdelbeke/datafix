@@ -36,11 +36,18 @@ class Validator(Node):
             state = NodeState.FAIL
             if not self.continue_on_fail:
                 raise e
-        return ResultNode(data_node=data_node,
+        result_node = ResultNode(data_node=data_node,
                           parent=self,
                           state=state,
                           warning=self.warning,
                           name=data_node.name)
+
+        # add actions from data node to result node. e.g. select mesh
+        # as a convenience method for better UX in the UI
+        for action in data_node.actions:
+            result_node.actions.append(action)
+
+        return result_node
 
     def run(self):
      # create instances node(s)
