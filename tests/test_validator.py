@@ -1,3 +1,5 @@
+import logging
+
 from datafix.core import Session, Validator, Collector, NodeState
 
 
@@ -83,6 +85,19 @@ def test_failed_result_node():
 
     # print(session.report())
 
+def test_validate_twice():
+    """check we correctly clear the results when we rerun a validator"""
+    logging.warning("test")
+    session = Session()
+    session.append(CollectStringABC)
+    validator = ValidatorStringIsA(parent=session)
+    session.run()
+    length = len(validator.children)
+    print("children", validator.children)
+    session.run()
+    print("children", validator.children)
+    assert length == len(validator.children)
+
 
 class CollectorInts(Collector):
     def collect(self):
@@ -102,4 +117,4 @@ def test_incompatible_types():
 
 
 if __name__ == '__main__':
-    test_all_instances_equal()
+    test_validate_twice()

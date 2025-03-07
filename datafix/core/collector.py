@@ -1,5 +1,6 @@
 from datafix.core.node import Node, NodeState, node_state_setter
 from datafix.core.datanode import DataNode
+from datafix.core.action import Action
 
 
 class Collector(Node):  # session plugin (context), session is a node
@@ -18,8 +19,10 @@ class Collector(Node):  # session plugin (context), session is a node
         return self.children
 
     def run(self, *args, **kwargs):
-        # self.children.clear()  # reset before we rerun
-        # todo this clashes with actions being child nodes too atm
+        # clear all children, except actions which are assigned on init
+        children_to_delete = [child for child in self.children if not isinstance(child, Action)]
+        for child in children_to_delete:
+                child.delete()
 
         with node_state_setter(self):
             result = self.collect(*args, **kwargs)

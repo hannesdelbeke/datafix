@@ -108,7 +108,7 @@ class Ui_Form(view.Ui_Form):
             item = self.list_session_nodes.item(index)
 
             if len(self.session.children) == 0:
-               # small hack to make it work when nodes arent instanced yet
+               # small hack to make it work when nodes aren't instanced yet
                 node_state = datafix.core.NodeState.INIT
             else:
                 node = self.session.children[index]

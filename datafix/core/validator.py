@@ -48,6 +48,7 @@ class Validator(Node):
         # 2. get the DataNodes from the collectors
         # 3. run validate on the mesh instances,
         # 4. create a backward link (to validate instance) in mesh instances
+        self.delete_children()
         for result_node in self._iter_validate_data_nodes():
             ...
         self.set_state_from_children()

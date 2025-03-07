@@ -7,7 +7,7 @@ class CollectHelloWorld(Collector):
         return ["Hello World"]
 
 
-def test_single_collect() -> Session:
+def test_single_collect():
     """test we can collect a data_node from a collector node"""
     session = Session()
     session.append(CollectHelloWorld)
@@ -22,7 +22,7 @@ class CollectHelloWorldList(Collector):
         return ["Hello", "World"]
 
 
-def test_double_collect() -> Session:
+def test_double_collect():
     """test we can collect 2 data_nodes from 1 collector node"""
     session = Session()
     session.append(CollectHelloWorldList)
@@ -34,13 +34,21 @@ def test_double_collect() -> Session:
     assert session.children[0].data_nodes[1].data == "World"
 
 
+def test_collect_twice():
+    session = Session()
+    collector = CollectHelloWorld(parent=session)
+    session.run()
+    assert len(collector.children) == 1
+    session.run()
+    assert len(collector.children) == 1
+
 # test that we can fail to collect due to exception, and continue to next node
 class CollectFail(Collector):
     def collect(self):
         raise Exception('Force raise exception')
 
 
-def test_fail_collect() -> Session:
+def test_fail_collect():
     """test the Collector node can fail, and the session will continue to the next node"""
     session = Session()
     session.append(CollectFail)

@@ -170,13 +170,16 @@ class Node:
     #     else:
     #         self.children
 
-    # def __delete__(self, instance):
-    #     # TODO test
-    #     #  delete all child-nodes, then remove self
-    #     for child in self.children:
-    #         del child
-    #     self.parent.children.remove(self)
-    #     del self
+    def delete(self):
+        """delete self and all child-nodes, remove self from parent"""
+        self.delete_children()
+        if self.parent:
+            self.parent.children.remove(self)
+
+    def delete_children(self, type=None):
+        """delete all child-nodes, keep self"""
+        for child in list(self.children):  # list so we can delete while iterating
+            child.delete()
 
     # def __iter__(self):
     #     return iter(self.children)
