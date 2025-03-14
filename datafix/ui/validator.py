@@ -30,6 +30,9 @@ class Ui_Form(view.Ui_Form):
         if self.run_on_startup:
             self.clicked_check()
 
+        # init UI
+        self.session_node_selection_changed()
+
     def load_session(self, session=None):
         # clear any existing nodes
         self.list_session_nodes.clear()
@@ -51,7 +54,8 @@ class Ui_Form(view.Ui_Form):
         # run validation
         self.session.run()
         self.color_items_in_list_session_nodes()  # color the list of results
-        self.list_session_nodes.setCurrentRow(0)  # select the first item
+        # self.list_session_nodes.setCurrentRow(0)  # select the first item
+        self.session_node_selection_changed()  # update UI
 
     def clicked_fix(self):
         # todo fix actions
@@ -89,6 +93,8 @@ class Ui_Form(view.Ui_Form):
             return
 
         selected_item = self.list_session_nodes.currentItem()
+        if not selected_item:
+            return
         session_node = selected_item.data(QtCore.Qt.UserRole)
 
         if not session_node:
