@@ -2,7 +2,9 @@ import logging
 from enum import Enum
 from typing import List
 from contextlib import contextmanager
-from copy import copy
+
+
+DEBUG_MODE = False
 
 
 def color_text(text, state):
@@ -40,6 +42,7 @@ class Node:
     warning = False  # set state to WARNING if this node FAILS
     # action_classes = []
     child_actions = []  # Action-classes to add action-instances to child nodes
+    name = None
 
     def __init__(self, parent:"Node|None"=None, name=None):
         self.actions = []
@@ -216,6 +219,6 @@ def node_state_setter(node: Node):
         # On exception, set the node state to FAIL and log the error
         node._state = NodeState.FAIL
         node.log_error(f"'{node.__class__.__name__}' failed running: '{e}'")
-        if not node.continue_on_fail:
+        if DEBUG_MODE or not node.continue_on_fail:
             raise e  # Rethrow the exception if continue_on_fail is False
 
