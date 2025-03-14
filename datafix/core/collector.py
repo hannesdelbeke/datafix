@@ -19,14 +19,10 @@ class Collector(Node):  # session plugin (context), session is a node
     @property
     def data_nodes(self):
         # convenience method to get all instance nodes, children is too abstract
-        return self.children
+        return [n for n in self.children if isinstance(n, DataNode)]
 
     def run(self, *args, **kwargs):
-        # clear all children, except actions which are assigned on init
-        children_to_delete = [child for child in self.children if not isinstance(child, Action)]
-        for child in children_to_delete:
-                child.delete()
-
+        self.delete_children()
         with node_state_setter(self):
             result = self.collect(*args, **kwargs)
             for data_item in result:

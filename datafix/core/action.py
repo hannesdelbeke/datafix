@@ -2,6 +2,14 @@ from datafix.core.node import Node, node_state_setter
 
 
 class Action(Node):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # hack remove from parent children.
+        if self.parent:
+            self.parent.children.remove(self)
+
+
     def run(self):
         with node_state_setter(self):
             self.action()
