@@ -18,3 +18,9 @@ class Action(Node):
     # result nodes can auto inherit actions from their instance/data-node. wouldnt work for face ids though
 
     # makes more sense for validator to assign action to result node.
+
+
+class Run(Action):
+    """ Action to re-run a Node, e.g. re-validate a validator."""
+    def run(self):
+        self.parent.run()

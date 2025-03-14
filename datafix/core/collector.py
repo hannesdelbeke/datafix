@@ -1,6 +1,6 @@
 from datafix.core.node import Node, NodeState, node_state_setter
 from datafix.core.datanode import DataNode
-from datafix.core.action import Action
+from datafix.core.action import Action, Run
 
 
 class Collector(Node):  # session plugin (context), session is a node
@@ -12,6 +12,9 @@ class Collector(Node):  # session plugin (context), session is a node
 
     override self.collect() to implement your collector
     """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.actions = [Run(parent=self)]
 
     @property
     def data_nodes(self):

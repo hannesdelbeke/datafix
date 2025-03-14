@@ -1,5 +1,6 @@
 from datafix.core.resultnode import ResultNode
 from datafix.core.node import Node, NodeState
+from datafix.core.action import Run
 
 
 class Validator(Node):
@@ -11,6 +12,10 @@ class Validator(Node):
     # results are saved in self.children
     """
     required_type = None
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.actions = [Run(parent=self)]
 
     def _adapt_and_validate_data(self, data):
         """validate the data in the DataNode"""
@@ -50,11 +55,7 @@ class Validator(Node):
         return result_node
 
     def run(self):
-     # create instances node(s)
-        # 1. get the collectors from the session
-        # 2. get the DataNodes from the collectors
-        # 3. run validate on the mesh instances,
-        # 4. create a backward link (to validate instance) in mesh instances
+        """run the validator on all collected DataNodes, and save the results in ResultNodes"""
         self.delete_children()
         for result_node in self._iter_validate_data_nodes():
             ...
@@ -72,3 +73,4 @@ class Validator(Node):
         for collector in self.session.iter_collectors(required_type=self.required_type):
             for data_node in collector.data_nodes:
                 yield data_node
+
