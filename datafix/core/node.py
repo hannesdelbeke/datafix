@@ -41,11 +41,16 @@ class Node:
     continue_on_fail = True  # if self or any children fail, continue running
     warning = False  # set state to WARNING if this node FAILS
     # action_classes = []
-    child_actions = []  # Action-classes to add action-instances to child nodes
+
+    # Action-classes, that will be added to self.actions on instance
+    # the main reason we instance on init, is so each node has it's own action
+    # so we can track fail success of actions per node
+    # E.G. a select mesh action, defined by a mesh collector, is auto added to all mesh-Nodes
+    child_actions = []
     name = None
 
     def __init__(self, parent:"Node|None"=None, name=None):
-        self.actions = []
+        self.actions = []  # instanced action nodes, that can be run on this node
         self.children: "List[Node]" = []  # nodes created by this node
         self.parent = parent  # node that created this node
 
@@ -55,9 +60,18 @@ class Node:
             self.name = self.__class__.__name__
 
         if parent:
+            if parent is self:
+                # this shouldn't happen, but I had a non repro bug that might be related
+                raise ValueError(f"Node '{self}' cannot be its own parent")
+
+            # add any node created by another node, to the parent's children
             parent.children.append(self)
+
+            # add any child actions defined in the parent, to this node
             for action in parent.child_actions:
+                # print(parent.child_actions)
                 self.actions.append(action(parent=self))
+
         self._state = NodeState.INIT
 
         # self.actions = [action(parent=self) for action in self.action_classes]

@@ -39,6 +39,18 @@ class NodeTreeView(QMainWindow):
 
 
 if __name__ == "__main__":
+    """
+    Test code for the Qt tree widget, displaying the session as a collapsable node-graph
+    
+    Node Name
+    active_session
+    ├── CollectHelloWorld
+    ├──── DataNode
+    ├──── DataNode
+    ├── ValidateHelloWorld
+    ├──── ResultNode
+    ├──── ResultNode
+    """
     app = QApplication([])
 
     from tests.test_simple import setup_sample_pipeline

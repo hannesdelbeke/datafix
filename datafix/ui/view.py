@@ -71,4 +71,5 @@ def show(parent=None):
 
 
 if __name__ == '__main__':
+    """empty UI test code, use datafix.ui.validator.show() instead to test the populated UI"""
     window = show()

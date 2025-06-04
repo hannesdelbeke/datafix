@@ -141,6 +141,7 @@ def show(parent=None, session=None):
 
 
 if __name__ == '__main__':
+    """ test code to test UI with collectors, validators, and actions """
     from tests.test_simple import setup_sample_pipeline
     setup_sample_pipeline()
     show()

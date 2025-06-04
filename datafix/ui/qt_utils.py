@@ -45,6 +45,7 @@ def color_item(item: QtWidgets.QListWidgetItem, state=States.INIT):
 
 
 if __name__ == "__main__":
+    """Test code for the color_item function in a QListWidget"""
     import sys
     app = QtWidgets.QApplication(sys.argv)
     widget = QtWidgets.QListWidget()
