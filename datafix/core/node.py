@@ -46,13 +46,15 @@ class Node:
     # the main reason we instance on init, is so each node has it's own action
     # so we can track fail success of actions per node
     # E.G. a select mesh action, defined by a mesh collector, is auto added to all mesh-Nodes
-    child_actions = []
+    child_actions = None # should be empty list but mutate bug
     name = None
 
     def __init__(self, parent:"Node|None"=None, name=None):
         self.actions = []  # instanced action nodes, that can be run on this node
         self.children: "List[Node]" = []  # nodes created by this node
         self.parent = parent  # node that created this node
+
+        self.child_actions = self.child_actions or []
 
         if name:
             self.name = str(name)
@@ -61,7 +63,6 @@ class Node:
 
         if parent:
             if parent is self:
-                # this shouldn't happen, but I had a non repro bug that might be related
                 raise ValueError(f"Node '{self}' cannot be its own parent")
 
             # add any node created by another node, to the parent's children

@@ -60,9 +60,12 @@ def setup_sample_pipeline():
         def run(self):
             print(self.parent)
 
-    node = CollectHelloWorld(parent=active_session)
-    node.actions.append(ActionPrintNode(parent=node))
-    node.child_actions.append(ActionPrintNode)
+    # create a collector node
+    collector_node = CollectHelloWorld(parent=active_session)
+    # add a instanced action to the collector node
+    collector_node.actions.append(ActionPrintNode(parent=collector_node))
+    # tell the collector, to add the ActionPrintNode to every child node it creates
+    collector_node.child_actions.append(ActionPrintNode)
 
     active_session.append(CollectHelloWorldList)
     active_session.append(ValidateHelloWorld)
