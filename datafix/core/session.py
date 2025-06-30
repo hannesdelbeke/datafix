@@ -1,16 +1,19 @@
 import logging
-from typing import List, Type
+from typing import Type
 
 from datafix.core.collector import Collector
 from datafix.core.node import Node, NodeState, node_state_setter
+
+
+__active_session: "Session"
 
 
 class Session(Node):
     """some kind of canvas or context, that contains plugins etc"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        global active_session
-        active_session = self
+        global __active_session
+        __active_session = self
         self.adapters = []
 
     def append(self, node: Type[Node]):
@@ -68,4 +71,12 @@ class Session(Node):
     def __str__(self):
         return f"Session({self.name})"
 
-active_session = Session()
+
+def get_active_session():
+    """
+    use method to get active session instead of a global variable.
+    Else sometimes other modules reference the old session
+    """
+    global __active_session
+
+    return __active_session or Session(name="default session")

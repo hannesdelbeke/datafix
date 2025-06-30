@@ -1,6 +1,7 @@
 from PySide6.QtWidgets import QApplication, QMainWindow, QTreeView
 from PySide6.QtGui import QStandardItemModel, QStandardItem
-from datafix.core import active_session  # Assuming this module exists
+from datafix.core import get_active_session  # Assuming this module exists
+
 
 class NodeTreeView(QMainWindow):
     def __init__(self, parent=None, *args, **kwargs):
@@ -20,7 +21,8 @@ class NodeTreeView(QMainWindow):
         root_item.appendRow(root_node_item)
 
         # Recursively add nodes
-        self.populate_tree(root_node_item, active_session)
+        session = get_active_session()
+        self.populate_tree(root_node_item, session)
 
         # Assign model to the tree view
         self.tree_view.setModel(model)
@@ -55,7 +57,8 @@ if __name__ == "__main__":
 
     from tests.test_simple import setup_sample_pipeline
     setup_sample_pipeline()
-    active_session.run()
+    session = get_active_session()
+    session.run()
 
     window = NodeTreeView()
     window.show()

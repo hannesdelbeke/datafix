@@ -1,4 +1,4 @@
-from datafix.core import Validator, active_session
+from datafix.core import Validator
 from pathlib import Path
 
 
@@ -16,10 +16,12 @@ class PathIsFile(Validator):
 if __name__ == '__main__':
     from datafix.nodes.collectors.paths_in_folder import PathsInFolder
     from datafix.nodes.collectors.current_time import CurrentTime
+    from datafix.core import get_active_session
 
+    session = get_active_session()
     PathsInFolder.folder_path = 'C:/'
-    active_session.append(CurrentTime)
-    active_session.append(PathsInFolder)
-    active_session.append(PathIsFile)
-    active_session.run()
-    print(active_session.report())
+    session.append(CurrentTime)
+    session.append(PathsInFolder)
+    session.append(PathIsFile)
+    session.run()
+    print(session.report())
