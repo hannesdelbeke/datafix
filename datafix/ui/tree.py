@@ -3,8 +3,8 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem
 from datafix.core import active_session  # Assuming this module exists
 
 class NodeTreeView(QMainWindow):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
         self.setWindowTitle("Parent Structure Tree")
 
         # Create the tree view

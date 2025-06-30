@@ -7,8 +7,8 @@ from datafix.core.node import Node, NodeState, node_state_setter
 
 class Session(Node):
     """some kind of canvas or context, that contains plugins etc"""
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         global active_session
         active_session = self
         self.adapters = []
