@@ -2,6 +2,9 @@ import logging
 from enum import Enum
 from typing import List
 from contextlib import contextmanager
+from __future__ import annotations  # delay typhint for Python <3.10 to handle Session type
+if TYPE_CHECKING:
+    import datafix.core.session
 
 
 DEBUG_MODE = False
@@ -119,7 +122,7 @@ class Node:
         return self.state
 
     @property
-    def session(self):
+    def session(self) -> "datafix.core.session.Session":
         """get the session this node belongs to (the top node)"""
         if self.parent:
             return self.parent.session
