@@ -5,7 +5,7 @@ from datafix.core import Session, Validator, Adapter, Collector, Action, NodeSta
 class StringToIntAdapter(Adapter):
     # input: instance of type string
     # output: instance of type int
-    type_input = str
+    input_types = [str]
     type_output = int
 
     def adapt(self, data: str):
@@ -23,7 +23,7 @@ class StringToIntAdapter(Adapter):
 class IntToStringAdapter(Adapter):
     # input: instance of type int
     # output: instance of type string
-    type_input = int
+    input_types = [int]
     type_output = str
 
     def adapt(self, data):

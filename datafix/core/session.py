@@ -1,9 +1,11 @@
 import logging
-from typing import Type
+from typing import Type, List
 
 from datafix.core.collector import Collector
 from datafix.core.node import Node, NodeState, node_state_setter
 
+if TYPE_CHECKING:
+    from typing import Generator
 
 __active_session: "Session"
 
@@ -20,7 +22,7 @@ class Session(Node):
         # convenience method to add a node to the session, unsure if i ll keep it
         return node(parent=self)
 
-    def iter_collectors(self, required_type=None) -> Collector:
+    def iter_collectors(self, required_type=None) -> Generator[Collector]:
         """return all collectors that collect the required type"""
         for node in self.children:
             if not isinstance(node, Collector):
@@ -48,7 +50,7 @@ class Session(Node):
                 node.run()
         self.set_state_from_children()
 
-    def adapt(self, instance, required_type):
+    def adapt(self, instance, required_type: "type"):
         if not required_type:
             # there is no required type, so we collect all instances
             return instance
@@ -61,14 +63,14 @@ class Session(Node):
         # if possible we collect, if no adapter is found, we skip the instance
         # this should not fail, but skip! # todo
         for adapter in self.adapters:
-            if adapter.type_output == required_type and adapter.type_input == type(instance):
+            if adapter.type_output == required_type and type(instance) in adapter.input_types:
                 return adapter.run(instance)
         return None
 
     def register_adapter(self, adapter):
         self.adapters.append(adapter)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Session({self.name})"
 
 

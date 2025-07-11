@@ -41,7 +41,8 @@ class Adapter:
     # this is the adapter class, which can convert the input to the expected type
     # if there is a registered adapter
 
-    type_input = None
+    input_types: "list[type]" = None
+    # type_input: "type" = None  # legacy, use input_types instead
     type_output = None
 
     def adapt(self, data):
