@@ -1,11 +1,12 @@
 import logging
 from typing import Type, List, TYPE_CHECKING
+if TYPE_CHECKING:
+    from typing import Generator
 
 from datafix.core.collector import Collector
 from datafix.core.node import Node, NodeState, node_state_setter
 
-if TYPE_CHECKING:
-    from typing import Generator
+
 
 __active_session: "Session"
 
@@ -22,7 +23,7 @@ class Session(Node):
         # convenience method to add a node to the session, unsure if i ll keep it
         return node(parent=self)
 
-    def iter_collectors(self, required_type=None) -> Generator[Collector]:
+    def iter_collectors(self, required_type=None) -> "Generator[Collector]":
         """return all collectors that collect the required type"""
         for node in self.children:
             if not isinstance(node, Collector):
