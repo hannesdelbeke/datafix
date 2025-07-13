@@ -1,6 +1,11 @@
-from PySide6 import QtCore, QtWidgets, QtGui   # pylint: disable=no-name-in-module
+try:
+    from PySide6 import QtCore, QtWidgets, QtGui   # pylint: disable=no-name-in-module
+except ImportError:
+    from PySide2 import QtCore, QtWidgets, QtGui
+
 import datafix.core
 from datafix.ui import view, qt_utils
+
 
 # hookup states
 qt_utils.States.INIT = datafix.core.NodeState.INIT

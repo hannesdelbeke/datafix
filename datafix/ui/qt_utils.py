@@ -1,5 +1,7 @@
-from PySide6 import QtWidgets, QtGui
-
+try:
+    from PySide6 import QtWidgets, QtGui
+except:
+    from PySide2 import QtWidgets, QtGui
 
 class States:
     INIT = 0

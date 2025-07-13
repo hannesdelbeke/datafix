@@ -1,5 +1,10 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QTreeView
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+try:
+    from PySide6.QtWidgets import QApplication, QMainWindow, QTreeView
+    from PySide6.QtGui import QStandardItemModel, QStandardItem
+except ImportError:
+    from PySide2.QtWidgets import QApplication, QMainWindow, QTreeView
+    from PySide2.QtGui import QStandardItemModel, QStandardItem
+
 from datafix.core import get_active_session  # Assuming this module exists
 
 

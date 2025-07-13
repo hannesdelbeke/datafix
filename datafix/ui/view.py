@@ -1,4 +1,7 @@
-from PySide6 import QtCore, QtGui, QtWidgets  # pylint: disable=no-name-in-module
+try:
+    from PySide6 import QtWidgets
+except ImportError:
+    from PySide2 import QtWidgets
 
 
 class Ui_Form(QtWidgets.QDialog):
