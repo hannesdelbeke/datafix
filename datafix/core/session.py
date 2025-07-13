@@ -1,5 +1,5 @@
 import logging
-from typing import Type, List
+from typing import Type, List, TYPE_CHECKING
 
 from datafix.core.collector import Collector
 from datafix.core.node import Node, NodeState, node_state_setter

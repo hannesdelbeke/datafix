@@ -1,8 +1,8 @@
+from __future__ import annotations  # delay typhint for Python <3.10 to handle Session type
 import logging
 from enum import Enum
-from typing import List
+from typing import List, TYPE_CHECKING
 from contextlib import contextmanager
-from __future__ import annotations  # delay typhint for Python <3.10 to handle Session type
 if TYPE_CHECKING:
     import datafix.core.session
 
