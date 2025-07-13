@@ -12,7 +12,7 @@ class Session(Node):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.__active_session = self
+        type(self).__active_session = self
         self.adapters = []
 
     def append(self, node: Type[Node]):
