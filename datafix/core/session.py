@@ -1,14 +1,10 @@
 import logging
-from typing import Type, List, TYPE_CHECKING
-if TYPE_CHECKING:
-    from typing import Generator
-
+from typing import Type, List, TYPE_CHECKING, Optional, Generator
 from datafix.core.collector import Collector
 from datafix.core.node import Node, NodeState, node_state_setter
 
 
-
-__active_session: "Session"
+__active_session: "Optional[Session]" = None
 
 
 class Session(Node):
