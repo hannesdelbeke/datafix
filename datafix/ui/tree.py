@@ -5,7 +5,7 @@ except ImportError:
     from PySide2.QtWidgets import QApplication, QMainWindow, QTreeView
     from PySide2.QtGui import QStandardItemModel, QStandardItem
 
-from datafix.core import get_active_session  # Assuming this module exists
+from datafix.core import Session  # Assuming this module exists
 
 
 class NodeTreeView(QMainWindow):
@@ -26,7 +26,7 @@ class NodeTreeView(QMainWindow):
         root_item.appendRow(root_node_item)
 
         # Recursively add nodes
-        session = get_active_session()
+        session = Session.active
         self.populate_tree(root_node_item, session)
 
         # Assign model to the tree view
@@ -62,7 +62,7 @@ if __name__ == "__main__":
 
     from tests.test_simple import setup_sample_pipeline
     setup_sample_pipeline()
-    session = get_active_session()
+    session = Session.active
     session.run()
 
     window = NodeTreeView()

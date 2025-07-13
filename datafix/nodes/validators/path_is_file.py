@@ -16,9 +16,9 @@ class PathIsFile(Validator):
 if __name__ == '__main__':
     from datafix.nodes.collectors.paths_in_folder import PathsInFolder
     from datafix.nodes.collectors.current_time import CurrentTime
-    from datafix.core import get_active_session
+    from datafix.core import Session
 
-    session = get_active_session()
+    session = Session.active
     PathsInFolder.folder_path = 'C:/'
     session.append(CurrentTime)
     session.append(PathsInFolder)

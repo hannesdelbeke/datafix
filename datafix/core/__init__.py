@@ -1,4 +1,4 @@
-from datafix.core.session import Session, get_active_session
+from datafix.core.session import Session
 from datafix.core.node import Node, NodeState
 from datafix.core.collector import Collector
 from datafix.core.validator import Validator

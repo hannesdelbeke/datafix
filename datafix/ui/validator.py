@@ -42,8 +42,9 @@ class Ui_Form(view.Ui_Form):
         # clear any existing nodes
         self.list_session_nodes.clear()
         self.list_child_nodes.clear()
-        self.session = session or datafix.core.get_active_session()
+        self.session = session or datafix.core.Session.active
         self.load_session_nodes_in_ui()
+        # self.setWindowTitle(self.session.name)
 
     def load_session_nodes_in_ui(self):
         # run collectors, and add to list

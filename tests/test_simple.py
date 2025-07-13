@@ -1,4 +1,4 @@
-from datafix.core import Collector, Validator, get_active_session, Action
+from datafix.core import Collector, Validator, Session, Action
 
 """
 1. Define your Collectors.
@@ -48,7 +48,7 @@ class ValidateContainsHello(Validator):
 
 Now that you defined the building blocks of your pipeline, 
 it's time to hook it all up.
-we use datafix.get_active_session()
+we use datafix.Session.active
 First we register the collectors, to collect our datanodes.
 Then we register the validators, which will run on our collected datanodes.
 When you have your first pipeline defined, you can run it with 
@@ -60,7 +60,7 @@ def setup_sample_pipeline():
         def run(self):
             print(self.parent)
 
-    session = get_active_session()
+    session = Session.active
     # create a collector node
     collector_node = CollectHelloWorld(parent=session)
     # add a instanced action to the collector node

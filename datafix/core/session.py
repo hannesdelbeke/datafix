@@ -71,6 +71,7 @@ class Session(Node):
         return f"Session({self.name})"
 
     @classmethod
-    def get_active(cls) -> "Session":
-        """ Get the active session (the latest one created) """
+    @property
+    def active(cls) -> "Session":
+        """ The active session (the latest one created) """
         return cls.__active_session or cls(name="default session")
