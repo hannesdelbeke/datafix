@@ -1,5 +1,6 @@
 from __future__ import annotations  # delay typhint for Python <3.10 to handle Session type
 import logging
+import textwrap
 from enum import Enum
 from typing import List, TYPE_CHECKING
 from contextlib import contextmanager
@@ -11,11 +12,14 @@ DEBUG_MODE = False
 
 
 def color_text(text, state):
-    """format text to support color (green or red) in the console based on state"""
+    """ format text with color codes (green or red),
+    to represent node states with colors in console & terminal output """
     if state == NodeState.SUCCEED:
         text = f'\033[32m{text}\033[0m'  # green
     elif state == NodeState.FAIL:
         text = f'\033[31m{text}\033[0m'  # red
+    elif state == NodeState.WARNING:
+        text = f'\033[33m{text}\033[0m'  # yellow
     return text
 
 
@@ -51,6 +55,7 @@ class Node:
     # E.G. a select mesh action, defined by a mesh collector, is auto added to all mesh-Nodes
     child_actions = None # should be empty list but mutate bug
     name = None
+    _color_console = True  # color console output by default, can be set to False to disable
 
     def __init__(self, parent:"Node|None"=None, name=None):
         self.actions = []  # instanced action nodes, that can be run on this node
@@ -81,7 +86,6 @@ class Node:
         # self.actions = [action(parent=self) for action in self.action_classes]
         # # auto parent doesn't work, because the parent is not yet created. so manually populate children
         # self.children = copy(self.actions)
-
 
     @property
     def state(self):
@@ -136,7 +140,6 @@ class Node:
         """"create a report of this node and it's children"""
         txt = f'{self.pp_state}\n'
 
-        import textwrap
         for child in self.children:
             txt_child = child.report()
             txt += textwrap.indent(txt_child, '  ')
@@ -148,7 +151,10 @@ class Node:
         return a pretty print string for this Node & it's state
         e.g. 'DataNode(Hello): succeed'
         """
-        state = color_text(state=self.state, text=self.state.value)
+        if self._color_console:
+            state = color_text(state=self.state, text=self.state.value)
+        else:
+            state = self.state.value
         return f'{self}: {state}'
 
     def __repr__(self):
