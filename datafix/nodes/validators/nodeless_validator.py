@@ -1,4 +1,4 @@
-from datafix import Validator
+from datafix.core import Validator
 from pathlib import Path
 
 
@@ -9,7 +9,7 @@ class NodelessValidator(Validator):
     """
     required_type = Path
 
-    def _run(self):
+    def run(self):
         # to validate without a collector,
         # override the _run method instead of the logic method
         ...
