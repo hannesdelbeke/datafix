@@ -3,7 +3,7 @@ from datafix.core.datanode import DataNode
 
 
 class ResultNode(Node):
-    """store the outcome of a validation"""
+    """stores the results of a DataNode validation"""
 
     # there is overlap between a resultnode, and a outcome saved in the state. SUCCESS / FAIL / WARNING
     # POLISH: maybe combine in future?
