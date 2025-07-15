@@ -94,7 +94,7 @@ class Ui_Form(view.Ui_Form):
             menu.addAction(menu_action)
 
         # Show the menu at the cursor position
-        menu.exec(list_widget.viewport().mapToGlobal(pos))
+        menu.exec_(list_widget.viewport().mapToGlobal(pos))  # use exec_ to support pyside2
 
     def session_node_selection_changed(self):
         if len(self.session.children) == 0:
