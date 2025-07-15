@@ -1,7 +1,9 @@
 try:
     from PySide6 import QtCore, QtWidgets, QtGui   # pylint: disable=no-name-in-module
+    from PySide6.QtGui import QAction
 except ImportError:
     from PySide2 import QtCore, QtWidgets, QtGui
+    from PySide2.QtWidgets import QAction
 
 import datafix.core
 from datafix.ui import view, qt_utils
@@ -87,7 +89,7 @@ class Ui_Form(view.Ui_Form):
         # Create the context menu
         menu = QtWidgets.QMenu(self)
         for action in node.actions:
-            menu_action = QtGui.QAction(action.name, self)
+            menu_action = QAction(action.name, self)
             menu_action.triggered.connect(lambda checked=None, a=action: a.run())
             menu.addAction(menu_action)
 
