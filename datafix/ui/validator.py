@@ -143,7 +143,7 @@ def show(parent=None, session=None):
     window.show()
 
     if new_app_created:
-        app.exec()
+        app.exec_()  # exec_ to support pyside 2
 
     return window
 
