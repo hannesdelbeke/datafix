@@ -67,6 +67,9 @@ def test_externally_register_action():
     collector1 = CollectHelloWorld(parent=session)
     collector2 = CollectHelloWorld(parent=session)
 
+    collector1.actions = []  # remove default action
+    collector2.actions = []  # remove default action
+    
     action = ActionPrintHello(parent=collector1)
     collector1.actions.append(action)
 
