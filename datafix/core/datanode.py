@@ -3,7 +3,9 @@ from datafix.core.node import Node, NodeState
 
 class DataNode(Node):
     """
-    a DataNode can only contain 1 data-instance. (an instance can be a list)
+    Collectors create DataNodes to store collected data
+    a DataNode contains only 1 data-instance in self.data (it can be a list)
+    DataNodes are not runnable, but can have actions, e.g. 'select mesh'
     """
     def __init__(self, data, *args, **kwargs):
         self.data = data  # custom data saved in the node
