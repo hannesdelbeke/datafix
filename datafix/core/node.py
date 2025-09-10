@@ -9,6 +9,7 @@ if TYPE_CHECKING:
 
 
 DEBUG_MODE = False
+COLOR_CONSOLE_OUTPUT = True  # color console output by default, can be set to False to disable
 
 
 def color_text(text, state):
@@ -55,7 +56,6 @@ class Node:
     # E.G. a select mesh action, defined by a mesh collector, is auto added to all mesh-Nodes
     child_actions = None # should be empty list but mutate bug
     name = None
-    _color_console = True  # color console output by default, can be set to False to disable
 
     def __init__(self, parent:"Node|None"=None, name=None):
         self.actions = []  # instanced action nodes, that can be run on this node
@@ -151,7 +151,7 @@ class Node:
         return a pretty print string for this Node & it's state
         e.g. 'DataNode(Hello): succeed'
         """
-        if self._color_console:
+        if COLOR_CONSOLE_OUTPUT:
             state = color_text(state=self.state, text=self.state.value)
         else:
             state = self.state.value
