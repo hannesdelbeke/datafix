@@ -98,8 +98,7 @@ class Node:
         self._state = state
 
     def set_state_from_children(self):
-        # todo make part of node class
-        """fail if a child fails, also fail if a parent fails"""
+        """fail or warn if a child Node failed or warned"""
         # a validator fails if any of the DataNodes it runs on fails
         # or if the validator itself fails
         if self.state == NodeState.FAIL:
@@ -202,8 +201,9 @@ class Node:
         self.delete_children()
         if self.parent:
             self.parent.children.remove(self)
+            self.parent = None  # Clear parent reference
 
-    def delete_children(self, type=None):
+    def delete_children(self):
         """delete all child-nodes, keep self"""
         for child in list(self.children):  # list so we can delete while iterating
             child.delete()
@@ -231,7 +231,15 @@ class Node:
 
 @contextmanager
 def node_state_setter(node: Node):
-    """a context manager to set the state of a node, and handle exceptions"""
+    """
+    a context manager to set the state of a node, and handle exceptions
+    
+    usage:
+
+    > with node_state_setter(node):
+    >     # do something that might fail
+    >     ...
+    """
     try:
         # Set the node state to RUNNING at the start
         node._state = NodeState.RUNNING
