@@ -34,8 +34,8 @@ class Session(Node):
                 # if a type is required, only return collectors of matching type
                 if collector.data_type and issubclass(collector.data_type, required_type):
                     yield collector
-                else:
-                    logging.info(f"collector '{collector}' does not match datatype '{required_type}'")
+                # else:
+                #     logging.info(f"collector '{collector}' does not match datatype '{required_type}'")
             else:
                 # no required type, allow all collectors
                 yield collector
