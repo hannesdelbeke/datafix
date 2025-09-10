@@ -78,14 +78,9 @@ class Node:
 
             # add any child actions defined in the parent, to this node
             for action in parent.child_actions:
-                # print(parent.child_actions)
                 self.actions.append(action(parent=self))
 
         self._state = NodeState.INIT
-
-        # self.actions = [action(parent=self) for action in self.action_classes]
-        # # auto parent doesn't work, because the parent is not yet created. so manually populate children
-        # self.children = copy(self.actions)
 
     @property
     def state(self):
@@ -249,7 +244,10 @@ def node_state_setter(node: Node):
             node._state = NodeState.SUCCEED
     except Exception as e:
         # On exception, set the node state to FAIL and log the error
-        node._state = NodeState.FAIL
+        if node.warning:
+            node._state = NodeState.WARNING
+        else:
+            node._state = NodeState.FAIL
         node.log_error(f"'{node.__class__.__name__}' failed running: '{e}'")
         if DEBUG_MODE or not node.continue_on_fail:
             raise e  # Rethrow the exception if continue_on_fail is False
