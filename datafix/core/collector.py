@@ -1,6 +1,6 @@
-from datafix.core.node import Node, NodeState, node_state_setter
+from datafix.core.node import Node
 from datafix.core.datanode import DataNode
-from datafix.core.action import Action, Run
+from datafix.core.action import Run
 
 
 class Collector(Node):  # session plugin (context), session is a node
@@ -23,7 +23,7 @@ class Collector(Node):  # session plugin (context), session is a node
 
     def run(self, *args, **kwargs):
         self.delete_children()
-        with node_state_setter(self):
+        with self.node_state_setter():
             result = self.collect(*args, **kwargs)
             for data_item in result:
                 DataNode(data=data_item, parent=self, name=data_item)

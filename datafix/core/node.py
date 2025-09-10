@@ -223,32 +223,27 @@ class Node:
     #             if item == child or item in child:
     #                 return True
 
-
-@contextmanager
-def node_state_setter(node: Node):
-    """
-    a context manager to set the state of a node, and handle exceptions
-    
-    usage:
-
-    > with node_state_setter(node):
-    >     # do something that might fail
-    >     ...
-    """
-    try:
-        # Set the node state to RUNNING at the start
-        node._state = NodeState.RUNNING
-        yield  # Logic inside the 'with' block executes here
-        # check state is not fail or warning, in case something set it to fail while it ran
-        if node.state == NodeState.RUNNING:
-            node._state = NodeState.SUCCEED
-    except Exception as e:
-        # On exception, set the node state to FAIL and log the error
-        if node.warning:
-            node._state = NodeState.WARNING
-        else:
-            node._state = NodeState.FAIL
-        node.log_error(f"'{node.__class__.__name__}' failed running: '{e}'")
-        if DEBUG_MODE or not node.continue_on_fail:
-            raise e  # Rethrow the exception if continue_on_fail is False
+    @contextmanager
+    def node_state_setter(self):
+        """
+        a context manager to set the state of a node, and handle exceptions
+        
+        usage:
+        > with self.node_state_setter():
+        >     # do something that might fail
+        >     ...
+        """
+        try:
+            # Set the node state to RUNNING at the start
+            self._state = NodeState.RUNNING
+            yield  # Logic inside the 'with' block executes here
+            # check state is not fail or warning, in case something set it to fail while it ran
+            if self.state == NodeState.RUNNING:
+                self._state = NodeState.SUCCEED
+        except Exception as e:
+            # On exception, set the node state to FAIL and log the error
+            self._state = NodeState.FAIL
+            self.log_error(f"'{self.__class__.__name__}' failed running: '{e}'")
+            if DEBUG_MODE or not self.continue_on_fail:
+                raise e  # Rethrow the exception if continue_on_fail is False
 

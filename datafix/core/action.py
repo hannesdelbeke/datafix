@@ -1,17 +1,21 @@
-from datafix.core.node import Node, node_state_setter
+from datafix.core.node import Node
 
 
 class Action(Node):
+    """
+    An Action is a Node that can run a method, and saves the result
+    """
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # hack remove from parent children.
+
+        # hack remove from parent children, to prevent infinite recursion bug
         if self.parent:
             self.parent.children.remove(self)
 
 
     def run(self):
-        with node_state_setter(self):
+        with self.node_state_setter():
             self.action()
 
     def action(self):

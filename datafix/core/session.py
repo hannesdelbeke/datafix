@@ -1,9 +1,7 @@
 import logging
 from typing import Type, Optional, Generator
 from datafix.core.collector import Collector
-from datafix.core.node import Node, NodeState, node_state_setter
-
-
+from datafix.core.node import Node, NodeState
 
 
 class Session(Node):
@@ -43,7 +41,7 @@ class Session(Node):
     def run(self):
         self.state = NodeState.RUNNING
         for node in self.children:
-            with node_state_setter(node):
+            with node.node_state_setter():
                 node.run()
         self.set_state_from_children()
 
