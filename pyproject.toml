@@ -27,6 +27,5 @@ version = "0.0.1"
 Homepage = "https://github.com/hannesdelbeke/datafix"
 
 [tool.pytest.ini_options]
-addopts = "-B"  # Disable .pyc files and __pycache__ directories
 testpaths = ["tests"]
 
