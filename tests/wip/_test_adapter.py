@@ -10,12 +10,12 @@ class StringToIntAdapter(Adapter):
 
     def adapt(self, data: str):
         magic_dict = {
-            'zero': 0,
-            'one': 1,
-            'two': 2,
-            'three': 3,
-            'four': 4,
-            'five': 5,
+            "zero": 0,
+            "one": 1,
+            "two": 2,
+            "three": 3,
+            "four": 4,
+            "five": 5,
         }
         return magic_dict.get(data, data)  # return instance if we cant convert
 
@@ -74,5 +74,5 @@ def test_adapter():
     print(session.report())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_adapter()

@@ -7,6 +7,7 @@ class DataNode(Node):
     a DataNode contains only 1 data-instance in self.data (it can be a list)
     DataNodes are not runnable, but can have actions, e.g. 'select mesh'
     """
+
     def __init__(self, data, *args, **kwargs):
         self.data = data  # custom data saved in the node
         self.result_nodes = []  # result nodes created by the validator(s) that ran on this node
@@ -33,4 +34,4 @@ class DataNode(Node):
         pass
 
     def __str__(self):
-        return f'DataNode({self.data})'
+        return f"DataNode({self.data})"

@@ -1,5 +1,5 @@
 try:
-    from PySide6 import QtCore, QtWidgets, QtGui   # pylint: disable=no-name-in-module
+    from PySide6 import QtCore, QtWidgets, QtGui  # pylint: disable=no-name-in-module
     from PySide6.QtGui import QAction
 except ImportError:
     from PySide2 import QtCore, QtWidgets, QtGui
@@ -122,7 +122,7 @@ class Ui_Form(view.Ui_Form):
             item = self.list_session_nodes.item(index)
 
             if len(self.session.children) == 0:
-               # small hack to make it work when nodes aren't instanced yet
+                # small hack to make it work when nodes aren't instanced yet
                 node_state = datafix.core.NodeState.INIT
             else:
                 node = self.session.children[index]
@@ -148,8 +148,9 @@ def show(parent=None, session=None):
     return window
 
 
-if __name__ == '__main__':
-    """ test code to test UI with collectors, validators, and actions """
+if __name__ == "__main__":
+    """test code to test UI with collectors, validators, and actions"""
     from tests.test_simple import setup_sample_pipeline
+
     setup_sample_pipeline()
     show()

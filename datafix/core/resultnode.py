@@ -5,7 +5,7 @@ from datafix.core.datanode import DataNode
 class ResultNode(Node):
     """
     stores the results of a DataNode validation
-    
+
     the reason we don't set the state on the DataNode itself,
     is that a DataNode can be validated by multiple Validators.
     This allows tracking which validator produced which result.
@@ -22,7 +22,7 @@ class ResultNode(Node):
         self.warning = warning
 
     def __str__(self):
-        return f'ResultNode({self.data_node.data})'
+        return f"ResultNode({self.data_node.data})"
 
     @property
     def data(self):

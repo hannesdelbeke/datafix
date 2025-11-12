@@ -10,14 +10,15 @@ from datafix.core import Session, Validator, Action, Collector, Node, NodeState
 #     ...
 # action also needs a name, mainly for UI purposes.
 
+
 class ActionPrintHello(Action):
     def action(self):
-        return 'Hello'
+        return "Hello"
 
 
 class ActionFail(Action):
     def action(self):
-        raise Exception('Fail')
+        raise Exception("Fail")
 
 
 class ActionPrintChildNodes(Action):
@@ -31,6 +32,7 @@ class CollectHelloWorld(Collector):
 
     def collect(self):
         return ["Hello World"]
+
 
 class CollectWithAction(Collector):
     # action_classes = [ActionPrintChildNodes]
@@ -69,7 +71,7 @@ def test_externally_register_action():
 
     collector1.actions = []  # remove default action
     collector2.actions = []  # remove default action
-    
+
     action = ActionPrintHello(parent=collector1)
     collector1.actions.append(action)
 
@@ -88,6 +90,7 @@ def test_action_fail():
     action = ActionFail()
     action.run()
     assert action.state == NodeState.FAIL
+
 
 def test_action_fail2():
     session = Session()

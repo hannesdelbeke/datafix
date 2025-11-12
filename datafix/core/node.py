@@ -1,26 +1,28 @@
-from __future__ import annotations  # delay typhint for Python <3.10 to handle Session type
+from __future__ import annotations
 import logging
 import textwrap
 from enum import Enum
 from typing import List, TYPE_CHECKING
 from contextlib import contextmanager
+
 if TYPE_CHECKING:
     import datafix.core.session
 
 
 DEBUG_MODE = False
-COLOR_CONSOLE_OUTPUT = True  # color console output by default, can be set to False to disable
+# Color console output by default, can be set to False to disable
+COLOR_CONSOLE_OUTPUT = True
 
 
 def color_text(text, state):
-    """ format text with color codes (green or red),
-    to represent node states with colors in console & terminal output """
+    """format text with color codes (green or red),
+    to represent node states with colors in console & terminal output"""
     if state == NodeState.SUCCEED:
-        text = f'\033[32m{text}\033[0m'  # green
+        text = f"\033[32m{text}\033[0m"  # green
     elif state == NodeState.FAIL:
-        text = f'\033[31m{text}\033[0m'  # red
+        text = f"\033[31m{text}\033[0m"  # red
     elif state == NodeState.WARNING:
-        text = f'\033[33m{text}\033[0m'  # yellow
+        text = f"\033[33m{text}\033[0m"  # yellow
     return text
 
 
@@ -46,6 +48,7 @@ class Node:
     warning: if True, warn instead of fail. A warning implies accepted failure.
     continue_on_fail: if True, continue running even if this node fails
     """
+
     continue_on_fail = True  # if self or any children fail, continue running
     warning = False  # set state to WARNING if this node FAILS
     # action_classes = []
@@ -54,10 +57,10 @@ class Node:
     # the main reason we instance on init, is so each node has it's own action
     # so we can track fail success of actions per node
     # E.G. a select mesh action, defined by a mesh collector, is auto added to all mesh-Nodes
-    child_actions = None # should be empty list but mutate bug
+    child_actions = None  # should be empty list but mutate bug
     name = None
 
-    def __init__(self, parent:"Node|None"=None, name=None):
+    def __init__(self, parent: "Node|None" = None, name=None):
         self.actions = []  # instanced action nodes, that can be run on this node
         self.children: "List[Node]" = []  # nodes created by this node
         self.parent = parent  # node that created this node
@@ -131,12 +134,12 @@ class Node:
         raise NotImplementedError
 
     def report(self) -> str:
-        """"create a report of this node and it's children"""
-        txt = f'{self.pp_state}\n'
+        """ "create a report of this node and it's children"""
+        txt = f"{self.pp_state}\n"
 
         for child in self.children:
             txt_child = child.report()
-            txt += textwrap.indent(txt_child, '  ')
+            txt += textwrap.indent(txt_child, "  ")
         return txt
 
     @property
@@ -149,10 +152,10 @@ class Node:
             state = color_text(state=self.state, text=self.state.value)
         else:
             state = self.state.value
-        return f'{self}: {state}'
+        return f"{self}: {state}"
 
     def __repr__(self):
-        return f'{self.__class__.__name__}'
+        return f"{self.__class__.__name__}"
 
     def log_error(self, text):
         if self.warning:
@@ -161,16 +164,16 @@ class Node:
             logging.error(text)
 
     def __getitem__(self, item: "str|Node"):
-        """ get a child-node by name, returns first node if multiple
-        e.g. session["collector_name"] """
+        """get a child-node by name, returns first node if multiple
+        e.g. session["collector_name"]"""
         for node in self.children:
             if node.name == item:
                 return node
         return None
 
     def get(self, item: "str|Node", default=None):
-        """ get a child-node by name, returns first node if multiple
-        e.g. session.get("collector_name") """
+        """get a child-node by name, returns first node if multiple
+        e.g. session.get("collector_name")"""
         return self[item] or default
 
     # def __setitem__(self, key, value):
@@ -227,7 +230,7 @@ class Node:
     def node_state_setter(self):
         """
         a context manager to set the state of a node, and handle exceptions
-        
+
         usage:
         > with self.node_state_setter():
         >     # do something that might fail
@@ -246,4 +249,3 @@ class Node:
             self.log_error(f"'{self.__class__.__name__}' failed running: '{e}'")
             if DEBUG_MODE or not self.continue_on_fail:
                 raise e  # Rethrow the exception if continue_on_fail is False
-

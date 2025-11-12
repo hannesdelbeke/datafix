@@ -23,7 +23,8 @@ class ValidatorSameStrings(Validator):
         inst_wrappers = data_node.parent.data_nodes
         for inst_wrapper in inst_wrappers:
             if inst_wrapper.data != inst_wrappers[0].data:
-                raise Exception('Not all instances are equal')
+                raise Exception("Not all instances are equal")
+
 
 class ValidatorStringIsA(Validator):
     required_type = str
@@ -85,6 +86,7 @@ def test_failed_result_node():
 
     # print(session.report())
 
+
 def test_validate_twice():
     """check we correctly clear the results when we rerun a validator"""
     logging.warning("test")
@@ -116,5 +118,5 @@ def test_incompatible_types():
     print(session.report())
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_validate_twice()

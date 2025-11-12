@@ -1,8 +1,10 @@
 from datafix.core import Collector, Validator, Session, NodeState, ResultNode
 
 
-class Type1(str):...
-class Type2(str):...
+class Type1(str): ...
+
+
+class Type2(str): ...
 
 
 class CollectType1(Collector):
@@ -36,7 +38,7 @@ def test_required_type():
     assert type1_collector.state == NodeState.SUCCEED
     assert type2_collector.state == NodeState.SUCCEED
     assert type1_validator.state == NodeState.SUCCEED
-    
+
     # The validator should only process Type1 data due to required_type filtering
-    validated_nodes = [child.data_node for child in type1_validator.children] 
+    validated_nodes = [child.data_node for child in type1_validator.children]
     assert validated_nodes == type1_collector.children

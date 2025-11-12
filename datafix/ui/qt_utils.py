@@ -3,6 +3,7 @@ try:
 except:
     from PySide2 import QtWidgets, QtGui
 
+
 class States:
     INIT = 0
     SUCCESS = 1
@@ -21,25 +22,25 @@ def color_item(item: QtWidgets.QListWidgetItem, state=States.INIT, color_text=Fa
         raise ValueError("item is None")
 
     if state == States.INIT:
-        color = 'white'
+        color = "white"
         icon = "🔲"  # white square
     elif state == States.FAIL:
-        color = 'red'
+        color = "red"
         # icon = "🟥"  # red square
         icon = "❌"  # cross mark for failure
     elif state == States.WARNING:
-        color = 'orange'
+        color = "orange"
         # icon = "🟨"  # yellow square
         icon = "⚠️"  # warning sign
     elif state == States.SUCCESS:
-        color = 'lime'
+        color = "lime"
         # icon = "🟩"  # green square
         icon = "✅"  # checkmark for success
     elif state == States.DISABLED:
-        color = 'gray'
-        icon = '⬛'  # black square
+        color = "gray"
+        icon = "⬛"  # black square
     else:
-        color = 'magenta'
+        color = "magenta"
         # icon = '🟪'
         icon = "❓"  # question mark for unknown state
 
@@ -61,9 +62,11 @@ def color_item(item: QtWidgets.QListWidgetItem, state=States.INIT, color_text=Fa
         # if we don't color the text, we can set the background color as a backup
         item.setBackground(QtGui.QColor(color))
 
+
 if __name__ == "__main__":
     """Test code for the color_item function in a QListWidget"""
     import sys
+
     app = QtWidgets.QApplication(sys.argv)
     widget = QtWidgets.QListWidget()
     widget.addItem("fail")

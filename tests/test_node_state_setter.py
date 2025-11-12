@@ -36,11 +36,11 @@ def test_node_state_setter_warning_mode():
 #     """Test that node_state_setter respects continue_on_fail setting."""
 #     node = Node()
 #     node.continue_on_fail = True
-    
+
 #     # Should not raise exception
 #     with node.node_state_setter():
 #         raise ValueError("Test error")
-    
+
 #     assert node.state == NodeState.FAIL
 
 
@@ -48,10 +48,10 @@ def test_node_state_setter_warning_mode():
 #     """Test that node_state_setter raises exception when continue_on_fail=False."""
 #     node = Node()
 #     node.continue_on_fail = False
-    
+
 #     # Should raise exception
 #     with pytest.raises(ValueError):
 #         with node.node_state_setter():
 #             raise ValueError("Test error")
-    
+
 #     assert node.state == NodeState.FAIL

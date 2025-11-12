@@ -12,6 +12,7 @@ class Collector(Node):  # session plugin (context), session is a node
 
     override self.collect() to implement your collector
     """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.actions = [Run(parent=self)]

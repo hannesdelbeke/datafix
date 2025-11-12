@@ -13,7 +13,6 @@ class Action(Node):
         if self.parent:
             self.parent.children.remove(self)
 
-
     def run(self):
         with self.node_state_setter():
             self.action()
@@ -33,6 +32,7 @@ class Action(Node):
 
 
 class Run(Action):
-    """ Action to re-run a Node, e.g. re-validate a validator."""
+    """Action to re-run a Node, e.g. re-validate a validator."""
+
     def run(self):
         self.parent.run()

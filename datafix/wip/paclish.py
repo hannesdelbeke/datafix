@@ -29,13 +29,13 @@ session.run()
 # ======== PYBLISH ================================================================
 class CollectHelloWorldPyblish(datafix.core.collector.Collector):
     def process(self, context):
-        asset = context.create_asset('HelloWorld', family="string")
+        asset = context.create_asset("HelloWorld", family="string")
         asset[:] = ["Hello World"]
 
 
 class CollectHelloWorldPyblish2(datafix.core.collector.Collector):
     def process(self, context):
-        asset = context.create_asset('HelloWorld2', family="string")
+        asset = context.create_asset("HelloWorld2", family="string")
         asset[:] = ["Hello World2"]
 
 
@@ -49,4 +49,4 @@ context = pyblish.util.publish()
 print(type(context))
 plugin: pyblish.api.Plugin
 for inst in context:
-    print('  ', inst, type(inst))
+    print("  ", inst, type(inst))

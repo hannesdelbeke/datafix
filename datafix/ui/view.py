@@ -16,8 +16,8 @@ class Ui_Form(QtWidgets.QDialog):
         # self.dropdown_validators = QtWidgets.QComboBox()
         self.list_session_nodes = QtWidgets.QListWidget()
         self.list_child_nodes = QtWidgets.QListWidget()
-        self.button_check = QtWidgets.QPushButton('Check All')
-        self.button_fix = QtWidgets.QPushButton('Fix All')
+        self.button_check = QtWidgets.QPushButton("Check All")
+        self.button_fix = QtWidgets.QPushButton("Fix All")
 
         # get list of collector plugins we just ran
         # self.collectors = list(p for p in self.plugins if pyblish.lib.inrange(
@@ -43,17 +43,14 @@ class Ui_Form(QtWidgets.QDialog):
         self.button_check.clicked.connect(self.clicked_check)
         # self.button_fix.clicked.connect(self.clicked_fix)
 
-
         # disable fix
         self.button_fix.setEnabled(False)
 
     # todo use action.on to filter when to show. ex. "failedOrWarning"
 
-    def clicked_check(self):
-        ...
+    def clicked_check(self): ...
 
-    def clicked_fix(self):
-        ...
+    def clicked_fix(self): ...
 
 
 def show(parent=None):
@@ -73,6 +70,6 @@ def show(parent=None):
     return window
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     """empty UI test code, use datafix.ui.validator.show() instead to test the populated UI"""
     window = show()

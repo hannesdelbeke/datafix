@@ -6,6 +6,7 @@ from datafix.core.node import Node, NodeState
 
 class Session(Node):
     """some kind of canvas or context, that contains plugins etc"""
+
     __active_session: "Optional[Session]" = None
 
     def __init__(self, *args, **kwargs):
@@ -71,5 +72,5 @@ class Session(Node):
     @classmethod
     @property
     def active(cls) -> "Session":
-        """ The active session (the latest one created) """
+        """The active session (the latest one created)"""
         return cls.__active_session or cls(name="default session")

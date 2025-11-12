@@ -42,10 +42,11 @@ def test_collect_twice():
     session.run()
     assert len(collector.children) == 1
 
+
 # test that we can fail to collect due to exception, and continue to next node
 class CollectFail(Collector):
     def collect(self):
-        raise Exception('Force raise exception')
+        raise Exception("Force raise exception")
 
 
 def test_fail_collect():
@@ -74,7 +75,7 @@ def test_fail_collect():
 #     return session
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_single_collect()
     test_double_collect()
     test_fail_collect()

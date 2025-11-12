@@ -13,7 +13,7 @@ class ValidateSuccess(Validator):
 
 class ValidateFail(Validator):
     def validate(self, data):
-        raise Exception('Fail')
+        raise Exception("Fail")
 
 
 def test_validation_order():
@@ -30,5 +30,5 @@ def test_validation_order():
     assert session.children[0].data_nodes[0].state == NodeState.FAIL
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_validation_order()

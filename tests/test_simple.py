@@ -43,6 +43,7 @@ class ValidateContainsHello(Validator):
     def validate(self, data):
         assert "Hello" in data, "Data does not contain 'Hello'"
 
+
 """
 3. Define the pipeline
 

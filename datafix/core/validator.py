@@ -11,6 +11,7 @@ class Validator(Node):
     to implement, override self.logic(data)
     results are saved in self.children
     """
+
     required_type = None
 
     def __init__(self, *args, **kwargs):
@@ -37,15 +38,13 @@ class Validator(Node):
             # # todo how to support return value and fail/raise error at same time
             state = NodeState.SUCCEED
         except Exception as e:
-            self.log_error(f"'{data_node}' failed validation `{self.__class__.__name__}`:'{e}'" )
+            self.log_error(f"'{data_node}' failed validation `{self.__class__.__name__}`:'{e}'")
             state = NodeState.FAIL
             if not self.continue_on_fail:
                 raise e
-        result_node = ResultNode(data_node=data_node,
-                          parent=self,
-                          state=state,
-                          warning=self.warning,
-                          name=data_node.name)
+        result_node = ResultNode(
+            data_node=data_node, parent=self, state=state, warning=self.warning, name=data_node.name
+        )
 
         # add actions from data node to result node. e.g. select mesh
         # as a convenience method for better UX in the UI
@@ -73,4 +72,3 @@ class Validator(Node):
         for collector in self.session.iter_collectors(required_type=self.required_type):
             for data_node in collector.data_nodes:
                 yield data_node
-

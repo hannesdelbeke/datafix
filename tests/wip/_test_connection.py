@@ -40,5 +40,5 @@ def test_simple_session():
     return session
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     session = test_simple_session()

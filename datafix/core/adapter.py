@@ -58,6 +58,3 @@ class Adapter:
 
 # class AdapterBrain(object):
 #     def __init__(self):
-
-
-

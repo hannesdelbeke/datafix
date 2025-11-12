@@ -17,7 +17,7 @@ def discover_modules():
     """
     discovered_modules = {}
     for finder, name, ispkg in pkgutil.walk_packages():
-        if 'pac_plugins' not in name:
+        if "pac_plugins" not in name:
             continue
         try:
             discovered_modules[name] = (importlib.import_module(name), ispkg)
@@ -37,7 +37,7 @@ def discover_plugins():
         for attr_name in dir(module):
 
             # skip private classes
-            if attr_name.startswith('_'):
+            if attr_name.startswith("_"):
                 continue
 
             # check for Node class
@@ -68,5 +68,5 @@ def discover_plugins():
 
 
 # discover all datafix plugins and print them
-if __name__ == '__main__':
+if __name__ == "__main__":
     pprint.pprint(discover_plugins())
