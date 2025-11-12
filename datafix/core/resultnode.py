@@ -3,7 +3,13 @@ from datafix.core.datanode import DataNode
 
 
 class ResultNode(Node):
-    """stores the results of a DataNode validation"""
+    """
+    stores the results of a DataNode validation
+    
+    the reason we don't set the state on the DataNode itself,
+    is that a DataNode can be validated by multiple Validators.
+    This allows tracking which validator produced which result.
+    """
 
     # there is overlap between a resultnode, and a outcome saved in the state. SUCCESS / FAIL / WARNING
     # POLISH: maybe combine in future?
@@ -20,4 +26,6 @@ class ResultNode(Node):
 
     @property
     def data(self):
+        # the result node doesnt store data, but runs on a data node
+        # so for convenience, return the data from the data node
         return self.data_node.data

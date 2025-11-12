@@ -5,11 +5,11 @@ from datafix.core.action import Run
 
 class Validator(Node):
     """
-    a node that validates all collected instance nodes
+    A Validator node validates all collected instance nodes,
+    with the option of only validating a specific type of data. e.g. meshes, textures, ...
 
     to implement, override self.logic(data)
-
-    # results are saved in self.children
+    results are saved in self.children
     """
     required_type = None
 
